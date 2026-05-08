@@ -1,4 +1,5 @@
-import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
+import { BeforeInsert, Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
+import { unixTimestampSeconds } from '../../common/unix-timestamp';
 import { Player } from '../../players/entities/player.entity';
 
 @Entity({ name: 'spin_records', comment: '真實抽獎紀錄，每位玩家每日每階段最多一筆' })
@@ -34,6 +35,11 @@ export class SpinRecord {
   @Column({ name: 'amount_points', type: 'int', unsigned: true, default: 0, comment: '本次送出的獎金點數，0 可代表未中獎' })
   amountPoints: number;
 
-  @CreateDateColumn({ name: 'created_at', comment: '抽獎建立時間' })
-  createdAt: Date;
+  @Column({ name: 'created_at', type: 'int', unsigned: true, comment: '抽獎建立 Unix timestamp 秒數' })
+  createdAt: number;
+
+  @BeforeInsert()
+  setCreateTimestamp() {
+    this.createdAt ??= unixTimestampSeconds();
+  }
 }

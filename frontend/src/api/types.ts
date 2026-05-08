@@ -1,8 +1,8 @@
 export interface Player {
   id: string;
   externalId: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface PrizeConfig {
@@ -60,7 +60,7 @@ export interface SpinRecord {
   probabilityTable: 'low' | 'high';
   prizeName: string;
   amountPoints: number;
-  createdAt: string;
+  createdAt: number;
 }
 
 export interface PlayerDailyProgress {

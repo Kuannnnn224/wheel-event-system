@@ -1,4 +1,5 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { unixTimestampSeconds } from '../../common/unix-timestamp';
 
 @Entity({ name: 'admin_users', comment: '後控管理員帳號' })
 export class AdminUser {
@@ -14,9 +15,21 @@ export class AdminUser {
   @Column({ name: 'is_active', default: true, comment: '帳號是否啟用' })
   isActive: boolean;
 
-  @CreateDateColumn({ name: 'created_at', comment: '帳號建立時間' })
-  createdAt: Date;
+  @Column({ name: 'created_at', type: 'int', unsigned: true, comment: '帳號建立 Unix timestamp 秒數' })
+  createdAt: number;
 
-  @UpdateDateColumn({ name: 'updated_at', comment: '帳號最後更新時間' })
-  updatedAt: Date;
+  @Column({ name: 'updated_at', type: 'int', unsigned: true, comment: '帳號最後更新 Unix timestamp 秒數' })
+  updatedAt: number;
+
+  @BeforeInsert()
+  setCreateTimestamps() {
+    const now = unixTimestampSeconds();
+    this.createdAt ??= now;
+    this.updatedAt ??= now;
+  }
+
+  @BeforeUpdate()
+  setUpdateTimestamp() {
+    this.updatedAt = unixTimestampSeconds();
+  }
 }

@@ -1,4 +1,5 @@
-import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { BeforeInsert, Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { unixTimestampSeconds } from '../../common/unix-timestamp';
 import { Player } from '../../players/entities/player.entity';
 
 @Entity({ name: 'turnover_adjustments', comment: '流水異動紀錄，包含後控補流水與未來平台流水事件' })
@@ -27,6 +28,11 @@ export class TurnoverAdjustment {
   @Column({ length: 255, nullable: true, comment: '異動原因或備註' })
   reason?: string;
 
-  @CreateDateColumn({ name: 'created_at', comment: '異動建立時間' })
-  createdAt: Date;
+  @Column({ name: 'created_at', type: 'int', unsigned: true, comment: '異動建立 Unix timestamp 秒數' })
+  createdAt: number;
+
+  @BeforeInsert()
+  setCreateTimestamp() {
+    this.createdAt ??= unixTimestampSeconds();
+  }
 }

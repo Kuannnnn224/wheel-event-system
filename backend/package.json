@@ -6,6 +6,7 @@
     "build": "nest build",
     "start": "node dist/main.js",
     "start:dev": "nest start --watch",
+    "db:timestamps": "ts-node scripts/convert-time-columns-to-timestamp.ts",
     "probability:import": "ts-node scripts/import-probability.ts",
     "test": "jest",
     "test:watch": "jest --watch",

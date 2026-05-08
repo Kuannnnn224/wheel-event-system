@@ -1,4 +1,5 @@
-import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { BeforeInsert, Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { unixTimestampSeconds } from '../../common/unix-timestamp';
 import { Player } from '../../players/entities/player.entity';
 
 @Entity({ name: 'demo_sessions', comment: 'Demo webview session 與短效 token' })
@@ -18,9 +19,14 @@ export class DemoSession {
   @Column({ length: 128, comment: '給 webview 使用的短效 token' })
   token: string;
 
-  @Column({ name: 'expires_at', comment: 'token 過期時間' })
-  expiresAt: Date;
+  @Column({ name: 'expires_at', type: 'int', unsigned: true, comment: 'token 過期 Unix timestamp 秒數' })
+  expiresAt: number;
 
-  @CreateDateColumn({ name: 'created_at', comment: 'session 建立時間' })
-  createdAt: Date;
+  @Column({ name: 'created_at', type: 'int', unsigned: true, comment: 'session 建立 Unix timestamp 秒數' })
+  createdAt: number;
+
+  @BeforeInsert()
+  setCreateTimestamp() {
+    this.createdAt ??= unixTimestampSeconds();
+  }
 }

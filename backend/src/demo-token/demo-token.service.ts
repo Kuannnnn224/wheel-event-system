@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomBytes } from 'crypto';
 import { Repository } from 'typeorm';
+import { unixTimestampSeconds } from '../common/unix-timestamp';
 import { Player } from '../players/entities/player.entity';
 import { PlayersService } from '../players/players.service';
 import { DemoSession } from './entities/demo-session.entity';
@@ -20,7 +21,7 @@ export class DemoTokenService {
     const player = await this.playersService.getOrCreateByExternalId(externalId);
     const token = randomBytes(32).toString('hex');
     const ttlMinutes = Number(this.configService.get<string>('DEMO_TOKEN_TTL_MINUTES', '30'));
-    const expiresAt = new Date(Date.now() + ttlMinutes * 60_000);
+    const expiresAt = unixTimestampSeconds() + ttlMinutes * 60;
 
     const session = await this.demoSessionRepository.save(
       this.demoSessionRepository.create({
@@ -52,7 +53,7 @@ export class DemoTokenService {
       throw new NotFoundException('Demo session not found.');
     }
 
-    if (session.expiresAt.getTime() <= Date.now()) {
+    if (session.expiresAt <= unixTimestampSeconds()) {
       throw new UnauthorizedException('Demo session expired.');
     }
 

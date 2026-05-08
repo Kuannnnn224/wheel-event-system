@@ -1,4 +1,5 @@
 import { Alert, Button, Form, Input, Space, Typography } from 'antd';
+import dayjs from 'dayjs';
 import { useState } from 'react';
 import { api } from '../api/client';
 import type { Player } from '../api/types';
@@ -6,7 +7,7 @@ import type { Player } from '../api/types';
 interface DemoSession {
   player: Player;
   token: string;
-  expiresAt: string;
+  expiresAt: number;
   webviewUrl: string;
 }
 
@@ -47,7 +48,7 @@ export default function DemoSitePage() {
         <section className="result-panel">
           <Space direction="vertical" size={8} style={{ width: '100%' }}>
             <Typography.Text>玩家：{session.player.externalId}</Typography.Text>
-            <Typography.Text>到期：{session.expiresAt}</Typography.Text>
+            <Typography.Text>到期：{dayjs.unix(session.expiresAt).format('YYYY-MM-DD HH:mm:ss')}</Typography.Text>
             <Input.TextArea value={session.webviewUrl} rows={3} readOnly />
             <Button href={session.webviewUrl} target="_blank" rel="noreferrer">
               開啟連結
