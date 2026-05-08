@@ -2,17 +2,9 @@ import { Alert, Button, DatePicker, Form, Input, Space, Table, Tabs, Typography 
 import dayjs, { Dayjs } from 'dayjs';
 import { useState } from 'react';
 import { api } from '../api/client';
-import type { SpinRecord } from '../api/types';
+import type { DailyReport, SpinRecord } from '../api/types';
 
 const { RangePicker } = DatePicker;
-
-interface DailyReport {
-  businessDate: string;
-  totalSpins: number;
-  uniquePlayers: number;
-  totalAmountPoints: number;
-  byStage: Array<{ stageNumber: number; spinCount: number; totalAmountPoints: number }>;
-}
 
 interface PlayerReport {
   totalSpins: number;

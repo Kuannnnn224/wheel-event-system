@@ -73,6 +73,14 @@ export interface PlayerDailyProgress {
   spins: SpinRecord[];
 }
 
+export interface DailyReport {
+  businessDate: string;
+  totalSpins: number;
+  uniquePlayers: number;
+  totalAmountPoints: number;
+  byStage: Array<{ stageNumber: number; spinCount: number; totalAmountPoints: number }>;
+}
+
 export interface SimulationJob {
   id: string;
   status: 'queued' | 'running' | 'completed' | 'failed';

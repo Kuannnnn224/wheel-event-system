@@ -211,7 +211,6 @@ export default function PlayerLookupPage() {
           <Typography.Title level={3}>查詢玩家</Typography.Title>
           <Typography.Text type="secondary">查看玩家當日輪盤解鎖、抽獎與派發狀態</Typography.Text>
         </div>
-        {progress ? <Tag color={dailyStatus.color}>{dailyStatus.label}</Tag> : null}
       </div>
 
       <Form className="lookup-search-panel toolbar" layout="vertical" onFinish={search}>
