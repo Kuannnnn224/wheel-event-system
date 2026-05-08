@@ -3,72 +3,272 @@
   "stages": [
     {
       "stageNumber": 1,
-      "turnoverThresholdPoints": 1000,
+      "turnoverThresholdPoints": 500,
       "enabled": true,
-      "lowTableWeight": 80,
-      "highTableWeight": 20,
+      "lowTableWeight": 960,
+      "highTableWeight": 40,
       "prizes": [
-        { "rewardCode": "A", "name": "A Prize", "amountPoints": 0, "lowWeight": 500, "highWeight": 120, "enabled": true, "sortOrder": 1 },
-        { "rewardCode": "B", "name": "B Prize", "amountPoints": 100, "lowWeight": 280, "highWeight": 220, "enabled": true, "sortOrder": 2 },
-        { "rewardCode": "C", "name": "C Prize", "amountPoints": 300, "lowWeight": 150, "highWeight": 280, "enabled": true, "sortOrder": 3 },
-        { "rewardCode": "D", "name": "D Prize", "amountPoints": 700, "lowWeight": 60, "highWeight": 250, "enabled": true, "sortOrder": 4 },
-        { "rewardCode": "E", "name": "E Prize", "amountPoints": 1500, "lowWeight": 10, "highWeight": 130, "enabled": true, "sortOrder": 5 }
+        {
+          "rewardCode": "A",
+          "name": "₱1",
+          "amountPoints": 1,
+          "sortOrder": 1,
+          "lowWeight": 64,
+          "highWeight": 41,
+          "enabled": true
+        },
+        {
+          "rewardCode": "B",
+          "name": "₱3",
+          "amountPoints": 3,
+          "sortOrder": 2,
+          "lowWeight": 30,
+          "highWeight": 50,
+          "enabled": true
+        },
+        {
+          "rewardCode": "C",
+          "name": "₱10",
+          "amountPoints": 10,
+          "sortOrder": 3,
+          "lowWeight": 5,
+          "highWeight": 7,
+          "enabled": true
+        },
+        {
+          "rewardCode": "D",
+          "name": "₱25",
+          "amountPoints": 25,
+          "sortOrder": 4,
+          "lowWeight": 1,
+          "highWeight": 2,
+          "enabled": true
+        },
+        {
+          "rewardCode": "E",
+          "name": "₱500",
+          "amountPoints": 500,
+          "sortOrder": 5,
+          "lowWeight": 0,
+          "highWeight": 0,
+          "enabled": true
+        }
       ]
     },
     {
       "stageNumber": 2,
-      "turnoverThresholdPoints": 3000,
+      "turnoverThresholdPoints": 5000,
       "enabled": true,
-      "lowTableWeight": 80,
-      "highTableWeight": 20,
+      "lowTableWeight": 950,
+      "highTableWeight": 50,
       "prizes": [
-        { "rewardCode": "A", "name": "A Prize", "amountPoints": 0, "lowWeight": 500, "highWeight": 120, "enabled": true, "sortOrder": 1 },
-        { "rewardCode": "B", "name": "B Prize", "amountPoints": 200, "lowWeight": 280, "highWeight": 220, "enabled": true, "sortOrder": 2 },
-        { "rewardCode": "C", "name": "C Prize", "amountPoints": 600, "lowWeight": 150, "highWeight": 280, "enabled": true, "sortOrder": 3 },
-        { "rewardCode": "D", "name": "D Prize", "amountPoints": 1400, "lowWeight": 60, "highWeight": 250, "enabled": true, "sortOrder": 4 },
-        { "rewardCode": "E", "name": "E Prize", "amountPoints": 3000, "lowWeight": 10, "highWeight": 130, "enabled": true, "sortOrder": 5 }
+        {
+          "rewardCode": "A",
+          "name": "₱3",
+          "amountPoints": 3,
+          "sortOrder": 1,
+          "lowWeight": 64,
+          "highWeight": 40,
+          "enabled": true
+        },
+        {
+          "rewardCode": "B",
+          "name": "₱8",
+          "amountPoints": 8,
+          "sortOrder": 2,
+          "lowWeight": 30,
+          "highWeight": 50,
+          "enabled": true
+        },
+        {
+          "rewardCode": "C",
+          "name": "₱50",
+          "amountPoints": 50,
+          "sortOrder": 3,
+          "lowWeight": 5,
+          "highWeight": 7,
+          "enabled": true
+        },
+        {
+          "rewardCode": "D",
+          "name": "₱250",
+          "amountPoints": 250,
+          "sortOrder": 4,
+          "lowWeight": 1,
+          "highWeight": 3,
+          "enabled": true
+        },
+        {
+          "rewardCode": "E",
+          "name": "₱5000",
+          "amountPoints": 5000,
+          "sortOrder": 5,
+          "lowWeight": 0,
+          "highWeight": 0,
+          "enabled": true
+        }
       ]
     },
     {
       "stageNumber": 3,
-      "turnoverThresholdPoints": 6000,
+      "turnoverThresholdPoints": 20000,
       "enabled": true,
-      "lowTableWeight": 80,
-      "highTableWeight": 20,
+      "lowTableWeight": 940,
+      "highTableWeight": 60,
       "prizes": [
-        { "rewardCode": "A", "name": "A Prize", "amountPoints": 0, "lowWeight": 500, "highWeight": 120, "enabled": true, "sortOrder": 1 },
-        { "rewardCode": "B", "name": "B Prize", "amountPoints": 300, "lowWeight": 280, "highWeight": 220, "enabled": true, "sortOrder": 2 },
-        { "rewardCode": "C", "name": "C Prize", "amountPoints": 900, "lowWeight": 150, "highWeight": 280, "enabled": true, "sortOrder": 3 },
-        { "rewardCode": "D", "name": "D Prize", "amountPoints": 2100, "lowWeight": 60, "highWeight": 250, "enabled": true, "sortOrder": 4 },
-        { "rewardCode": "E", "name": "E Prize", "amountPoints": 4500, "lowWeight": 10, "highWeight": 130, "enabled": true, "sortOrder": 5 }
+        {
+          "rewardCode": "A",
+          "name": "₱8",
+          "amountPoints": 8,
+          "sortOrder": 1,
+          "lowWeight": 64,
+          "highWeight": 40,
+          "enabled": true
+        },
+        {
+          "rewardCode": "B",
+          "name": "₱15",
+          "amountPoints": 15,
+          "sortOrder": 2,
+          "lowWeight": 30,
+          "highWeight": 50,
+          "enabled": true
+        },
+        {
+          "rewardCode": "C",
+          "name": "₱50",
+          "amountPoints": 50,
+          "sortOrder": 3,
+          "lowWeight": 5,
+          "highWeight": 7,
+          "enabled": true
+        },
+        {
+          "rewardCode": "D",
+          "name": "₱300",
+          "amountPoints": 300,
+          "sortOrder": 4,
+          "lowWeight": 1,
+          "highWeight": 3,
+          "enabled": true
+        },
+        {
+          "rewardCode": "E",
+          "name": "₱20000",
+          "amountPoints": 20000,
+          "sortOrder": 5,
+          "lowWeight": 0,
+          "highWeight": 0,
+          "enabled": true
+        }
       ]
     },
     {
       "stageNumber": 4,
-      "turnoverThresholdPoints": 10000,
+      "turnoverThresholdPoints": 50000,
       "enabled": true,
-      "lowTableWeight": 80,
-      "highTableWeight": 20,
+      "lowTableWeight": 930,
+      "highTableWeight": 70,
       "prizes": [
-        { "rewardCode": "A", "name": "A Prize", "amountPoints": 0, "lowWeight": 500, "highWeight": 120, "enabled": true, "sortOrder": 1 },
-        { "rewardCode": "B", "name": "B Prize", "amountPoints": 400, "lowWeight": 280, "highWeight": 220, "enabled": true, "sortOrder": 2 },
-        { "rewardCode": "C", "name": "C Prize", "amountPoints": 1200, "lowWeight": 150, "highWeight": 280, "enabled": true, "sortOrder": 3 },
-        { "rewardCode": "D", "name": "D Prize", "amountPoints": 2800, "lowWeight": 60, "highWeight": 250, "enabled": true, "sortOrder": 4 },
-        { "rewardCode": "E", "name": "E Prize", "amountPoints": 6000, "lowWeight": 10, "highWeight": 130, "enabled": true, "sortOrder": 5 }
+        {
+          "rewardCode": "A",
+          "name": "₱15",
+          "amountPoints": 15,
+          "sortOrder": 1,
+          "lowWeight": 64,
+          "highWeight": 40,
+          "enabled": true
+        },
+        {
+          "rewardCode": "B",
+          "name": "₱30",
+          "amountPoints": 30,
+          "sortOrder": 2,
+          "lowWeight": 30,
+          "highWeight": 50,
+          "enabled": true
+        },
+        {
+          "rewardCode": "C",
+          "name": "₱80",
+          "amountPoints": 80,
+          "sortOrder": 3,
+          "lowWeight": 5,
+          "highWeight": 7,
+          "enabled": true
+        },
+        {
+          "rewardCode": "D",
+          "name": "₱500",
+          "amountPoints": 500,
+          "sortOrder": 4,
+          "lowWeight": 1,
+          "highWeight": 3,
+          "enabled": true
+        },
+        {
+          "rewardCode": "E",
+          "name": "₱50000",
+          "amountPoints": 50000,
+          "sortOrder": 5,
+          "lowWeight": 0,
+          "highWeight": 0,
+          "enabled": true
+        }
       ]
     },
     {
       "stageNumber": 5,
-      "turnoverThresholdPoints": 15000,
+      "turnoverThresholdPoints": 100000,
       "enabled": true,
-      "lowTableWeight": 80,
-      "highTableWeight": 20,
+      "lowTableWeight": 920,
+      "highTableWeight": 80,
       "prizes": [
-        { "rewardCode": "A", "name": "A Prize", "amountPoints": 0, "lowWeight": 500, "highWeight": 120, "enabled": true, "sortOrder": 1 },
-        { "rewardCode": "B", "name": "B Prize", "amountPoints": 500, "lowWeight": 280, "highWeight": 220, "enabled": true, "sortOrder": 2 },
-        { "rewardCode": "C", "name": "C Prize", "amountPoints": 1500, "lowWeight": 150, "highWeight": 280, "enabled": true, "sortOrder": 3 },
-        { "rewardCode": "D", "name": "D Prize", "amountPoints": 3500, "lowWeight": 60, "highWeight": 250, "enabled": true, "sortOrder": 4 },
-        { "rewardCode": "E", "name": "E Prize", "amountPoints": 7500, "lowWeight": 10, "highWeight": 130, "enabled": true, "sortOrder": 5 }
+        {
+          "rewardCode": "A",
+          "name": "₱30",
+          "amountPoints": 30,
+          "sortOrder": 1,
+          "lowWeight": 64,
+          "highWeight": 40,
+          "enabled": true
+        },
+        {
+          "rewardCode": "B",
+          "name": "₱80",
+          "amountPoints": 80,
+          "sortOrder": 2,
+          "lowWeight": 30,
+          "highWeight": 50,
+          "enabled": true
+        },
+        {
+          "rewardCode": "C",
+          "name": "₱300",
+          "amountPoints": 300,
+          "sortOrder": 3,
+          "lowWeight": 5,
+          "highWeight": 7,
+          "enabled": true
+        },
+        {
+          "rewardCode": "D",
+          "name": "₱1000",
+          "amountPoints": 1000,
+          "sortOrder": 4,
+          "lowWeight": 1,
+          "highWeight": 3,
+          "enabled": true
+        },
+        {
+          "rewardCode": "E",
+          "name": "₱100000",
+          "amountPoints": 100000,
+          "sortOrder": 5,
+          "lowWeight": 0,
+          "highWeight": 0,
+          "enabled": true
+        }
       ]
     }
   ]

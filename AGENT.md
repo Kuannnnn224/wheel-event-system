@@ -20,7 +20,8 @@ Keep root-level files limited to project docs, environment examples, Docker setu
 - Amounts and turnover are integer points.
 - Probability configs live in `backend/config/probability.json`, not MySQL.
 - Probability JSON is read on demand so PM/parser updates can hot-load without a backend restart.
-- Future XLSX parser work should output the same JSON shape rather than changing runtime draw logic.
+- XLSX parser output must keep the same JSON shape rather than changing runtime draw logic.
+- Current XLSX import uses `config.xlsx`, `weight.xlsx`, `low.xlsx`, and `high.xlsx`; `prize.xlsx` and `daily-limit.xlsx` are source files reserved for future rules until the business meaning is confirmed.
 - Bulk simulations are one-off in-memory jobs and must not write real player spin records.
 
 ## Backend Boundaries
@@ -62,6 +63,7 @@ npm run dev
 npm run lint
 npm run test
 npm run build
+npm run probability:import -- <xlsx-source-dir>
 ```
 
 Backend:
@@ -99,6 +101,7 @@ docker compose up -d
 - First-version TypeORM uses `synchronize=true` for local development only. Use migrations before production use.
 - The webview HTML is intentionally not implemented yet. Preserve `POST /demo/session` and `POST /spins/real` as the future integration points.
 - Do not add DB tables for probability settings unless explicitly requested. Probability data belongs in JSON generated from XLSX.
+- Import PM probability sheets with `npm run probability:import -- <xlsx-source-dir>`; the command writes `backend/config/probability.json` unless an output path is provided.
 
 ## Commit Discipline
 

@@ -59,3 +59,20 @@ Change these in `backend/.env` before using real data.
 - The JSON file is read on demand, so parser/manual changes can be hot-loaded without restarting the backend.
 - The future XLSX parser should output the same JSON shape.
 - Bulk simulations are in-memory one-off jobs and do not write real player records.
+
+## Probability XLSX Import
+
+PM source sheets can be converted into the hot-loaded JSON config:
+
+```bash
+npm run probability:import -- C:\path\to\source
+```
+
+The source directory currently uses these files:
+
+- `config.xlsx`: stage turnover thresholds and A-E prize names/amounts.
+- `weight.xlsx`: per-stage low/high table split weights.
+- `low.xlsx`: A-E weights for the low table.
+- `high.xlsx`: A-E weights for the high table.
+
+The command writes `backend/config/probability.json` by default. `prize.xlsx` and `daily-limit.xlsx` are kept as source material but are not wired into the first low/high draw flow until their business rules are confirmed.
