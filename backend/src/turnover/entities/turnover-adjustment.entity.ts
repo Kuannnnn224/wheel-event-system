@@ -1,13 +1,13 @@
 import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Player } from '../../players/entities/player.entity';
 
-@Entity('turnover_adjustments')
+@Entity({ name: 'turnover_adjustments', comment: '流水異動紀錄，包含後控補流水與未來平台流水事件' })
 export class TurnoverAdjustment {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn('uuid', { comment: '流水異動 UUID' })
   id: string;
 
   @Index()
-  @Column({ name: 'player_id' })
+  @Column({ name: 'player_id', comment: '關聯 players.id' })
   playerId: string;
 
   @ManyToOne(() => Player, { onDelete: 'CASCADE' })
@@ -15,18 +15,18 @@ export class TurnoverAdjustment {
   player: Player;
 
   @Index()
-  @Column({ name: 'business_date', length: 10 })
+  @Column({ name: 'business_date', length: 10, comment: '套用流水的業務日期，Asia/Taipei YYYY-MM-DD' })
   businessDate: string;
 
-  @Column({ name: 'amount_points', type: 'int', unsigned: true })
+  @Column({ name: 'amount_points', type: 'int', unsigned: true, comment: '本次新增流水點數' })
   amountPoints: number;
 
-  @Column({ length: 40, default: 'admin' })
+  @Column({ length: 40, default: 'admin', comment: '流水來源，例如 admin 或 platform' })
   source: string;
 
-  @Column({ length: 255, nullable: true })
+  @Column({ length: 255, nullable: true, comment: '異動原因或備註' })
   reason?: string;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({ name: 'created_at', comment: '異動建立時間' })
   createdAt: Date;
 }

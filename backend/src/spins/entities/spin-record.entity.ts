@@ -1,14 +1,14 @@
 import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
 import { Player } from '../../players/entities/player.entity';
 
-@Entity('spin_records')
+@Entity({ name: 'spin_records', comment: '真實抽獎紀錄，每位玩家每日每階段最多一筆' })
 @Unique(['playerId', 'businessDate', 'stageNumber'])
 export class SpinRecord {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn('uuid', { comment: '抽獎紀錄 UUID' })
   id: string;
 
   @Index()
-  @Column({ name: 'player_id' })
+  @Column({ name: 'player_id', comment: '關聯 players.id' })
   playerId: string;
 
   @ManyToOne(() => Player, { onDelete: 'CASCADE' })
@@ -16,24 +16,24 @@ export class SpinRecord {
   player: Player;
 
   @Index()
-  @Column({ name: 'business_date', length: 10 })
+  @Column({ name: 'business_date', length: 10, comment: '抽獎業務日期，Asia/Taipei YYYY-MM-DD' })
   businessDate: string;
 
-  @Column({ name: 'stage_number', type: 'tinyint', unsigned: true })
+  @Column({ name: 'stage_number', type: 'tinyint', unsigned: true, comment: '抽獎階段，1 到 5' })
   stageNumber: number;
 
-  @Column({ name: 'probability_table', length: 10, default: 'low' })
+  @Column({ name: 'probability_table', length: 10, default: 'low', comment: '本次命中的機率分流表，low 或 high' })
   probabilityTable: string;
 
-  @Column({ name: 'prize_config_id', nullable: true })
+  @Column({ name: 'prize_config_id', nullable: true, comment: '獎項設定識別，JSON 設定來源時可為空' })
   prizeConfigId?: number;
 
-  @Column({ name: 'prize_name', length: 120 })
+  @Column({ name: 'prize_name', length: 120, comment: '抽中的獎項名稱快照' })
   prizeName: string;
 
-  @Column({ name: 'amount_points', type: 'int', unsigned: true, default: 0 })
+  @Column({ name: 'amount_points', type: 'int', unsigned: true, default: 0, comment: '本次送出的獎金點數，0 可代表未中獎' })
   amountPoints: number;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({ name: 'created_at', comment: '抽獎建立時間' })
   createdAt: Date;
 }
