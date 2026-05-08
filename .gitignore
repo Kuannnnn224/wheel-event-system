@@ -1,0 +1,16 @@
+node_modules/
+dist/
+coverage/
+.env
+.DS_Store
+*.log
+
+backend/node_modules/
+backend/dist/
+backend/coverage/
+backend/.env
+
+frontend/node_modules/
+frontend/dist/
+frontend/coverage/
+frontend/.env
