@@ -3,9 +3,11 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomBytes } from 'crypto';
 import { Repository } from 'typeorm';
+import { resolveBusinessDate } from '../common/business-date';
 import { unixTimestampSeconds } from '../common/unix-timestamp';
 import { Player } from '../players/entities/player.entity';
 import { PlayersService } from '../players/players.service';
+import { ProbabilityService } from '../probability/probability.service';
 import { DemoSession } from './entities/demo-session.entity';
 
 @Injectable()
@@ -15,6 +17,7 @@ export class DemoTokenService {
     private readonly demoSessionRepository: Repository<DemoSession>,
     private readonly configService: ConfigService,
     private readonly playersService: PlayersService,
+    private readonly probabilityService: ProbabilityService,
   ) {}
 
   async createSession(externalId: string) {
@@ -44,6 +47,27 @@ export class DemoTokenService {
   }
 
   async validateToken(token: string): Promise<Player> {
+    return (await this.findValidSession(token)).player;
+  }
+
+  async getSessionState(token: string, date?: string) {
+    const session = await this.findValidSession(token);
+    const businessDate = resolveBusinessDate(date);
+    const [progress, stages] = await Promise.all([
+      this.playersService.getDailyProgress(session.playerId, businessDate),
+      this.probabilityService.getStages(),
+    ]);
+
+    return {
+      player: session.player,
+      expiresAt: session.expiresAt,
+      businessDate,
+      progress,
+      stages,
+    };
+  }
+
+  private async findValidSession(token: string) {
     const session = await this.demoSessionRepository.findOne({
       where: { token },
       relations: { player: true },
@@ -57,6 +81,6 @@ export class DemoTokenService {
       throw new UnauthorizedException('Demo session expired.');
     }
 
-    return session.player;
+    return session;
   }
 }
