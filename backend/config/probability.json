@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "stages": [
+    {
+      "stageNumber": 1,
+      "turnoverThresholdPoints": 1000,
+      "enabled": true,
+      "lowTableWeight": 80,
+      "highTableWeight": 20,
+      "prizes": [
+        { "rewardCode": "A", "name": "A Prize", "amountPoints": 0, "lowWeight": 500, "highWeight": 120, "enabled": true, "sortOrder": 1 },
+        { "rewardCode": "B", "name": "B Prize", "amountPoints": 100, "lowWeight": 280, "highWeight": 220, "enabled": true, "sortOrder": 2 },
+        { "rewardCode": "C", "name": "C Prize", "amountPoints": 300, "lowWeight": 150, "highWeight": 280, "enabled": true, "sortOrder": 3 },
+        { "rewardCode": "D", "name": "D Prize", "amountPoints": 700, "lowWeight": 60, "highWeight": 250, "enabled": true, "sortOrder": 4 },
+        { "rewardCode": "E", "name": "E Prize", "amountPoints": 1500, "lowWeight": 10, "highWeight": 130, "enabled": true, "sortOrder": 5 }
+      ]
+    },
+    {
+      "stageNumber": 2,
+      "turnoverThresholdPoints": 3000,
+      "enabled": true,
+      "lowTableWeight": 80,
+      "highTableWeight": 20,
+      "prizes": [
+        { "rewardCode": "A", "name": "A Prize", "amountPoints": 0, "lowWeight": 500, "highWeight": 120, "enabled": true, "sortOrder": 1 },
+        { "rewardCode": "B", "name": "B Prize", "amountPoints": 200, "lowWeight": 280, "highWeight": 220, "enabled": true, "sortOrder": 2 },
+        { "rewardCode": "C", "name": "C Prize", "amountPoints": 600, "lowWeight": 150, "highWeight": 280, "enabled": true, "sortOrder": 3 },
+        { "rewardCode": "D", "name": "D Prize", "amountPoints": 1400, "lowWeight": 60, "highWeight": 250, "enabled": true, "sortOrder": 4 },
+        { "rewardCode": "E", "name": "E Prize", "amountPoints": 3000, "lowWeight": 10, "highWeight": 130, "enabled": true, "sortOrder": 5 }
+      ]
+    },
+    {
+      "stageNumber": 3,
+      "turnoverThresholdPoints": 6000,
+      "enabled": true,
+      "lowTableWeight": 80,
+      "highTableWeight": 20,
+      "prizes": [
+        { "rewardCode": "A", "name": "A Prize", "amountPoints": 0, "lowWeight": 500, "highWeight": 120, "enabled": true, "sortOrder": 1 },
+        { "rewardCode": "B", "name": "B Prize", "amountPoints": 300, "lowWeight": 280, "highWeight": 220, "enabled": true, "sortOrder": 2 },
+        { "rewardCode": "C", "name": "C Prize", "amountPoints": 900, "lowWeight": 150, "highWeight": 280, "enabled": true, "sortOrder": 3 },
+        { "rewardCode": "D", "name": "D Prize", "amountPoints": 2100, "lowWeight": 60, "highWeight": 250, "enabled": true, "sortOrder": 4 },
+        { "rewardCode": "E", "name": "E Prize", "amountPoints": 4500, "lowWeight": 10, "highWeight": 130, "enabled": true, "sortOrder": 5 }
+      ]
+    },
+    {
+      "stageNumber": 4,
+      "turnoverThresholdPoints": 10000,
+      "enabled": true,
+      "lowTableWeight": 80,
+      "highTableWeight": 20,
+      "prizes": [
+        { "rewardCode": "A", "name": "A Prize", "amountPoints": 0, "lowWeight": 500, "highWeight": 120, "enabled": true, "sortOrder": 1 },
+        { "rewardCode": "B", "name": "B Prize", "amountPoints": 400, "lowWeight": 280, "highWeight": 220, "enabled": true, "sortOrder": 2 },
+        { "rewardCode": "C", "name": "C Prize", "amountPoints": 1200, "lowWeight": 150, "highWeight": 280, "enabled": true, "sortOrder": 3 },
+        { "rewardCode": "D", "name": "D Prize", "amountPoints": 2800, "lowWeight": 60, "highWeight": 250, "enabled": true, "sortOrder": 4 },
+        { "rewardCode": "E", "name": "E Prize", "amountPoints": 6000, "lowWeight": 10, "highWeight": 130, "enabled": true, "sortOrder": 5 }
+      ]
+    },
+    {
+      "stageNumber": 5,
+      "turnoverThresholdPoints": 15000,
+      "enabled": true,
+      "lowTableWeight": 80,
+      "highTableWeight": 20,
+      "prizes": [
+        { "rewardCode": "A", "name": "A Prize", "amountPoints": 0, "lowWeight": 500, "highWeight": 120, "enabled": true, "sortOrder": 1 },
+        { "rewardCode": "B", "name": "B Prize", "amountPoints": 500, "lowWeight": 280, "highWeight": 220, "enabled": true, "sortOrder": 2 },
+        { "rewardCode": "C", "name": "C Prize", "amountPoints": 1500, "lowWeight": 150, "highWeight": 280, "enabled": true, "sortOrder": 3 },
+        { "rewardCode": "D", "name": "D Prize", "amountPoints": 3500, "lowWeight": 60, "highWeight": 250, "enabled": true, "sortOrder": 4 },
+        { "rewardCode": "E", "name": "E Prize", "amountPoints": 7500, "lowWeight": 10, "highWeight": 130, "enabled": true, "sortOrder": 5 }
+      ]
+    }
+  ]
+}

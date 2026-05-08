@@ -18,7 +18,9 @@ Keep root-level files limited to project docs, environment examples, Docker setu
 - Real spins must be sequential: stage 1 before stage 2, and so on.
 - If a player reaches the max turnover threshold in one adjustment, all five stages unlock, but play order still applies.
 - Amounts and turnover are integer points.
-- Prize configs live in MySQL and are shared by real spins and simulations.
+- Probability configs live in `backend/config/probability.json`, not MySQL.
+- Probability JSON is read on demand so PM/parser updates can hot-load without a backend restart.
+- Future XLSX parser work should output the same JSON shape rather than changing runtime draw logic.
 - Bulk simulations are one-off in-memory jobs and must not write real player spin records.
 
 ## Backend Boundaries
@@ -28,7 +30,7 @@ NestJS modules are split by business ownership:
 - `auth`: admin login and JWT concerns.
 - `players`: player lookup and daily progress read model.
 - `turnover`: admin/platform turnover adjustments and progress updates.
-- `probability`: stage thresholds, prize configs, weighted draw logic.
+- `probability`: JSON probability config loading, stage thresholds, low/high table split, weighted draw logic.
 - `spins`: real spin and single-spin simulation orchestration.
 - `reports`: player and daily aggregate queries.
 - `simulations`: large async simulation jobs.
@@ -45,7 +47,7 @@ The admin console uses sidebar routes:
 - `/reports`: daily and player reports.
 - `/bulk-simulation`: async large simulation jobs with polling.
 - `/demo`: create player/demo token/webview URL.
-- `/probability`: edit stage thresholds and prize weights.
+- `/probability`: view/edit the JSON-backed stage thresholds, low/high split, and A-E prize weights.
 
 Keep API calls in `frontend/src/api` when shared across pages. Page-specific request code may stay inside the page until it is reused.
 
@@ -95,6 +97,7 @@ docker compose up -d
 - Do not commit `.env`, `node_modules`, `dist`, or generated coverage.
 - First-version TypeORM uses `synchronize=true` for local development only. Use migrations before production use.
 - The webview HTML is intentionally not implemented yet. Preserve `POST /demo/session` and `POST /spins/real` as the future integration points.
+- Do not add DB tables for probability settings unless explicitly requested. Probability data belongs in JSON generated from XLSX.
 
 ## Commit Discipline
 

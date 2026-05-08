@@ -7,8 +7,10 @@ export interface Player {
 
 export interface PrizeConfig {
   id?: number;
+  rewardCode: string;
   name: string;
-  weight: number;
+  lowWeight: number;
+  highWeight: number;
   amountPoints: number;
   enabled: boolean;
   sortOrder: number;
@@ -18,6 +20,8 @@ export interface StageConfig {
   id?: number;
   stageNumber: number;
   turnoverThresholdPoints: number;
+  lowTableWeight: number;
+  highTableWeight: number;
   enabled: boolean;
   prizes: PrizeConfig[];
 }
@@ -27,6 +31,7 @@ export interface SpinRecord {
   playerId: string;
   businessDate: string;
   stageNumber: number;
+  probabilityTable: 'low' | 'high';
   prizeName: string;
   amountPoints: number;
   createdAt: string;
@@ -51,6 +56,8 @@ export interface SimulationJob {
   progressPercent: number;
   totalAmountPoints: number;
   prizeResults: Array<{
+    probabilityTable: 'low' | 'high';
+    rewardCode: string;
     name: string;
     amountPoints: number;
     count: number;

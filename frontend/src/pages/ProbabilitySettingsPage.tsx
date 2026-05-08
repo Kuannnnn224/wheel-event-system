@@ -1,4 +1,4 @@
-import { Alert, Button, Form, Input, InputNumber, Space, Switch, Table, Typography } from 'antd';
+import { Alert, Button, Form, Input, InputNumber, Space, Switch, Table, Tag, Typography } from 'antd';
 import { useEffect, useState } from 'react';
 import { fetchStages, saveStages } from '../api/client';
 import type { PrizeConfig, StageConfig } from '../api/types';
@@ -39,38 +39,16 @@ export default function ProbabilitySettingsPage() {
     );
   }
 
-  function patchPrize(index: number, patch: Partial<PrizeConfig>) {
+  function patchPrize(rewardCode: string, patch: Partial<PrizeConfig>) {
     setStages((previous) =>
       previous.map((stage) => {
         if (stage.stageNumber !== selectedStage) {
           return stage;
         }
 
-        const prizes = stage.prizes.map((prize, prizeIndex) => (prizeIndex === index ? { ...prize, ...patch } : prize));
+        const prizes = stage.prizes.map((prize) => (prize.rewardCode === rewardCode ? { ...prize, ...patch } : prize));
         return { ...stage, prizes };
       }),
-    );
-  }
-
-  function addPrize() {
-    setStages((previous) =>
-      previous.map((stage) =>
-        stage.stageNumber === selectedStage
-          ? {
-              ...stage,
-              prizes: [
-                ...stage.prizes,
-                {
-                  name: 'New prize',
-                  weight: 1,
-                  amountPoints: 0,
-                  enabled: true,
-                  sortOrder: stage.prizes.length + 1,
-                },
-              ],
-            }
-          : stage,
-      ),
     );
   }
 
@@ -118,55 +96,80 @@ export default function ProbabilitySettingsPage() {
                 onChange={(value) => patchStage(currentStage.stageNumber, { turnoverThresholdPoints: Number(value ?? 0) })}
               />
             </Form.Item>
+            <Form.Item label="Low 表分流權重">
+              <InputNumber
+                min={0}
+                precision={0}
+                value={currentStage.lowTableWeight}
+                onChange={(value) => patchStage(currentStage.stageNumber, { lowTableWeight: Number(value ?? 0) })}
+              />
+            </Form.Item>
+            <Form.Item label="High 表分流權重">
+              <InputNumber
+                min={0}
+                precision={0}
+                value={currentStage.highTableWeight}
+                onChange={(value) => patchStage(currentStage.stageNumber, { highTableWeight: Number(value ?? 0) })}
+              />
+            </Form.Item>
             <Form.Item label="啟用">
               <Switch
                 checked={currentStage.enabled}
                 onChange={(enabled) => patchStage(currentStage.stageNumber, { enabled })}
               />
             </Form.Item>
-            <Form.Item>
-              <Button onClick={addPrize}>新增獎項</Button>
-            </Form.Item>
           </Form>
           <Table<PrizeConfig>
             rowKey={(_, index) => `${selectedStage}-${index}`}
-            dataSource={currentStage.prizes}
+            dataSource={[...currentStage.prizes].sort((a, b) => a.sortOrder - b.sortOrder)}
             pagination={false}
             columns={[
               {
-                title: '獎項',
-                dataIndex: 'name',
-                render: (value: string, _row, index) => <Input value={value} onChange={(event) => patchPrize(index, { name: event.target.value })} />,
+                title: '代碼',
+                dataIndex: 'rewardCode',
+                render: (value: string) => <Tag>{value}</Tag>,
               },
               {
-                title: '權重',
-                dataIndex: 'weight',
-                render: (value: number, _row, index) => (
-                  <InputNumber min={0} precision={0} value={value} onChange={(next) => patchPrize(index, { weight: Number(next ?? 0) })} />
+                title: '獎項',
+                dataIndex: 'name',
+                render: (value: string, row) => <Input value={value} onChange={(event) => patchPrize(row.rewardCode, { name: event.target.value })} />,
+              },
+              {
+                title: 'Low 權重',
+                dataIndex: 'lowWeight',
+                render: (value: number, row) => (
+                  <InputNumber min={0} precision={0} value={value} onChange={(next) => patchPrize(row.rewardCode, { lowWeight: Number(next ?? 0) })} />
+                ),
+              },
+              {
+                title: 'High 權重',
+                dataIndex: 'highWeight',
+                render: (value: number, row) => (
+                  <InputNumber min={0} precision={0} value={value} onChange={(next) => patchPrize(row.rewardCode, { highWeight: Number(next ?? 0) })} />
                 ),
               },
               {
                 title: '點數',
                 dataIndex: 'amountPoints',
-                render: (value: number, _row, index) => (
+                render: (value: number, row) => (
                   <InputNumber
                     min={0}
                     precision={0}
                     value={value}
-                    onChange={(next) => patchPrize(index, { amountPoints: Number(next ?? 0) })}
+                    onChange={(next) => patchPrize(row.rewardCode, { amountPoints: Number(next ?? 0) })}
                   />
                 ),
               },
               {
                 title: '啟用',
                 dataIndex: 'enabled',
-                render: (value: boolean, _row, index) => <Switch checked={value} onChange={(enabled) => patchPrize(index, { enabled })} />,
+                render: (value: boolean, row) => <Switch checked={value} onChange={(enabled) => patchPrize(row.rewardCode, { enabled })} />,
               },
               {
                 title: '排序',
                 dataIndex: 'sortOrder',
-                render: (value: number, _row, index) => (
-                  <InputNumber min={0} precision={0} value={value} onChange={(next) => patchPrize(index, { sortOrder: Number(next ?? 0) })} />
+                render: (value: number, row) => (
+                  <InputNumber min={0} precision={0} value={value} onChange={(next) => patchPrize(row.rewardCode, { sortOrder: Number(next ?? 0) })} />
                 ),
               },
             ]}

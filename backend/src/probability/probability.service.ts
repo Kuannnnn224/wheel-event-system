@@ -1,169 +1,220 @@
 import { BadRequestException, Injectable, OnModuleInit } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
+import { mkdir, readFile, writeFile } from 'fs/promises';
+import { dirname, isAbsolute, resolve } from 'path';
 import { StageThreshold } from '../domain/stage-progress';
-import { pickWeightedPrize } from './probability-picker';
+import { pickProbabilityTable, pickWeightedItem } from './probability-picker';
+import {
+  DrawPrizeResult,
+  ProbabilityConfigFile,
+  ProbabilityPrizeConfig,
+  ProbabilityStageConfig,
+  StageDrawConfig,
+} from './probability-config.types';
 import { UpdateStagesDto } from './dto/update-stages.dto';
-import { PrizeConfig } from './entities/prize-config.entity';
-import { StageConfig } from './entities/stage-config.entity';
 
-const DEFAULT_THRESHOLDS = [1000, 3000, 6000, 10000, 15000];
+const REWARD_CODES = ['A', 'B', 'C', 'D', 'E'];
+const DEFAULT_CONFIG: ProbabilityConfigFile = {
+  version: 1,
+  stages: [1, 2, 3, 4, 5].map((stageNumber) => ({
+    stageNumber,
+    turnoverThresholdPoints: [1000, 3000, 6000, 10000, 15000][stageNumber - 1],
+    enabled: true,
+    lowTableWeight: 80,
+    highTableWeight: 20,
+    prizes: [
+      {
+        rewardCode: 'A',
+        name: 'A Prize',
+        amountPoints: 0,
+        lowWeight: 500,
+        highWeight: 120,
+        enabled: true,
+        sortOrder: 1,
+      },
+      {
+        rewardCode: 'B',
+        name: 'B Prize',
+        amountPoints: stageNumber * 100,
+        lowWeight: 280,
+        highWeight: 220,
+        enabled: true,
+        sortOrder: 2,
+      },
+      {
+        rewardCode: 'C',
+        name: 'C Prize',
+        amountPoints: stageNumber * 300,
+        lowWeight: 150,
+        highWeight: 280,
+        enabled: true,
+        sortOrder: 3,
+      },
+      {
+        rewardCode: 'D',
+        name: 'D Prize',
+        amountPoints: stageNumber * 700,
+        lowWeight: 60,
+        highWeight: 250,
+        enabled: true,
+        sortOrder: 4,
+      },
+      {
+        rewardCode: 'E',
+        name: 'E Prize',
+        amountPoints: stageNumber * 1500,
+        lowWeight: 10,
+        highWeight: 130,
+        enabled: true,
+        sortOrder: 5,
+      },
+    ],
+  })),
+};
 
 @Injectable()
 export class ProbabilityService implements OnModuleInit {
-  constructor(
-    @InjectRepository(StageConfig)
-    private readonly stageRepository: Repository<StageConfig>,
-    @InjectRepository(PrizeConfig)
-    private readonly prizeRepository: Repository<PrizeConfig>,
-    private readonly dataSource: DataSource,
-  ) {}
+  private readonly configPath: string;
 
-  async onModuleInit() {
-    await this.ensureDefaultConfigs();
+  constructor(private readonly configService: ConfigService) {
+    const configuredPath = this.configService.get<string>('PROBABILITY_CONFIG_PATH', 'config/probability.json');
+    this.configPath = isAbsolute(configuredPath) ? configuredPath : resolve(process.cwd(), configuredPath);
   }
 
-  async getStages() {
-    const stages = await this.stageRepository.find({
-      relations: { prizes: true },
-      order: {
-        stageNumber: 'ASC',
-        prizes: {
-          sortOrder: 'ASC',
-          id: 'ASC',
-        },
-      },
-    });
+  async onModuleInit() {
+    await this.ensureConfigFile();
+  }
 
-    return stages.map((stage) => ({
-      ...stage,
-      prizes: [...(stage.prizes ?? [])].sort((a, b) => a.sortOrder - b.sortOrder || a.id - b.id),
-    }));
+  async getConfig(): Promise<ProbabilityConfigFile> {
+    await this.ensureConfigFile();
+    const raw = await readFile(this.configPath, 'utf-8');
+    const config = JSON.parse(raw) as ProbabilityConfigFile;
+    this.assertValidConfig(config);
+    return this.sortConfig(config);
+  }
+
+  async getStages(): Promise<ProbabilityStageConfig[]> {
+    return (await this.getConfig()).stages;
   }
 
   async getStageThresholds(): Promise<StageThreshold[]> {
-    return this.stageRepository.find({
-      select: ['stageNumber', 'turnoverThresholdPoints', 'enabled'],
-      order: { stageNumber: 'ASC' },
-    });
+    return (await this.getStages()).map((stage) => ({
+      stageNumber: stage.stageNumber,
+      turnoverThresholdPoints: stage.turnoverThresholdPoints,
+      enabled: stage.enabled,
+    }));
   }
 
-  async getPrizesForStage(stageNumber: number): Promise<PrizeConfig[]> {
-    return this.prizeRepository.find({
-      where: { stageNumber, enabled: true },
-      order: { sortOrder: 'ASC', id: 'ASC' },
-    });
+  async getPrizesForStage(stageNumber: number): Promise<ProbabilityPrizeConfig[]> {
+    return (await this.getDrawConfigForStage(stageNumber)).prizes.filter((prize) => prize.enabled);
   }
 
-  async drawPrize(stageNumber: number, rng = Math.random): Promise<PrizeConfig> {
-    const stage = await this.stageRepository.findOne({ where: { stageNumber, enabled: true } });
+  async getDrawConfigForStage(stageNumber: number): Promise<StageDrawConfig> {
+    const stage = (await this.getStages()).find((item) => item.stageNumber === stageNumber && item.enabled);
 
     if (!stage) {
       throw new BadRequestException(`Stage ${stageNumber} is not enabled.`);
     }
 
-    return pickWeightedPrize(await this.getPrizesForStage(stageNumber), rng);
+    return {
+      stage,
+      prizes: stage.prizes.filter((prize) => prize.enabled),
+    };
   }
 
-  async updateStages(dto: UpdateStagesDto) {
-    this.assertValidStagePayload(dto);
+  drawPrizeFromConfig(config: StageDrawConfig, rng = Math.random): DrawPrizeResult {
+    const table = pickProbabilityTable(config.stage.lowTableWeight, config.stage.highTableWeight, rng);
+    const prize = pickWeightedItem(
+      config.prizes,
+      (item) => (table === 'low' ? item.lowWeight : item.highWeight),
+      rng,
+    );
 
-    await this.dataSource.transaction(async (manager) => {
-      const stageRepository = manager.getRepository(StageConfig);
-      const prizeRepository = manager.getRepository(PrizeConfig);
+    return { table, prize };
+  }
 
-      for (const stageInput of dto.stages) {
-        const stage =
-          (await stageRepository.findOne({ where: { stageNumber: stageInput.stageNumber } })) ??
-          stageRepository.create({ stageNumber: stageInput.stageNumber });
+  async drawPrize(stageNumber: number, rng = Math.random): Promise<DrawPrizeResult> {
+    return this.drawPrizeFromConfig(await this.getDrawConfigForStage(stageNumber), rng);
+  }
 
-        stage.turnoverThresholdPoints = stageInput.turnoverThresholdPoints;
-        stage.enabled = stageInput.enabled;
-        await stageRepository.save(stage);
-
-        await prizeRepository.delete({ stageNumber: stageInput.stageNumber });
-        await prizeRepository.save(
-          stageInput.prizes.map((prize, index) =>
-            prizeRepository.create({
-              stageNumber: stageInput.stageNumber,
-              stageConfig: stage,
-              name: prize.name,
-              weight: prize.weight,
-              amountPoints: prize.amountPoints,
-              enabled: prize.enabled,
-              sortOrder: prize.sortOrder ?? index,
-            }),
-          ),
-        );
-      }
-    });
-
+  async updateStages(dto: UpdateStagesDto): Promise<ProbabilityStageConfig[]> {
+    const config: ProbabilityConfigFile = {
+      version: 1,
+      stages: dto.stages,
+    };
+    this.assertValidConfig(config);
+    await this.writeConfig(this.sortConfig(config));
     return this.getStages();
   }
 
-  private assertValidStagePayload(dto: UpdateStagesDto) {
-    const stageNumbers = dto.stages.map((stage) => stage.stageNumber);
-
-    if (new Set(stageNumbers).size !== stageNumbers.length) {
-      throw new BadRequestException('Duplicate stage numbers are not allowed.');
-    }
-
-    for (const stage of dto.stages) {
-      if (stage.enabled && !stage.prizes.some((prize) => prize.enabled && prize.weight > 0)) {
-        throw new BadRequestException(`Stage ${stage.stageNumber} needs at least one enabled weighted prize.`);
-      }
+  private async ensureConfigFile() {
+    try {
+      await readFile(this.configPath, 'utf-8');
+    } catch {
+      await this.writeConfig(DEFAULT_CONFIG);
     }
   }
 
-  private async ensureDefaultConfigs() {
-    const existingCount = await this.stageRepository.count();
+  private async writeConfig(config: ProbabilityConfigFile) {
+    await mkdir(dirname(this.configPath), { recursive: true });
+    await writeFile(this.configPath, `${JSON.stringify(config, null, 2)}\n`, 'utf-8');
+  }
 
-    if (existingCount > 0) {
-      return;
+  private sortConfig(config: ProbabilityConfigFile): ProbabilityConfigFile {
+    return {
+      ...config,
+      stages: [...config.stages]
+        .sort((a, b) => a.stageNumber - b.stageNumber)
+        .map((stage) => ({
+          ...stage,
+          prizes: [...stage.prizes].sort((a, b) => a.sortOrder - b.sortOrder || a.rewardCode.localeCompare(b.rewardCode)),
+        })),
+    };
+  }
+
+  private assertValidConfig(config: ProbabilityConfigFile) {
+    if (!Array.isArray(config.stages) || config.stages.length !== 5) {
+      throw new BadRequestException('Probability config must define exactly five stages.');
     }
 
-    await this.dataSource.transaction(async (manager) => {
-      const stageRepository = manager.getRepository(StageConfig);
-      const prizeRepository = manager.getRepository(PrizeConfig);
+    const stageNumbers = config.stages.map((stage) => stage.stageNumber);
 
-      for (let index = 0; index < 5; index += 1) {
-        const stageNumber = index + 1;
-        const stage = await stageRepository.save({
-          stageNumber,
-          turnoverThresholdPoints: DEFAULT_THRESHOLDS[index],
-          enabled: true,
-        });
+    if (new Set(stageNumbers).size !== 5 || ![1, 2, 3, 4, 5].every((stageNumber) => stageNumbers.includes(stageNumber))) {
+      throw new BadRequestException('Probability config stages must be numbered 1 through 5.');
+    }
 
-        await prizeRepository.save([
-          {
-            stageNumber,
-            stageConfig: stage,
-            name: 'No prize',
-            weight: 700,
-            amountPoints: 0,
-            enabled: true,
-            sortOrder: 1,
-          },
-          {
-            stageNumber,
-            stageConfig: stage,
-            name: `Stage ${stageNumber} small prize`,
-            weight: 250,
-            amountPoints: stageNumber * 100,
-            enabled: true,
-            sortOrder: 2,
-          },
-          {
-            stageNumber,
-            stageConfig: stage,
-            name: `Stage ${stageNumber} big prize`,
-            weight: 50,
-            amountPoints: stageNumber * 500,
-            enabled: true,
-            sortOrder: 3,
-          },
-        ]);
+    for (const stage of config.stages) {
+      this.assertValidStage(stage);
+    }
+  }
+
+  private assertValidStage(stage: ProbabilityStageConfig) {
+    if (stage.turnoverThresholdPoints < 0 || stage.lowTableWeight < 0 || stage.highTableWeight < 0) {
+      throw new BadRequestException(`Stage ${stage.stageNumber} contains negative numeric values.`);
+    }
+
+    const rewardCodes = stage.prizes.map((prize) => prize.rewardCode);
+
+    if (rewardCodes.length !== 5 || new Set(rewardCodes).size !== 5 || !REWARD_CODES.every((code) => rewardCodes.includes(code))) {
+      throw new BadRequestException(`Stage ${stage.stageNumber} must define rewards A through E.`);
+    }
+
+    if (stage.enabled && stage.lowTableWeight + stage.highTableWeight <= 0) {
+      throw new BadRequestException(`Stage ${stage.stageNumber} needs low/high table split weight.`);
+    }
+
+    if (stage.enabled && !stage.prizes.some((prize) => prize.enabled && prize.lowWeight > 0)) {
+      throw new BadRequestException(`Stage ${stage.stageNumber} low table needs at least one enabled weighted prize.`);
+    }
+
+    if (stage.enabled && !stage.prizes.some((prize) => prize.enabled && prize.highWeight > 0)) {
+      throw new BadRequestException(`Stage ${stage.stageNumber} high table needs at least one enabled weighted prize.`);
+    }
+
+    for (const prize of stage.prizes) {
+      if (prize.amountPoints < 0 || prize.lowWeight < 0 || prize.highWeight < 0) {
+        throw new BadRequestException(`Stage ${stage.stageNumber} reward ${prize.rewardCode} contains negative numeric values.`);
       }
-    });
+    }
   }
 }

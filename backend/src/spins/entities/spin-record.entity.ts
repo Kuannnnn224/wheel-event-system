@@ -22,6 +22,9 @@ export class SpinRecord {
   @Column({ name: 'stage_number', type: 'tinyint', unsigned: true })
   stageNumber: number;
 
+  @Column({ name: 'probability_table', length: 10, default: 'low' })
+  probabilityTable: string;
+
   @Column({ name: 'prize_config_id', nullable: true })
   prizeConfigId?: number;
 

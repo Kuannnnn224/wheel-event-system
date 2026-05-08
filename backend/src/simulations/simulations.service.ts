@@ -1,12 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { pickWeightedPrize } from '../probability/probability-picker';
 import { ProbabilityService } from '../probability/probability.service';
 import { CreateSimulationDto } from './dto/create-simulation.dto';
 
 export type SimulationStatus = 'queued' | 'running' | 'completed' | 'failed';
 
 export interface SimulationPrizeResult {
+  probabilityTable: 'low' | 'high';
+  rewardCode: string;
   name: string;
   amountPoints: number;
   count: number;
@@ -74,7 +75,7 @@ export class SimulationsService {
       job.status = 'running';
       job.startedAt = new Date().toISOString();
       const startedMs = Date.now();
-      const prizes = await this.probabilityService.getPrizesForStage(job.stageNumber);
+      const drawConfig = await this.probabilityService.getDrawConfigForStage(job.stageNumber);
       const resultMap = new Map<string, SimulationPrizeResult>();
       const chunkSize = 50_000;
 
@@ -82,18 +83,20 @@ export class SimulationsService {
         const limit = Math.min(chunkSize, job.requestedCount - job.completedCount);
 
         for (let index = 0; index < limit; index += 1) {
-          const prize = pickWeightedPrize(prizes);
-          const key = `${prize.name}:${prize.amountPoints}`;
+          const draw = this.probabilityService.drawPrizeFromConfig(drawConfig);
+          const key = `${draw.table}:${draw.prize.rewardCode}:${draw.prize.name}:${draw.prize.amountPoints}`;
           const current = resultMap.get(key) ?? {
-            name: prize.name,
-            amountPoints: prize.amountPoints,
+            probabilityTable: draw.table,
+            rewardCode: draw.prize.rewardCode,
+            name: draw.prize.name,
+            amountPoints: draw.prize.amountPoints,
             count: 0,
             totalAmountPoints: 0,
           };
           current.count += 1;
-          current.totalAmountPoints += prize.amountPoints;
+          current.totalAmountPoints += draw.prize.amountPoints;
           resultMap.set(key, current);
-          job.totalAmountPoints += prize.amountPoints;
+          job.totalAmountPoints += draw.prize.amountPoints;
         }
 
         job.completedCount += limit;

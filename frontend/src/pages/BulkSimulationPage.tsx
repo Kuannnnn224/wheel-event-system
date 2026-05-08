@@ -89,9 +89,11 @@ export default function BulkSimulationPage() {
             {job.error ? <Alert type="error" showIcon message={job.error} style={{ marginTop: 12 }} /> : null}
           </section>
           <Table
-            rowKey={(row) => `${row.name}-${row.amountPoints}`}
+            rowKey={(row) => `${row.probabilityTable}-${row.rewardCode}-${row.name}-${row.amountPoints}`}
             dataSource={job.prizeResults}
             columns={[
+              { title: '表', dataIndex: 'probabilityTable', render: (value: string) => value.toUpperCase() },
+              { title: '代碼', dataIndex: 'rewardCode' },
               { title: '獎項', dataIndex: 'name' },
               { title: '單次點數', dataIndex: 'amountPoints', render: (value: number) => value.toLocaleString() },
               { title: '命中次數', dataIndex: 'count', render: (value: number) => value.toLocaleString() },

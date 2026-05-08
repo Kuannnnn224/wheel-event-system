@@ -6,8 +6,10 @@ import type { StageConfig } from '../api/types';
 
 interface SimulateResult {
   stageNumber: number;
+  probabilityTable: 'low' | 'high';
   prize: {
-    id: number;
+    id?: number;
+    rewardCode: string;
     name: string;
     amountPoints: number;
   };
@@ -16,6 +18,8 @@ interface SimulateResult {
 const fallbackStages: StageConfig[] = Array.from({ length: 5 }, (_, index) => ({
   stageNumber: index + 1,
   turnoverThresholdPoints: 0,
+  lowTableWeight: 80,
+  highTableWeight: 20,
   enabled: true,
   prizes: [],
 }));
@@ -41,9 +45,15 @@ export default function SpinSimulatorPage() {
     () => [...(selectedStageConfig?.prizes ?? [])].sort((a, b) => a.sortOrder - b.sortOrder),
     [selectedStageConfig?.prizes],
   );
-  const totalEnabledWeight = selectedPrizes
-    .filter((prize) => prize.enabled && prize.weight > 0)
-    .reduce((sum, prize) => sum + prize.weight, 0);
+  const lowEnabledWeight = selectedPrizes
+    .filter((prize) => prize.enabled && prize.lowWeight > 0)
+    .reduce((sum, prize) => sum + prize.lowWeight, 0);
+  const highEnabledWeight = selectedPrizes
+    .filter((prize) => prize.enabled && prize.highWeight > 0)
+    .reduce((sum, prize) => sum + prize.highWeight, 0);
+  const tableSplitTotal = (selectedStageConfig?.lowTableWeight ?? 0) + (selectedStageConfig?.highTableWeight ?? 0);
+  const lowSplitRate = tableSplitTotal > 0 ? (((selectedStageConfig?.lowTableWeight ?? 0) / tableSplitTotal) * 100).toFixed(2) : '0.00';
+  const highSplitRate = tableSplitTotal > 0 ? (((selectedStageConfig?.highTableWeight ?? 0) / tableSplitTotal) * 100).toFixed(2) : '0.00';
 
   return (
     <div className="page-stack">
@@ -80,7 +90,10 @@ export default function SpinSimulatorPage() {
               <Typography.Text type="secondary">該階段獎勵配置</Typography.Text>
               <Typography.Title level={4}>Stage {selectedStage} 獎項與權重</Typography.Title>
             </div>
-            <Tag color="blue">總啟用權重 {totalEnabledWeight.toLocaleString()}</Tag>
+            <Space wrap>
+              <Tag color="blue">Low 表 {selectedStageConfig?.lowTableWeight ?? 0} / {lowSplitRate}%</Tag>
+              <Tag color="cyan">High 表 {selectedStageConfig?.highTableWeight ?? 0} / {highSplitRate}%</Tag>
+            </Space>
           </div>
           {stagesQuery.isLoading ? (
             <div className="reward-empty">載入獎項配置中...</div>
@@ -89,26 +102,38 @@ export default function SpinSimulatorPage() {
               <table className="reward-table">
                 <thead>
                   <tr>
+                    <th>代碼</th>
                     <th>獎項</th>
                     <th>獎勵點數</th>
-                    <th>權重</th>
-                    <th>預估命中率</th>
+                    <th>Low 權重</th>
+                    <th>Low 命中率</th>
+                    <th>High 權重</th>
+                    <th>High 命中率</th>
                     <th>狀態</th>
                   </tr>
                 </thead>
                 <tbody>
                   {selectedPrizes.map((prize) => {
-                    const hitRate =
-                      prize.enabled && prize.weight > 0 && totalEnabledWeight > 0
-                        ? `${((prize.weight / totalEnabledWeight) * 100).toFixed(2)}%`
+                    const lowHitRate =
+                      prize.enabled && prize.lowWeight > 0 && lowEnabledWeight > 0
+                        ? `${((prize.lowWeight / lowEnabledWeight) * 100).toFixed(2)}%`
+                        : '0.00%';
+                    const highHitRate =
+                      prize.enabled && prize.highWeight > 0 && highEnabledWeight > 0
+                        ? `${((prize.highWeight / highEnabledWeight) * 100).toFixed(2)}%`
                         : '0.00%';
 
                     return (
-                      <tr key={`${selectedStage}-${prize.name}-${prize.sortOrder}`}>
+                      <tr key={`${selectedStage}-${prize.rewardCode}-${prize.sortOrder}`}>
+                        <td>
+                          <Tag>{prize.rewardCode}</Tag>
+                        </td>
                         <td>{prize.name}</td>
                         <td>{prize.amountPoints.toLocaleString()}</td>
-                        <td>{prize.weight.toLocaleString()}</td>
-                        <td>{hitRate}</td>
+                        <td>{prize.lowWeight.toLocaleString()}</td>
+                        <td>{lowHitRate}</td>
+                        <td>{prize.highWeight.toLocaleString()}</td>
+                        <td>{highHitRate}</td>
                         <td>
                           <Tag color={prize.enabled ? 'success' : 'default'}>{prize.enabled ? '啟用' : '停用'}</Tag>
                         </td>
@@ -143,7 +168,9 @@ export default function SpinSimulatorPage() {
       {mutation.data ? (
         <section className="result-panel">
           <Space direction="vertical">
-            <Typography.Text>Stage {mutation.data.stageNumber}</Typography.Text>
+            <Typography.Text>
+              Stage {mutation.data.stageNumber} / {mutation.data.probabilityTable.toUpperCase()} 表 / {mutation.data.prize.rewardCode} 獎
+            </Typography.Text>
             <Typography.Title level={4}>{mutation.data.prize.name}</Typography.Title>
             <Typography.Text strong>{mutation.data.prize.amountPoints.toLocaleString()} 點</Typography.Text>
           </Space>

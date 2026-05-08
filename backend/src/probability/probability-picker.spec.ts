@@ -1,4 +1,4 @@
-import { pickWeightedPrize } from './probability-picker';
+import { pickProbabilityTable, pickWeightedItem, pickWeightedPrize } from './probability-picker';
 
 describe('pickWeightedPrize', () => {
   const prizes = [
@@ -18,5 +18,23 @@ describe('pickWeightedPrize', () => {
 
   it('throws when no enabled positive weights exist', () => {
     expect(() => pickWeightedPrize([{ name: 'None', weight: 0, amountPoints: 0 }])).toThrow();
+  });
+
+  it('picks low or high table by split weight', () => {
+    expect(pickProbabilityTable(80, 20, () => 0.1)).toBe('low');
+    expect(pickProbabilityTable(80, 20, () => 0.9)).toBe('high');
+  });
+
+  it('supports generic weighted item selection', () => {
+    expect(
+      pickWeightedItem(
+        [
+          { code: 'A', lowWeight: 10 },
+          { code: 'B', lowWeight: 90 },
+        ],
+        (item) => item.lowWeight,
+        () => 0.5,
+      ).code,
+    ).toBe('B');
   });
 });

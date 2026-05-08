@@ -54,5 +54,7 @@ Change these in `backend/.env` before using real data.
 - Turnover unlocks five stages by configured cumulative thresholds.
 - Real spins must be played in order from stage 1 to stage 5.
 - Each player can play each stage at most once per business date.
-- Prize configuration lives in MySQL and is shared by real spins and simulations.
+- Probability configuration lives in `backend/config/probability.json`, not MySQL.
+- The JSON file is read on demand, so parser/manual changes can be hot-loaded without restarting the backend.
+- The future XLSX parser should output the same JSON shape.
 - Bulk simulations are in-memory one-off jobs and do not write real player records.

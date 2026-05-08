@@ -127,6 +127,7 @@ export default function PlayerLookupPage() {
             pagination={false}
             columns={[
               { title: '階段', dataIndex: 'stageNumber' },
+              { title: '表', dataIndex: 'probabilityTable', render: (value: string) => value?.toUpperCase?.() ?? '-' },
               { title: '獎項', dataIndex: 'prizeName' },
               { title: '點數', dataIndex: 'amountPoints', render: (value: number) => value.toLocaleString() },
               { title: '時間', dataIndex: 'createdAt', render: (value: string) => dayjs(value).format('YYYY-MM-DD HH:mm:ss') },

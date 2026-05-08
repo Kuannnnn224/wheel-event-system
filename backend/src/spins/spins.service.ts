@@ -22,13 +22,14 @@ export class SpinsService {
   ) {}
 
   async simulate(dto: SimulateSpinDto) {
-    const prize = await this.probabilityService.drawPrize(dto.stageNumber);
+    const draw = await this.probabilityService.drawPrize(dto.stageNumber);
     return {
       stageNumber: dto.stageNumber,
+      probabilityTable: draw.table,
       prize: {
-        id: prize.id,
-        name: prize.name,
-        amountPoints: prize.amountPoints,
+        rewardCode: draw.prize.rewardCode,
+        name: draw.prize.name,
+        amountPoints: draw.prize.amountPoints,
       },
     };
   }
@@ -51,16 +52,16 @@ export class SpinsService {
       throw new BadRequestException(rule.reason);
     }
 
-    const prize = await this.probabilityService.drawPrize(dto.stageNumber);
+    const draw = await this.probabilityService.drawPrize(dto.stageNumber);
     const spin = await this.spinRecordRepository.save(
       this.spinRecordRepository.create({
         playerId: player.id,
         player,
         businessDate,
         stageNumber: dto.stageNumber,
-        prizeConfigId: prize.id,
-        prizeName: prize.name,
-        amountPoints: prize.amountPoints,
+        probabilityTable: draw.table,
+        prizeName: draw.prize.name,
+        amountPoints: draw.prize.amountPoints,
       }),
     );
 
@@ -68,10 +69,11 @@ export class SpinsService {
       player,
       businessDate,
       spin,
+      probabilityTable: draw.table,
       prize: {
-        id: prize.id,
-        name: prize.name,
-        amountPoints: prize.amountPoints,
+        rewardCode: draw.prize.rewardCode,
+        name: draw.prize.name,
+        amountPoints: draw.prize.amountPoints,
       },
     };
   }
