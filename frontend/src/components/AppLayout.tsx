@@ -129,7 +129,7 @@ export default function AppLayout({ children, onLogout }: AppLayoutProps) {
           </div>
         </div>
       </Sider>
-      <Layout>
+      <Layout className="app-main">
         <Header className="app-header">
           <Space size={12}>
             <span className="header-clock">
