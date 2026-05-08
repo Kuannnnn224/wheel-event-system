@@ -1,5 +1,4 @@
-import { Body, Controller, Get, Put } from '@nestjs/common';
-import { UpdateStagesDto } from './dto/update-stages.dto';
+import { Controller, ForbiddenException, Get, Put } from '@nestjs/common';
 import { ProbabilityService } from './probability.service';
 
 @Controller('probability')
@@ -12,7 +11,7 @@ export class ProbabilityController {
   }
 
   @Put('stages')
-  updateStages(@Body() dto: UpdateStagesDto) {
-    return this.probabilityService.updateStages(dto);
+  updateStages() {
+    throw new ForbiddenException('機率設定只能透過機率表 ZIP 匯入，不允許手動更新。');
   }
 }

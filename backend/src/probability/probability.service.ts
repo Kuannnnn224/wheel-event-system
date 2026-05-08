@@ -11,7 +11,6 @@ import {
   ProbabilityStageConfig,
   StageDrawConfig,
 } from './probability-config.types';
-import { UpdateStagesDto } from './dto/update-stages.dto';
 
 const REWARD_CODES = ['A', 'B', 'C', 'D', 'E'];
 const DEFAULT_CONFIG: ProbabilityConfigFile = {
@@ -140,13 +139,6 @@ export class ProbabilityService implements OnModuleInit {
 
   async drawPrizeForTable(stageNumber: number, table: ProbabilityTable, rng = Math.random): Promise<DrawPrizeResult> {
     return this.drawPrizeFromConfigForTable(await this.getDrawConfigForStage(stageNumber), table, rng);
-  }
-
-  async updateStages(dto: UpdateStagesDto): Promise<ProbabilityStageConfig[]> {
-    return this.replaceConfig({
-      version: 1,
-      stages: dto.stages,
-    });
   }
 
   async replaceConfig(config: ProbabilityConfigFile): Promise<ProbabilityStageConfig[]> {

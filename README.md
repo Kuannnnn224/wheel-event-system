@@ -59,6 +59,7 @@ Change these in `backend/.env` before using real data.
 - Probability configuration lives in `backend/config/probability.json`, not MySQL.
 - The JSON file is read on demand, so parser/manual changes can be hot-loaded without restarting the backend.
 - XLSX imports output the same JSON shape used by the runtime probability service.
+- The admin probability page is read-only; probability updates must go through ZIP upload/parser apply, not direct form editing.
 - Bulk simulations are in-memory one-off jobs and do not write real player records.
 
 ## Probability XLSX Import

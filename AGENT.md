@@ -55,7 +55,7 @@ The admin console uses sidebar routes:
 - `/reports`: daily and player reports.
 - `/bulk-simulation`: async large simulation jobs with polling.
 - `/demo`: create player/demo token/webview URL.
-- `/probability`: view/edit the JSON-backed stage thresholds, low/high/prize weights, and A-E prize settings.
+- `/probability`: read-only view of JSON-backed stage thresholds, low/high/prize weights, and A-E prize settings; updates must go through ZIP upload/parser apply.
 
 Keep API calls in `frontend/src/api` when shared across pages. Page-specific request code may stay inside the page until it is reused.
 
@@ -109,6 +109,7 @@ docker compose up -d
 - The webview HTML is intentionally not implemented yet. Preserve `POST /demo/session` and `POST /spins/real` as the future integration points.
 - Do not add DB tables for probability settings unless explicitly requested. Probability data belongs in JSON generated from XLSX.
 - Keep parser/upload/download code in `probability-imports`; `probability` should stay focused on runtime probability config and draw behavior.
+- Do not expose manual probability edit/save flows. The admin probability page is read-only and backend writes should come from the import parser apply path.
 - Import PM probability sheets with `npm run probability:import -- <xlsx-source-dir>`; the command writes `backend/config/probability.json` unless an output path is provided.
 
 ## Commit Discipline

@@ -23,7 +23,7 @@ const DIFF_FIELD_LABELS: Record<string, string> = {
   amountPoints: '獎勵點數',
   lowWeight: 'Low 權重',
   highWeight: 'High 權重',
-  prizeWeight: 'Prize 權重',
+  prizeWeight: '指定派獎權重',
   sortOrder: '排序',
 };
 

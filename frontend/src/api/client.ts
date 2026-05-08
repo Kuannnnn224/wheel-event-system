@@ -71,11 +71,6 @@ export async function fetchStages() {
   return data;
 }
 
-export async function saveStages(stages: StageConfig[]) {
-  const { data } = await api.put<StageConfig[]>('/probability/stages', { stages });
-  return data;
-}
-
 export async function previewProbabilityImport(file: File) {
   const formData = new FormData();
   formData.append('file', file);

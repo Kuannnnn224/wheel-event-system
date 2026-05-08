@@ -1,4 +1,4 @@
-import { DownOutlined, DownloadOutlined, ReloadOutlined, RightOutlined, SaveOutlined, UploadOutlined } from '@ant-design/icons';
+import { DownOutlined, DownloadOutlined, ReloadOutlined, RightOutlined, UploadOutlined } from '@ant-design/icons';
 import { Alert, Button, Form, Input, InputNumber, Space, Table, Tag, Typography, Upload, message } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -7,16 +7,8 @@ import {
   fetchProbabilityImports,
   fetchStages,
   previewProbabilityImport,
-  saveStages,
 } from '../api/client';
 import type { PrizeConfig, ProbabilityImportDiffItem, ProbabilityImportPreview, ProbabilityImportUpload, StageConfig } from '../api/types';
-
-function cloneStages(stages: StageConfig[]) {
-  return stages.map((stage) => ({
-    ...stage,
-    prizes: stage.prizes.map((prize) => ({ ...prize })),
-  }));
-}
 
 function formatWeightRate(weight: number, total: number) {
   return total > 0 ? `${((weight / total) * 100).toFixed(2)}%` : '0.00%';
@@ -68,37 +60,6 @@ export default function ProbabilitySettingsPage() {
       setImports(await fetchProbabilityImports());
     } catch {
       setImports([]);
-    }
-  }
-
-  function patchStage(stageNumber: number, patch: Partial<StageConfig>) {
-    setStages((previous) =>
-      previous.map((stage) => (stage.stageNumber === stageNumber ? { ...stage, ...patch } : stage)),
-    );
-  }
-
-  function patchPrize(rewardCode: string, patch: Partial<PrizeConfig>) {
-    setStages((previous) =>
-      previous.map((stage) => {
-        if (stage.stageNumber !== selectedStage) {
-          return stage;
-        }
-
-        const prizes = stage.prizes.map((prize) => (prize.rewardCode === rewardCode ? { ...prize, ...patch } : prize));
-        return { ...stage, prizes };
-      }),
-    );
-  }
-
-  async function submit() {
-    setLoading(true);
-    setError(undefined);
-    try {
-      setStages(await saveStages(cloneStages(stages)));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '儲存機率設定失敗');
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -166,20 +127,18 @@ export default function ProbabilitySettingsPage() {
     <div className="page-stack">
       {messageContextHolder}
       <Typography.Title level={3}>機率 / 獎項設定</Typography.Title>
+      <Alert type="info" showIcon message="機率設定為唯讀，只能透過上傳機率表 ZIP 預覽並套用更新。" />
       {error ? <Alert type="error" showIcon message={error} /> : null}
       {downloadNotice ? <Alert type="success" showIcon message={downloadNotice} /> : null}
       <section className="probability-control-panel">
         <div className="probability-control-header">
           <div>
-            <Typography.Text type="secondary">目前編輯</Typography.Text>
+            <Typography.Text type="secondary">目前檢視</Typography.Text>
             <Typography.Title level={4}>Stage {selectedStage}</Typography.Title>
           </div>
           <Space wrap>
             <Button icon={<ReloadOutlined />} onClick={load} loading={loading}>
               重新載入
-            </Button>
-            <Button type="primary" icon={<SaveOutlined />} onClick={submit} loading={loading}>
-              儲存全部
             </Button>
             <Upload
               accept=".zip"
@@ -344,7 +303,7 @@ export default function ProbabilitySettingsPage() {
                 min={0}
                 precision={0}
                 value={currentStage.turnoverThresholdPoints}
-                onChange={(value) => patchStage(currentStage.stageNumber, { turnoverThresholdPoints: Number(value ?? 0) })}
+                readOnly
               />
             </Form.Item>
             <Form.Item label="Low 表分流權重">
@@ -352,7 +311,7 @@ export default function ProbabilitySettingsPage() {
                 min={0}
                 precision={0}
                 value={currentStage.lowTableWeight}
-                onChange={(value) => patchStage(currentStage.stageNumber, { lowTableWeight: Number(value ?? 0) })}
+                readOnly
               />
             </Form.Item>
             <Form.Item label="High 表分流權重">
@@ -360,7 +319,7 @@ export default function ProbabilitySettingsPage() {
                 min={0}
                 precision={0}
                 value={currentStage.highTableWeight}
-                onChange={(value) => patchStage(currentStage.stageNumber, { highTableWeight: Number(value ?? 0) })}
+                readOnly
               />
             </Form.Item>
           </Form>
@@ -393,14 +352,14 @@ export default function ProbabilitySettingsPage() {
               {
                 title: '獎項',
                 dataIndex: 'name',
-                render: (value: string, row) => <Input value={value} onChange={(event) => patchPrize(row.rewardCode, { name: event.target.value })} />,
+                render: (value: string) => <Input value={value} readOnly />,
               },
               {
                 title: 'Low 權重',
                 dataIndex: 'lowWeight',
                 width: 132,
                 render: (value: number, row) => (
-                  <InputNumber min={0} precision={0} value={value} onChange={(next) => patchPrize(row.rewardCode, { lowWeight: Number(next ?? 0) })} />
+                  <InputNumber min={0} precision={0} value={value} readOnly />
                 ),
               },
               {
@@ -408,7 +367,7 @@ export default function ProbabilitySettingsPage() {
                 dataIndex: 'highWeight',
                 width: 132,
                 render: (value: number, row) => (
-                  <InputNumber min={0} precision={0} value={value} onChange={(next) => patchPrize(row.rewardCode, { highWeight: Number(next ?? 0) })} />
+                  <InputNumber min={0} precision={0} value={value} readOnly />
                 ),
               },
               {
@@ -420,7 +379,7 @@ export default function ProbabilitySettingsPage() {
                     min={0}
                     precision={0}
                     value={value ?? 0}
-                    onChange={(next) => patchPrize(row.rewardCode, { prizeWeight: Number(next ?? 0) })}
+                    readOnly
                   />
                 ),
               },
@@ -433,7 +392,7 @@ export default function ProbabilitySettingsPage() {
                     min={0}
                     precision={0}
                     value={value}
-                    onChange={(next) => patchPrize(row.rewardCode, { amountPoints: Number(next ?? 0) })}
+                    readOnly
                   />
                 ),
               },
@@ -442,7 +401,7 @@ export default function ProbabilitySettingsPage() {
                 dataIndex: 'sortOrder',
                 width: 118,
                 render: (value: number, row) => (
-                  <InputNumber min={0} precision={0} value={value} onChange={(next) => patchPrize(row.rewardCode, { sortOrder: Number(next ?? 0) })} />
+                  <InputNumber min={0} precision={0} value={value} readOnly />
                 ),
               },
             ]}
