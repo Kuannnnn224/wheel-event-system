@@ -1,53 +1,19 @@
 import { BadRequestException, Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { randomUUID } from 'crypto';
-import { mkdir, readdir, readFile, writeFile } from 'fs/promises';
-import { basename, dirname, isAbsolute, join, resolve } from 'path';
+import { mkdir, readFile, writeFile } from 'fs/promises';
+import { dirname, isAbsolute, resolve } from 'path';
 import { StageThreshold } from '../domain/stage-progress';
 import { pickProbabilityTable, pickWeightedItem } from './probability-picker';
 import {
   DrawPrizeResult,
   ProbabilityConfigFile,
-  ProbabilityImportDiffItem,
-  ProbabilityImportPreview,
   ProbabilityPrizeConfig,
   ProbabilityStageConfig,
   StageDrawConfig,
 } from './probability-config.types';
-import { parseProbabilityXlsxZip } from './probability-xlsx.parser';
 import { UpdateStagesDto } from './dto/update-stages.dto';
 
 const REWARD_CODES = ['A', 'B', 'C', 'D', 'E'];
-const DIFF_FIELD_LABELS: Record<string, string> = {
-  turnoverThresholdPoints: '流水門檻',
-  lowTableWeight: 'Low 表分流權重',
-  highTableWeight: 'High 表分流權重',
-  name: '獎項名稱',
-  amountPoints: '獎勵點數',
-  lowWeight: 'Low 權重',
-  highWeight: 'High 權重',
-  sortOrder: '排序',
-};
-
-export interface ProbabilityImportUpload {
-  id: string;
-  originalFilename: string;
-  storedFilename: string;
-  fileSize: number;
-  uploadedAt: string;
-}
-
-export interface ProbabilityImportFile {
-  path: string;
-  metadata: ProbabilityImportUpload;
-}
-
-type ProbabilityZipFile = {
-  buffer: Buffer;
-  originalname: string;
-  size: number;
-};
-
 const DEFAULT_CONFIG: ProbabilityConfigFile = {
   version: 1,
   stages: [1, 2, 3, 4, 5].map((stageNumber) => ({
@@ -103,18 +69,10 @@ const DEFAULT_CONFIG: ProbabilityConfigFile = {
 @Injectable()
 export class ProbabilityService implements OnModuleInit {
   private readonly configPath: string;
-  private readonly importStoragePath: string;
 
   constructor(private readonly configService: ConfigService) {
     const configuredPath = this.configService.get<string>('PROBABILITY_CONFIG_PATH', 'config/probability.json');
     this.configPath = isAbsolute(configuredPath) ? configuredPath : resolve(process.cwd(), configuredPath);
-    const configuredImportStoragePath = this.configService.get<string>(
-      'PROBABILITY_IMPORT_STORAGE_PATH',
-      '../storage/probability-imports',
-    );
-    this.importStoragePath = isAbsolute(configuredImportStoragePath)
-      ? configuredImportStoragePath
-      : resolve(process.cwd(), configuredImportStoragePath);
   }
 
   async onModuleInit() {
@@ -125,8 +83,7 @@ export class ProbabilityService implements OnModuleInit {
     await this.ensureConfigFile();
     const raw = await readFile(this.configPath, 'utf-8');
     const config = JSON.parse(raw) as ProbabilityConfigFile;
-    this.assertValidConfig(config);
-    return this.sortConfig(config);
+    return this.normalizeConfig(config);
   }
 
   async getStages(): Promise<ProbabilityStageConfig[]> {
@@ -173,73 +130,23 @@ export class ProbabilityService implements OnModuleInit {
   }
 
   async updateStages(dto: UpdateStagesDto): Promise<ProbabilityStageConfig[]> {
-    const config: ProbabilityConfigFile = {
+    return this.replaceConfig({
       version: 1,
       stages: dto.stages,
-    };
-    this.assertValidConfig(config);
-    await this.writeConfig(this.sortConfig(config));
-    return this.getStages();
-  }
-
-  async previewImportZip(file: ProbabilityZipFile): Promise<ProbabilityImportPreview & { upload: ProbabilityImportUpload }> {
-    const proposedConfig = this.parseImportZip(file);
-    const upload = await this.storeImportZip(file);
-    const currentConfig = await this.getConfig();
-
-    return {
-      filename: file.originalname,
-      upload,
-      diff: this.buildConfigDiff(currentConfig, proposedConfig),
-      proposedConfig,
-    };
-  }
-
-  async applyImportUpload(uploadId: string): Promise<{
-    upload: ProbabilityImportUpload;
-    diff: ProbabilityImportDiffItem[];
-    stages: ProbabilityStageConfig[];
-  }> {
-    const importFile = await this.getImportFile(uploadId);
-    const buffer = await readFile(importFile.path);
-    const proposedConfig = this.parseImportZip({
-      buffer,
-      originalname: importFile.metadata.originalFilename,
-      size: importFile.metadata.fileSize,
     });
-    const currentConfig = await this.getConfig();
-    const sortedConfig = this.sortConfig(proposedConfig);
+  }
+
+  async replaceConfig(config: ProbabilityConfigFile): Promise<ProbabilityStageConfig[]> {
+    const sortedConfig = this.normalizeConfig(config);
 
     await this.writeConfig(sortedConfig);
 
-    return {
-      upload: importFile.metadata,
-      diff: this.buildConfigDiff(currentConfig, sortedConfig),
-      stages: sortedConfig.stages,
-    };
+    return sortedConfig.stages;
   }
 
-  async listImportUploads(): Promise<ProbabilityImportUpload[]> {
-    await mkdir(this.importStoragePath, { recursive: true });
-    const files = await readdir(this.importStoragePath);
-    const metadataFiles = files.filter((file) => file.endsWith('.json'));
-    const uploads = await Promise.all(
-      metadataFiles.map(async (file) => JSON.parse(await readFile(join(this.importStoragePath, file), 'utf-8')) as ProbabilityImportUpload),
-    );
-
-    return uploads.sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt));
-  }
-
-  async getImportFile(uploadId: string): Promise<ProbabilityImportFile> {
-    if (!uploadId || !/^[a-zA-Z0-9-]+$/.test(uploadId)) {
-      throw new BadRequestException('Invalid probability import id.');
-    }
-
-    const metadataPath = join(this.importStoragePath, `${uploadId}.json`);
-    const metadata = JSON.parse(await readFile(metadataPath, 'utf-8')) as ProbabilityImportUpload;
-    const path = join(this.importStoragePath, metadata.storedFilename);
-
-    return { path, metadata };
+  normalizeConfig(config: ProbabilityConfigFile): ProbabilityConfigFile {
+    this.assertValidConfig(config);
+    return this.sortConfig(config);
   }
 
   private async ensureConfigFile() {
@@ -253,117 +160,6 @@ export class ProbabilityService implements OnModuleInit {
   private async writeConfig(config: ProbabilityConfigFile) {
     await mkdir(dirname(this.configPath), { recursive: true });
     await writeFile(this.configPath, `${JSON.stringify(config, null, 2)}\n`, 'utf-8');
-  }
-
-  private parseImportZip(file: ProbabilityZipFile): ProbabilityConfigFile {
-    if (!file?.buffer?.length) {
-      throw new BadRequestException('Probability zip file is required.');
-    }
-
-    if (!file.originalname.toLowerCase().endsWith('.zip')) {
-      throw new BadRequestException('Probability import file must be a .zip archive.');
-    }
-
-    try {
-      const config = this.sortConfig(parseProbabilityXlsxZip(file.buffer));
-      this.assertValidConfig(config);
-      return config;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown parser error.';
-      throw new BadRequestException(`Failed to parse probability zip: ${message}`);
-    }
-  }
-
-  private async storeImportZip(file: ProbabilityZipFile): Promise<ProbabilityImportUpload> {
-    await mkdir(this.importStoragePath, { recursive: true });
-    const id = `${new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14)}-${randomUUID().slice(0, 8)}`;
-    const storedFilename = `${id}.zip`;
-    const metadata: ProbabilityImportUpload = {
-      id,
-      originalFilename: basename(file.originalname),
-      storedFilename,
-      fileSize: file.size,
-      uploadedAt: new Date().toISOString(),
-    };
-
-    await writeFile(join(this.importStoragePath, storedFilename), file.buffer);
-    await writeFile(join(this.importStoragePath, `${id}.json`), `${JSON.stringify(metadata, null, 2)}\n`, 'utf-8');
-
-    return metadata;
-  }
-
-  private buildConfigDiff(current: ProbabilityConfigFile, proposed: ProbabilityConfigFile): ProbabilityImportDiffItem[] {
-    const diff: ProbabilityImportDiffItem[] = [];
-    const currentStages = new Map(current.stages.map((stage) => [stage.stageNumber, stage]));
-
-    for (const proposedStage of proposed.stages) {
-      const currentStage = currentStages.get(proposedStage.stageNumber);
-      if (!currentStage) {
-        diff.push({
-          key: `stage-${proposedStage.stageNumber}-new`,
-          stageNumber: proposedStage.stageNumber,
-          field: 'stage',
-          label: `Stage ${proposedStage.stageNumber} 新增`,
-          before: null,
-          after: '新增階段',
-        });
-        continue;
-      }
-
-      this.pushDiff(diff, proposedStage.stageNumber, undefined, 'turnoverThresholdPoints', currentStage.turnoverThresholdPoints, proposedStage.turnoverThresholdPoints);
-      this.pushDiff(diff, proposedStage.stageNumber, undefined, 'lowTableWeight', currentStage.lowTableWeight, proposedStage.lowTableWeight);
-      this.pushDiff(diff, proposedStage.stageNumber, undefined, 'highTableWeight', currentStage.highTableWeight, proposedStage.highTableWeight);
-
-      const currentPrizes = new Map(currentStage.prizes.map((prize) => [prize.rewardCode, prize]));
-      for (const proposedPrize of proposedStage.prizes) {
-        const currentPrize = currentPrizes.get(proposedPrize.rewardCode);
-        if (!currentPrize) {
-          diff.push({
-            key: `stage-${proposedStage.stageNumber}-prize-${proposedPrize.rewardCode}-new`,
-            stageNumber: proposedStage.stageNumber,
-            rewardCode: proposedPrize.rewardCode,
-            field: 'prize',
-            label: `Stage ${proposedStage.stageNumber} / ${proposedPrize.rewardCode} 獎 新增`,
-            before: null,
-            after: proposedPrize.name,
-          });
-          continue;
-        }
-
-        this.pushDiff(diff, proposedStage.stageNumber, proposedPrize.rewardCode, 'name', currentPrize.name, proposedPrize.name);
-        this.pushDiff(diff, proposedStage.stageNumber, proposedPrize.rewardCode, 'amountPoints', currentPrize.amountPoints, proposedPrize.amountPoints);
-        this.pushDiff(diff, proposedStage.stageNumber, proposedPrize.rewardCode, 'lowWeight', currentPrize.lowWeight, proposedPrize.lowWeight);
-        this.pushDiff(diff, proposedStage.stageNumber, proposedPrize.rewardCode, 'highWeight', currentPrize.highWeight, proposedPrize.highWeight);
-        this.pushDiff(diff, proposedStage.stageNumber, proposedPrize.rewardCode, 'sortOrder', currentPrize.sortOrder, proposedPrize.sortOrder);
-      }
-    }
-
-    return diff;
-  }
-
-  private pushDiff(
-    diff: ProbabilityImportDiffItem[],
-    stageNumber: number,
-    rewardCode: string | undefined,
-    field: string,
-    before: string | number,
-    after: string | number,
-  ) {
-    if (before === after) {
-      return;
-    }
-
-    diff.push({
-      key: `stage-${stageNumber}-${rewardCode ?? 'stage'}-${field}`,
-      stageNumber,
-      rewardCode,
-      field,
-      label: rewardCode
-        ? `Stage ${stageNumber} / ${rewardCode} 獎 / ${DIFF_FIELD_LABELS[field] ?? field}`
-        : `Stage ${stageNumber} / ${DIFF_FIELD_LABELS[field] ?? field}`,
-      before,
-      after,
-    });
   }
 
   private sortConfig(config: ProbabilityConfigFile): ProbabilityConfigFile {

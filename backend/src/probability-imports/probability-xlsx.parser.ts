@@ -2,7 +2,7 @@ import { existsSync } from 'fs';
 import { join } from 'path';
 import AdmZip = require('adm-zip');
 import * as XLSX from 'xlsx';
-import { ProbabilityConfigFile, ProbabilityPrizeConfig } from './probability-config.types';
+import { ProbabilityConfigFile, ProbabilityPrizeConfig } from '../probability/probability-config.types';
 
 type CellValue = string | number | boolean | Date | null | undefined;
 type SheetRows = CellValue[][];

@@ -34,6 +34,7 @@ NestJS modules are split by business ownership:
 - `players`: player lookup and daily progress read model.
 - `turnover`: admin/platform turnover adjustments and progress updates.
 - `probability`: JSON probability config loading, stage thresholds, low/high table split, weighted draw logic.
+- `probability-imports`: PM zip upload/download, XLSX parsing, import diff preview, and applying imported JSON configs.
 - `spins`: real spin and single-spin simulation orchestration.
 - `reports`: player and daily aggregate queries.
 - `simulations`: large async simulation jobs.
@@ -103,6 +104,7 @@ docker compose up -d
 - First-version TypeORM uses `synchronize=true` for local development only. Use migrations before production use.
 - The webview HTML is intentionally not implemented yet. Preserve `POST /demo/session` and `POST /spins/real` as the future integration points.
 - Do not add DB tables for probability settings unless explicitly requested. Probability data belongs in JSON generated from XLSX.
+- Keep parser/upload/download code in `probability-imports`; `probability` should stay focused on runtime probability config and draw behavior.
 - Import PM probability sheets with `npm run probability:import -- <xlsx-source-dir>`; the command writes `backend/config/probability.json` unless an output path is provided.
 
 ## Commit Discipline

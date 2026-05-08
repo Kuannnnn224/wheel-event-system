@@ -57,7 +57,7 @@ Change these in `backend/.env` before using real data.
 - Each player can play each stage at most once per business date.
 - Probability configuration lives in `backend/config/probability.json`, not MySQL.
 - The JSON file is read on demand, so parser/manual changes can be hot-loaded without restarting the backend.
-- The future XLSX parser should output the same JSON shape.
+- XLSX imports output the same JSON shape used by the runtime probability service.
 - Bulk simulations are in-memory one-off jobs and do not write real player records.
 
 ## Probability XLSX Import

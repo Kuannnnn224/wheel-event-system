@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { DemoTokenModule } from './demo-token/demo-token.module';
 import { PlayersModule } from './players/players.module';
+import { ProbabilityImportsModule } from './probability-imports/probability-imports.module';
 import { ProbabilityModule } from './probability/probability.module';
 import { ReportsModule } from './reports/reports.module';
 import { SimulationsModule } from './simulations/simulations.module';
@@ -32,6 +33,7 @@ import { TurnoverModule } from './turnover/turnover.module';
     AuthModule,
     PlayersModule,
     ProbabilityModule,
+    ProbabilityImportsModule,
     TurnoverModule,
     SpinsModule,
     ReportsModule,

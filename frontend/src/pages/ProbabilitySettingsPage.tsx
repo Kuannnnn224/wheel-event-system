@@ -1,5 +1,5 @@
 import { DownloadOutlined, UploadOutlined } from '@ant-design/icons';
-import { Alert, Button, Form, Input, InputNumber, Space, Table, Tag, Typography, Upload } from 'antd';
+import { Alert, Button, Form, Input, InputNumber, Space, Table, Tag, Typography, Upload, message } from 'antd';
 import { useEffect, useState } from 'react';
 import {
   applyProbabilityImport,
@@ -27,6 +27,9 @@ export default function ProbabilitySettingsPage() {
   const [loading, setLoading] = useState(false);
   const [importLoading, setImportLoading] = useState(false);
   const [applyLoading, setApplyLoading] = useState(false);
+  const [downloadingImportId, setDownloadingImportId] = useState<string>();
+  const [downloadNotice, setDownloadNotice] = useState<string>();
+  const [messageApi, messageContextHolder] = message.useMessage();
   const currentStage = stages.find((stage) => stage.stageNumber === selectedStage);
 
   useEffect(() => {
@@ -128,10 +131,29 @@ export default function ProbabilitySettingsPage() {
     return typeof value === 'number' ? value.toLocaleString() : value;
   }
 
+  async function downloadImport(upload: ProbabilityImportUpload) {
+    setDownloadingImportId(upload.id);
+    setError(undefined);
+    setDownloadNotice(undefined);
+    try {
+      await downloadProbabilityImport(upload);
+      setDownloadNotice(`已開始下載 ${upload.originalFilename}`);
+      messageApi.success(`已開始下載 ${upload.originalFilename}`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '下載 ZIP 失敗';
+      setError(message);
+      messageApi.error(message);
+    } finally {
+      setDownloadingImportId(undefined);
+    }
+  }
+
   return (
     <div className="page-stack">
+      {messageContextHolder}
       <Typography.Title level={3}>機率 / 獎項設定</Typography.Title>
       {error ? <Alert type="error" showIcon message={error} /> : null}
+      {downloadNotice ? <Alert type="success" showIcon message={downloadNotice} /> : null}
       <Space wrap>
         {stages.map((stage) => (
           <Button
@@ -170,7 +192,11 @@ export default function ProbabilitySettingsPage() {
               <Typography.Title level={4}>{importPreview.upload.originalFilename}</Typography.Title>
             </div>
             <Space wrap>
-              <Button icon={<DownloadOutlined />} onClick={() => void downloadProbabilityImport(importPreview.upload)}>
+              <Button
+                icon={<DownloadOutlined />}
+                loading={downloadingImportId === importPreview.upload.id}
+                onClick={() => void downloadImport(importPreview.upload)}
+              >
                 下載原始 ZIP
               </Button>
               <Button type="primary" onClick={applyImport} loading={applyLoading}>
@@ -233,7 +259,11 @@ export default function ProbabilitySettingsPage() {
               {
                 title: '',
                 render: (_, upload) => (
-                  <Button icon={<DownloadOutlined />} onClick={() => void downloadProbabilityImport(upload)}>
+                  <Button
+                    icon={<DownloadOutlined />}
+                    loading={downloadingImportId === upload.id}
+                    onClick={() => void downloadImport(upload)}
+                  >
                     下載
                   </Button>
                 ),

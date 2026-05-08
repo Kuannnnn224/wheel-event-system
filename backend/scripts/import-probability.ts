@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from 'fs';
 import { dirname, resolve } from 'path';
-import { parseProbabilityXlsxDirectory } from '../src/probability/probability-xlsx.parser';
+import { parseProbabilityXlsxDirectory } from '../src/probability-imports/probability-xlsx.parser';
 
 const sourceDirArg = process.argv[2];
 const outputArg = process.argv[3] ?? 'config/probability.json';

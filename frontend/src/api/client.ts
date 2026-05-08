@@ -66,15 +66,14 @@ export async function fetchProbabilityImports() {
 }
 
 export async function downloadProbabilityImport(upload: ProbabilityImportUpload) {
-  const { data } = await api.get<Blob>(`/probability/imports/${upload.id}/download`, { responseType: 'blob' });
-  const url = URL.createObjectURL(data);
+  const { data } = await api.post<{ downloadUrl: string }>(`/probability/imports/${upload.id}/download-token`);
+  const url = new URL(data.downloadUrl, api.defaults.baseURL).toString();
   const link = document.createElement('a');
   link.href = url;
   link.download = upload.originalFilename;
   document.body.appendChild(link);
   link.click();
   link.remove();
-  URL.revokeObjectURL(url);
 }
 
 export async function fetchPlayerByExternalId(externalId: string) {
