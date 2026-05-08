@@ -2,7 +2,7 @@ import { Alert, Button, DatePicker, Form, Input, Space, Table, Tabs, Typography 
 import dayjs, { Dayjs } from 'dayjs';
 import { useState } from 'react';
 import { api } from '../api/client';
-import type { DailyReport, SpinRecord } from '../api/types';
+import type { RangeReport, SpinRecord } from '../api/types';
 
 const { RangePicker } = DatePicker;
 
@@ -13,21 +13,24 @@ interface PlayerReport {
 }
 
 export default function ReportsPage() {
-  const [daily, setDaily] = useState<DailyReport>();
+  const [rangeReport, setRangeReport] = useState<RangeReport>();
   const [player, setPlayer] = useState<PlayerReport>();
   const [error, setError] = useState<string>();
   const [loading, setLoading] = useState(false);
 
-  async function loadDaily(values: { date: Dayjs }) {
+  async function loadRange(values: { range: [Dayjs, Dayjs] }) {
     setLoading(true);
     setError(undefined);
     try {
-      const { data } = await api.get<DailyReport>('/reports/daily', {
-        params: { date: values.date.format('YYYY-MM-DD') },
+      const { data } = await api.get<RangeReport>('/reports/range', {
+        params: {
+          startDate: values.range[0].format('YYYY-MM-DD'),
+          endDate: values.range[1].format('YYYY-MM-DD'),
+        },
       });
-      setDaily(data);
+      setRangeReport(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '日報查詢失敗');
+      setError(err instanceof Error ? err.message : '區間報表查詢失敗');
     } finally {
       setLoading(false);
     }
@@ -59,35 +62,38 @@ export default function ReportsPage() {
       <Tabs
         items={[
           {
-            key: 'daily',
-            label: '日報',
+            key: 'range',
+            label: '區間報表',
             children: (
               <Space direction="vertical" size={16} style={{ width: '100%' }}>
-                <Form layout="inline" initialValues={{ date: dayjs() }} onFinish={loadDaily}>
-                  <Form.Item label="日期" name="date" rules={[{ required: true }]}>
-                    <DatePicker />
+                <Form layout="inline" initialValues={{ range: [dayjs(), dayjs()] }} onFinish={loadRange}>
+                  <Form.Item label="區間" name="range" rules={[{ required: true }]}>
+                    <RangePicker />
                   </Form.Item>
                   <Button type="primary" htmlType="submit" loading={loading}>
                     查詢
                   </Button>
                 </Form>
-                {daily ? (
+                {rangeReport ? (
                   <>
+                    <Typography.Text type="secondary">
+                      {rangeReport.startDate} 至 {rangeReport.endDate}
+                    </Typography.Text>
                     <div className="metrics-grid">
                       <div className="metric">
                         <span className="metric-label">總 Spin</span>
-                        <span className="metric-value">{daily.totalSpins.toLocaleString()}</span>
+                        <span className="metric-value">{rangeReport.totalSpins.toLocaleString()}</span>
                       </div>
                       <div className="metric">
                         <span className="metric-label">玩家數</span>
-                        <span className="metric-value">{daily.uniquePlayers.toLocaleString()}</span>
+                        <span className="metric-value">{rangeReport.uniquePlayers.toLocaleString()}</span>
                       </div>
                       <div className="metric">
                         <span className="metric-label">送出點數</span>
-                        <span className="metric-value">{daily.totalAmountPoints.toLocaleString()}</span>
+                        <span className="metric-value">{rangeReport.totalAmountPoints.toLocaleString()}</span>
                       </div>
                     </div>
-                    <Table rowKey="stageNumber" dataSource={daily.byStage} pagination={false} columns={[
+                    <Table rowKey="stageNumber" dataSource={rangeReport.byStage} pagination={false} columns={[
                       { title: '階段', dataIndex: 'stageNumber' },
                       { title: 'Spin 數', dataIndex: 'spinCount', render: (value: number) => value.toLocaleString() },
                       { title: '送出點數', dataIndex: 'totalAmountPoints', render: (value: number) => value.toLocaleString() },

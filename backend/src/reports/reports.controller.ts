@@ -10,6 +10,11 @@ export class ReportsController {
     return this.reportsService.getDailyReport(date);
   }
 
+  @Get('range')
+  getRange(@Query('startDate') startDate: string, @Query('endDate') endDate: string) {
+    return this.reportsService.getRangeReport(startDate, endDate);
+  }
+
   @Get('player')
   getPlayer(@Query('externalId') externalId: string, @Query('startDate') startDate: string, @Query('endDate') endDate: string) {
     return this.reportsService.getPlayerReport(externalId, startDate, endDate);

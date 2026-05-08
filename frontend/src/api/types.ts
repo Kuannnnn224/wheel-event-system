@@ -81,6 +81,15 @@ export interface DailyReport {
   byStage: Array<{ stageNumber: number; spinCount: number; totalAmountPoints: number }>;
 }
 
+export interface RangeReport {
+  startDate: string;
+  endDate: string;
+  totalSpins: number;
+  uniquePlayers: number;
+  totalAmountPoints: number;
+  byStage: Array<{ stageNumber: number; spinCount: number; totalAmountPoints: number }>;
+}
+
 export interface SimulationJob {
   id: string;
   status: 'queued' | 'running' | 'completed' | 'failed';
