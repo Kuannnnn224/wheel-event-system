@@ -29,9 +29,8 @@ const primaryMenuItems = [
   { key: '/reports', icon: <BarChartOutlined />, label: '報表統計' },
   { key: '/bulk-simulation', icon: <ExperimentOutlined />, label: '多次模擬' },
   { key: '/probability', icon: <SettingOutlined />, label: '機率設定' },
+  { key: '/demo', icon: <ControlOutlined />, label: 'Demo 網站' },
 ];
-
-const footerMenuItems = [{ key: '/demo', icon: <ControlOutlined />, label: 'Demo 網站' }];
 
 function getTaipeiParts(date = new Date()) {
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -121,13 +120,6 @@ export default function AppLayout({ children, onLogout }: AppLayoutProps) {
           onClick={(item) => navigate(item.key)}
         />
         <div className="sidebar-footer">
-          <Menu
-            className="app-menu sidebar-footer-menu"
-            mode="inline"
-            selectedKeys={[location.pathname]}
-            items={footerMenuItems}
-            onClick={(item) => navigate(item.key)}
-          />
           <div className="sidebar-daily-card">
             <span className="sidebar-daily-label">今日送出</span>
             <strong>{dailyReportError ? '-' : `${(dailyReport?.totalAmountPoints ?? 0).toLocaleString()} 點`}</strong>
