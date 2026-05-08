@@ -383,6 +383,125 @@ body {
   margin-top: 4px;
 }
 
+.probability-control-panel,
+.probability-editor-panel,
+.prize-editor-panel {
+  padding: 18px;
+  background: #ffffff;
+  border: 1px solid #dde5ef;
+  border-radius: 8px;
+  box-shadow: 0 14px 34px rgba(31, 42, 68, 0.06);
+}
+
+.probability-control-header,
+.probability-section-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.probability-control-header h4,
+.probability-section-header h4 {
+  margin: 2px 0 0;
+}
+
+.probability-stage-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(132px, 1fr));
+  gap: 12px;
+}
+
+.probability-stage-card {
+  min-height: 120px;
+  padding: 14px;
+  border: 1px solid #d8e2ee;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #fbfdff 0%, #f7faff 100%);
+  color: #172033;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease,
+    background 160ms ease;
+}
+
+.probability-stage-card:hover {
+  border-color: #8fb8ff;
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.11);
+  transform: translateY(-1px);
+}
+
+.probability-stage-card.is-selected {
+  border-color: #2563eb;
+  background: #edf5ff;
+  box-shadow: 0 16px 34px rgba(37, 99, 235, 0.16);
+}
+
+.probability-stage-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.probability-stage-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #94a3b8;
+}
+
+.probability-stage-card.is-selected .probability-stage-dot {
+  background: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+.probability-stage-card-title {
+  color: #172033;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.probability-stage-card-meta,
+.probability-stage-split {
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.probability-stage-split {
+  padding-top: 8px;
+  border-top: 1px solid #e4ebf4;
+}
+
+.probability-setting-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.probability-setting-grid .ant-form-item {
+  margin-bottom: 0;
+}
+
+.probability-setting-grid .ant-input-number,
+.probability-prize-table .ant-input-number {
+  width: 100%;
+}
+
+.probability-prize-table .ant-table-wrapper,
+.prize-editor-panel .ant-table-wrapper {
+  box-shadow: none;
+}
+
 .import-preview-panel,
 .import-history-panel {
   padding: 16px;
@@ -644,6 +763,17 @@ body {
   }
 
   .count-option-grid {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+
+  .probability-control-header,
+  .probability-section-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .probability-stage-grid,
+  .probability-setting-grid {
     grid-template-columns: repeat(2, minmax(140px, 1fr));
   }
 }

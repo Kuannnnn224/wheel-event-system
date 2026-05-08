@@ -1,6 +1,6 @@
-import { DownOutlined, DownloadOutlined, RightOutlined, UploadOutlined } from '@ant-design/icons';
+import { DownOutlined, DownloadOutlined, ReloadOutlined, RightOutlined, SaveOutlined, UploadOutlined } from '@ant-design/icons';
 import { Alert, Button, Form, Input, InputNumber, Space, Table, Tag, Typography, Upload, message } from 'antd';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   applyProbabilityImport,
   downloadProbabilityImport,
@@ -18,6 +18,10 @@ function cloneStages(stages: StageConfig[]) {
   }));
 }
 
+function formatWeightRate(weight: number, total: number) {
+  return total > 0 ? `${((weight / total) * 100).toFixed(2)}%` : '0.00%';
+}
+
 export default function ProbabilitySettingsPage() {
   const [stages, setStages] = useState<StageConfig[]>([]);
   const [imports, setImports] = useState<ProbabilityImportUpload[]>([]);
@@ -32,6 +36,15 @@ export default function ProbabilitySettingsPage() {
   const [isImportHistoryOpen, setIsImportHistoryOpen] = useState(false);
   const [messageApi, messageContextHolder] = message.useMessage();
   const currentStage = stages.find((stage) => stage.stageNumber === selectedStage);
+  const currentPrizes = useMemo(
+    () => [...(currentStage?.prizes ?? [])].sort((a, b) => a.sortOrder - b.sortOrder),
+    [currentStage?.prizes],
+  );
+  const currentSplitTotal = (currentStage?.lowTableWeight ?? 0) + (currentStage?.highTableWeight ?? 0);
+  const lowSplitRate = formatWeightRate(currentStage?.lowTableWeight ?? 0, currentSplitTotal);
+  const highSplitRate = formatWeightRate(currentStage?.highTableWeight ?? 0, currentSplitTotal);
+  const lowPrizeWeightTotal = currentPrizes.reduce((sum, prize) => sum + prize.lowWeight, 0);
+  const highPrizeWeightTotal = currentPrizes.reduce((sum, prize) => sum + prize.highWeight, 0);
 
   useEffect(() => {
     void load();
@@ -155,36 +168,60 @@ export default function ProbabilitySettingsPage() {
       <Typography.Title level={3}>機率 / 獎項設定</Typography.Title>
       {error ? <Alert type="error" showIcon message={error} /> : null}
       {downloadNotice ? <Alert type="success" showIcon message={downloadNotice} /> : null}
-      <Space wrap>
-        {stages.map((stage) => (
-          <Button
-            key={stage.stageNumber}
-            type={stage.stageNumber === selectedStage ? 'primary' : 'default'}
-            onClick={() => setSelectedStage(stage.stageNumber)}
-          >
-            Stage {stage.stageNumber}
-          </Button>
-        ))}
-        <Button onClick={load} loading={loading}>
-          重新載入
-        </Button>
-        <Button type="primary" onClick={submit} loading={loading}>
-          儲存全部
-        </Button>
-        <Upload
-          accept=".zip"
-          maxCount={1}
-          showUploadList={false}
-          beforeUpload={(file) => {
-            void previewImport(file);
-            return false;
-          }}
-        >
-          <Button icon={<UploadOutlined />} loading={importLoading}>
-            上傳機率表 ZIP
-          </Button>
-        </Upload>
-      </Space>
+      <section className="probability-control-panel">
+        <div className="probability-control-header">
+          <div>
+            <Typography.Text type="secondary">目前編輯</Typography.Text>
+            <Typography.Title level={4}>Stage {selectedStage}</Typography.Title>
+          </div>
+          <Space wrap>
+            <Button icon={<ReloadOutlined />} onClick={load} loading={loading}>
+              重新載入
+            </Button>
+            <Button type="primary" icon={<SaveOutlined />} onClick={submit} loading={loading}>
+              儲存全部
+            </Button>
+            <Upload
+              accept=".zip"
+              maxCount={1}
+              showUploadList={false}
+              beforeUpload={(file) => {
+                void previewImport(file);
+                return false;
+              }}
+            >
+              <Button icon={<UploadOutlined />} loading={importLoading}>
+                上傳機率表 ZIP
+              </Button>
+            </Upload>
+          </Space>
+        </div>
+        <div className="probability-stage-grid">
+          {stages.map((stage) => {
+            const isSelected = stage.stageNumber === selectedStage;
+            const splitTotal = stage.lowTableWeight + stage.highTableWeight;
+
+            return (
+              <button
+                key={stage.stageNumber}
+                type="button"
+                className={`probability-stage-card ${isSelected ? 'is-selected' : ''}`}
+                onClick={() => setSelectedStage(stage.stageNumber)}
+              >
+                <span className="probability-stage-card-top">
+                  <span className="stage-badge">Stage {stage.stageNumber}</span>
+                  <span className="probability-stage-dot" />
+                </span>
+                <span className="probability-stage-card-title">第 {stage.stageNumber} 階段</span>
+                <span className="probability-stage-card-meta">流水 {stage.turnoverThresholdPoints.toLocaleString()} 點</span>
+                <span className="probability-stage-split">
+                  L {formatWeightRate(stage.lowTableWeight, splitTotal)} / H {formatWeightRate(stage.highTableWeight, splitTotal)}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
       {importPreview ? (
         <section className="import-preview-panel">
           <div className="import-preview-header">
@@ -290,8 +327,18 @@ export default function ProbabilitySettingsPage() {
         </section>
       ) : null}
       {currentStage ? (
-        <>
-          <Form layout="inline">
+        <section className="probability-editor-panel">
+          <div className="probability-section-header">
+            <div>
+              <Typography.Text type="secondary">Stage {currentStage.stageNumber} 基礎設定</Typography.Text>
+              <Typography.Title level={4}>分流與流水門檻</Typography.Title>
+            </div>
+            <Space wrap>
+              <Tag color="blue">Low {currentStage.lowTableWeight.toLocaleString()} / {lowSplitRate}</Tag>
+              <Tag color="cyan">High {currentStage.highTableWeight.toLocaleString()} / {highSplitRate}</Tag>
+            </Space>
+          </div>
+          <Form layout="vertical" className="probability-setting-grid">
             <Form.Item label="流水門檻">
               <InputNumber
                 min={0}
@@ -317,14 +364,30 @@ export default function ProbabilitySettingsPage() {
               />
             </Form.Item>
           </Form>
+        </section>
+      ) : null}
+      {currentStage ? (
+        <section className="prize-editor-panel">
+          <div className="probability-section-header">
+            <div>
+              <Typography.Text type="secondary">Stage {currentStage.stageNumber} 獎項設定</Typography.Text>
+              <Typography.Title level={4}>A-E 獎項權重</Typography.Title>
+            </div>
+            <Space wrap>
+              <Tag>Low 權重合計 {lowPrizeWeightTotal.toLocaleString()}</Tag>
+              <Tag>High 權重合計 {highPrizeWeightTotal.toLocaleString()}</Tag>
+            </Space>
+          </div>
           <Table<PrizeConfig>
+            className="probability-prize-table"
             rowKey={(_, index) => `${selectedStage}-${index}`}
-            dataSource={[...currentStage.prizes].sort((a, b) => a.sortOrder - b.sortOrder)}
+            dataSource={currentPrizes}
             pagination={false}
             columns={[
               {
                 title: '代碼',
                 dataIndex: 'rewardCode',
+                width: 70,
                 render: (value: string) => <Tag>{value}</Tag>,
               },
               {
@@ -335,6 +398,7 @@ export default function ProbabilitySettingsPage() {
               {
                 title: 'Low 權重',
                 dataIndex: 'lowWeight',
+                width: 132,
                 render: (value: number, row) => (
                   <InputNumber min={0} precision={0} value={value} onChange={(next) => patchPrize(row.rewardCode, { lowWeight: Number(next ?? 0) })} />
                 ),
@@ -342,6 +406,7 @@ export default function ProbabilitySettingsPage() {
               {
                 title: 'High 權重',
                 dataIndex: 'highWeight',
+                width: 132,
                 render: (value: number, row) => (
                   <InputNumber min={0} precision={0} value={value} onChange={(next) => patchPrize(row.rewardCode, { highWeight: Number(next ?? 0) })} />
                 ),
@@ -349,6 +414,7 @@ export default function ProbabilitySettingsPage() {
               {
                 title: '點數',
                 dataIndex: 'amountPoints',
+                width: 132,
                 render: (value: number, row) => (
                   <InputNumber
                     min={0}
@@ -361,13 +427,14 @@ export default function ProbabilitySettingsPage() {
               {
                 title: '排序',
                 dataIndex: 'sortOrder',
+                width: 118,
                 render: (value: number, row) => (
                   <InputNumber min={0} precision={0} value={value} onChange={(next) => patchPrize(row.rewardCode, { sortOrder: Number(next ?? 0) })} />
                 ),
               },
             ]}
           />
-        </>
+        </section>
       ) : null}
     </div>
   );
