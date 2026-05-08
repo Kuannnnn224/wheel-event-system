@@ -1,13 +1,19 @@
 import { Alert, Button, Checkbox, Form, Input, Space, Table, Tag, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { useEffect, useMemo, useState } from 'react';
-import { cancelAwardOverride, createAwardOverrides, fetchPendingAwardOverrides, getApiErrorMessage } from '../api/client';
+import { cancelAwardOverride, createAwardOverrides, fetchAwardOverrides, getApiErrorMessage } from '../api/client';
 import type { AwardOverrideRule } from '../api/types';
 
 const STAGE_OPTIONS = [1, 2, 3, 4, 5].map((stageNumber) => ({
   label: `VIP${stageNumber}`,
   value: stageNumber,
 }));
+
+const STATUS_META: Record<AwardOverrideRule['status'], { label: string; color: string }> = {
+  pending: { label: '等待派獎', color: 'processing' },
+  consumed: { label: '已派彩', color: 'success' },
+  cancelled: { label: '已取消', color: 'default' },
+};
 
 interface AwardOverridePanelProps {
   fixedExternalId?: string;
@@ -32,7 +38,7 @@ function formatTimestamp(value?: number) {
 export default function AwardOverridePanel({
   fixedExternalId,
   title = '指定派獎',
-  description = '建立與管理當日 pending 指定派獎規則',
+  description = '建立與管理當日所有指定派獎紀錄',
 }: AwardOverridePanelProps) {
   const [form] = Form.useForm<AwardOverrideFormValues>();
   const [rules, setRules] = useState<AwardOverrideRule[]>([]);
@@ -43,7 +49,7 @@ export default function AwardOverridePanel({
   const [error, setError] = useState<string>();
   const activeExternalId = fixedExternalId ?? filterExternalId;
   const sortedRules = useMemo(
-    () => [...rules].sort((a, b) => a.stageNumber - b.stageNumber || b.createdAt - a.createdAt),
+    () => [...rules].sort((a, b) => b.createdAt - a.createdAt || a.stageNumber - b.stageNumber),
     [rules],
   );
 
@@ -52,7 +58,7 @@ export default function AwardOverridePanel({
     setError(undefined);
 
     try {
-      setRules(await fetchPendingAwardOverrides(nextExternalId.trim() || undefined));
+      setRules(await fetchAwardOverrides(nextExternalId.trim() || undefined));
     } catch (err) {
       setError(getApiErrorMessage(err, '指定派獎讀取失敗'));
     } finally {
@@ -151,7 +157,7 @@ export default function AwardOverridePanel({
             </Button>
             {!fixedExternalId ? (
               <Button onClick={() => void loadRules(filterExternalId)} loading={loading}>
-                查詢 pending
+                查詢紀錄
               </Button>
             ) : null}
           </Space>
@@ -181,7 +187,10 @@ export default function AwardOverridePanel({
           {
             title: '狀態',
             dataIndex: 'status',
-            render: (value: AwardOverrideRule['status']) => <Tag color="processing">{value.toUpperCase()}</Tag>,
+            render: (value: AwardOverrideRule['status']) => {
+              const meta = STATUS_META[value] ?? { label: value, color: 'default' };
+              return <Tag color={meta.color}>{meta.label}</Tag>;
+            },
           },
           {
             title: '備註',
@@ -197,9 +206,13 @@ export default function AwardOverridePanel({
             title: '',
             align: 'right',
             render: (_, rule) => (
-              <Button danger loading={cancellingId === rule.id} onClick={() => void cancelRule(rule)}>
-                取消
-              </Button>
+              rule.status === 'pending' ? (
+                <Button danger loading={cancellingId === rule.id} onClick={() => void cancelRule(rule)}>
+                  取消
+                </Button>
+              ) : (
+                <Typography.Text type="secondary">-</Typography.Text>
+              )
             ),
           },
         ]}

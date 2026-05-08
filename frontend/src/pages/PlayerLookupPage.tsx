@@ -241,7 +241,7 @@ export default function PlayerLookupPage() {
         <AwardOverridePanel
           fixedExternalId={player.externalId}
           title="指定派獎"
-          description="查詢此玩家當日 pending 指定派獎，並可直接新增 VIP 階段或取消規則"
+          description="查詢此玩家當日所有指定派獎紀錄，並可直接新增 VIP 階段或取消等待中規則"
         />
       ) : null}
 

@@ -19,8 +19,8 @@ export class AwardOverridesService {
     private readonly playersService: PlayersService,
   ) {}
 
-  async list(status = 'pending', externalId?: string) {
-    const normalizedStatus = this.assertStatus(status);
+  async list(status?: string, externalId?: string) {
+    const normalizedStatus = status && status !== 'all' ? this.assertStatus(status) : undefined;
     const businessDate = resolveCurrentBusinessDate();
     let playerId: string | undefined;
 
@@ -35,7 +35,7 @@ export class AwardOverridesService {
     return this.awardOverrideRepository.find({
       where: {
         businessDate,
-        status: normalizedStatus,
+        ...(normalizedStatus ? { status: normalizedStatus } : {}),
         ...(playerId ? { playerId } : {}),
       },
       relations: { player: true },

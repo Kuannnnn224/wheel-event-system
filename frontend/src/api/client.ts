@@ -112,9 +112,9 @@ export async function fetchPlayerByExternalId(externalId: string) {
   return data.player;
 }
 
-export async function fetchPendingAwardOverrides(externalId?: string) {
+export async function fetchAwardOverrides(externalId?: string) {
   const { data } = await api.get<{ rules: AwardOverrideRule[] }>('/award-overrides', {
-    params: { status: 'pending', externalId: externalId || undefined },
+    params: { externalId: externalId || undefined },
   });
   return data.rules;
 }

@@ -13,7 +13,7 @@ export class AwardOverridesController {
   @Get()
   async list(@Query('status') status?: string, @Query('externalId') externalId?: string) {
     return {
-      rules: await this.awardOverridesService.list(status ?? 'pending', externalId),
+      rules: await this.awardOverridesService.list(status, externalId),
     };
   }
 

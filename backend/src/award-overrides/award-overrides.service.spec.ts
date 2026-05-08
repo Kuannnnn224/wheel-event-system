@@ -46,6 +46,32 @@ function createService(options?: {
 }
 
 describe('AwardOverridesService', () => {
+  it('lists all current-day rules by default', async () => {
+    const { service, overrideRepository } = createService();
+    overrideRepository.find.mockResolvedValue([]);
+
+    await service.list();
+
+    expect(overrideRepository.find).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.not.objectContaining({ status: expect.anything() }),
+      }),
+    );
+  });
+
+  it('can still filter current-day rules by status', async () => {
+    const { service, overrideRepository } = createService();
+    overrideRepository.find.mockResolvedValue([]);
+
+    await service.list('pending');
+
+    expect(overrideRepository.find).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ status: 'pending' }),
+      }),
+    );
+  });
+
   it('rejects creating rules for missing players', async () => {
     const { service } = createService({ playerResult: null });
 
