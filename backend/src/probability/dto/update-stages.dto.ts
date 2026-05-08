@@ -19,6 +19,10 @@ export class PrizeConfigInputDto {
 
   @IsInt()
   @Min(0)
+  prizeWeight: number;
+
+  @IsInt()
+  @Min(0)
   amountPoints: number;
 
   @IsInt()

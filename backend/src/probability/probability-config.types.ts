@@ -6,6 +6,7 @@ export interface ProbabilityPrizeConfig {
   amountPoints: number;
   lowWeight: number;
   highWeight: number;
+  prizeWeight: number;
   sortOrder: number;
 }
 

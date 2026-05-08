@@ -897,6 +897,51 @@ body {
   box-shadow: none;
 }
 
+.award-override-panel {
+  padding: 18px;
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  box-shadow: var(--admin-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.award-override-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.award-override-header h4 {
+  margin: 2px 0 0;
+}
+
+.award-override-form {
+  padding: 14px;
+  background: var(--admin-surface-soft);
+  border: 1px solid #e1edf2;
+  border-radius: 8px;
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(220px, 1.4fr) minmax(220px, 1.4fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.award-override-form .ant-form-item {
+  margin-bottom: 0;
+}
+
+.award-override-form .ant-input {
+  width: 100%;
+}
+
+.award-override-table.ant-table-wrapper {
+  box-shadow: none;
+}
+
 .login-page {
   min-height: 100vh;
   display: grid;
@@ -1063,5 +1108,14 @@ body {
 
   .player-stage-grid {
     grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+
+  .award-override-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .award-override-form {
+    grid-template-columns: 1fr;
   }
 }

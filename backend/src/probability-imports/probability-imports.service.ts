@@ -23,6 +23,7 @@ const DIFF_FIELD_LABELS: Record<string, string> = {
   amountPoints: '獎勵點數',
   lowWeight: 'Low 權重',
   highWeight: 'High 權重',
+  prizeWeight: 'Prize 權重',
   sortOrder: '排序',
 };
 
@@ -200,6 +201,7 @@ export class ProbabilityImportsService {
         this.pushDiff(diff, proposedStage.stageNumber, proposedPrize.rewardCode, 'amountPoints', currentPrize.amountPoints, proposedPrize.amountPoints);
         this.pushDiff(diff, proposedStage.stageNumber, proposedPrize.rewardCode, 'lowWeight', currentPrize.lowWeight, proposedPrize.lowWeight);
         this.pushDiff(diff, proposedStage.stageNumber, proposedPrize.rewardCode, 'highWeight', currentPrize.highWeight, proposedPrize.highWeight);
+        this.pushDiff(diff, proposedStage.stageNumber, proposedPrize.rewardCode, 'prizeWeight', currentPrize.prizeWeight, proposedPrize.prizeWeight);
         this.pushDiff(diff, proposedStage.stageNumber, proposedPrize.rewardCode, 'sortOrder', currentPrize.sortOrder, proposedPrize.sortOrder);
       }
     }

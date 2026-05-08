@@ -3,10 +3,11 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { api, fetchStages } from '../api/client';
 import type { StageConfig } from '../api/types';
+import ProbabilityTableTag from '../components/ProbabilityTableTag';
 
 interface SimulateResult {
   stageNumber: number;
-  probabilityTable: 'low' | 'high';
+  probabilityTable: 'low' | 'high' | 'prize';
   prize: {
     id?: number;
     rewardCode: string;
@@ -150,9 +151,7 @@ export default function SpinSimulatorPage() {
               <div className="inline-spin-result">
                 <Typography.Text type="secondary">本次結果</Typography.Text>
                 <div className="inline-spin-result-main">
-                  <Tag color={mutation.data.probabilityTable === 'high' ? 'cyan' : 'blue'}>
-                    {mutation.data.probabilityTable.toUpperCase()} 表
-                  </Tag>
+                  <ProbabilityTableTag value={mutation.data.probabilityTable} suffix=" 表" />
                   <Tag>{mutation.data.prize.rewardCode} 獎</Tag>
                   <Typography.Text strong>{mutation.data.prize.name}</Typography.Text>
                   <Typography.Text>{mutation.data.prize.amountPoints.toLocaleString()} 點</Typography.Text>

@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import { dirname, isAbsolute, resolve } from 'path';
 import { StageThreshold } from '../domain/stage-progress';
-import { pickProbabilityTable, pickWeightedItem } from './probability-picker';
+import { pickProbabilityTable, pickWeightedItem, ProbabilityTable } from './probability-picker';
 import {
   DrawPrizeResult,
   ProbabilityConfigFile,
@@ -28,6 +28,7 @@ const DEFAULT_CONFIG: ProbabilityConfigFile = {
         amountPoints: 0,
         lowWeight: 500,
         highWeight: 120,
+        prizeWeight: 120,
         sortOrder: 1,
       },
       {
@@ -36,6 +37,7 @@ const DEFAULT_CONFIG: ProbabilityConfigFile = {
         amountPoints: stageNumber * 100,
         lowWeight: 280,
         highWeight: 220,
+        prizeWeight: 220,
         sortOrder: 2,
       },
       {
@@ -44,6 +46,7 @@ const DEFAULT_CONFIG: ProbabilityConfigFile = {
         amountPoints: stageNumber * 300,
         lowWeight: 150,
         highWeight: 280,
+        prizeWeight: 280,
         sortOrder: 3,
       },
       {
@@ -52,6 +55,7 @@ const DEFAULT_CONFIG: ProbabilityConfigFile = {
         amountPoints: stageNumber * 700,
         lowWeight: 60,
         highWeight: 250,
+        prizeWeight: 250,
         sortOrder: 4,
       },
       {
@@ -60,6 +64,7 @@ const DEFAULT_CONFIG: ProbabilityConfigFile = {
         amountPoints: stageNumber * 1500,
         lowWeight: 10,
         highWeight: 130,
+        prizeWeight: 130,
         sortOrder: 5,
       },
     ],
@@ -116,9 +121,13 @@ export class ProbabilityService implements OnModuleInit {
 
   drawPrizeFromConfig(config: StageDrawConfig, rng = Math.random): DrawPrizeResult {
     const table = pickProbabilityTable(config.stage.lowTableWeight, config.stage.highTableWeight, rng);
+    return this.drawPrizeFromConfigForTable(config, table, rng);
+  }
+
+  drawPrizeFromConfigForTable(config: StageDrawConfig, table: ProbabilityTable, rng = Math.random): DrawPrizeResult {
     const prize = pickWeightedItem(
       config.prizes,
-      (item) => (table === 'low' ? item.lowWeight : item.highWeight),
+      (item) => this.getPrizeWeightForTable(item, table),
       rng,
     );
 
@@ -127,6 +136,10 @@ export class ProbabilityService implements OnModuleInit {
 
   async drawPrize(stageNumber: number, rng = Math.random): Promise<DrawPrizeResult> {
     return this.drawPrizeFromConfig(await this.getDrawConfigForStage(stageNumber), rng);
+  }
+
+  async drawPrizeForTable(stageNumber: number, table: ProbabilityTable, rng = Math.random): Promise<DrawPrizeResult> {
+    return this.drawPrizeFromConfigForTable(await this.getDrawConfigForStage(stageNumber), table, rng);
   }
 
   async updateStages(dto: UpdateStagesDto): Promise<ProbabilityStageConfig[]> {
@@ -145,8 +158,9 @@ export class ProbabilityService implements OnModuleInit {
   }
 
   normalizeConfig(config: ProbabilityConfigFile): ProbabilityConfigFile {
-    this.assertValidConfig(config);
-    return this.sortConfig(config);
+    const normalizedConfig = this.withLegacyPrizeWeights(config);
+    this.assertValidConfig(normalizedConfig);
+    return this.sortConfig(normalizedConfig);
   }
 
   private async ensureConfigFile() {
@@ -172,6 +186,31 @@ export class ProbabilityService implements OnModuleInit {
           prizes: [...stage.prizes].sort((a, b) => a.sortOrder - b.sortOrder || a.rewardCode.localeCompare(b.rewardCode)),
         })),
     };
+  }
+
+  private withLegacyPrizeWeights(config: ProbabilityConfigFile): ProbabilityConfigFile {
+    return {
+      ...config,
+      stages: config.stages?.map((stage) => ({
+        ...stage,
+        prizes: stage.prizes?.map((prize) => ({
+          ...prize,
+          prizeWeight: prize.prizeWeight ?? prize.highWeight,
+        })),
+      })),
+    };
+  }
+
+  private getPrizeWeightForTable(prize: ProbabilityPrizeConfig, table: ProbabilityTable): number {
+    if (table === 'low') {
+      return prize.lowWeight;
+    }
+
+    if (table === 'high') {
+      return prize.highWeight;
+    }
+
+    return prize.prizeWeight;
   }
 
   private assertValidConfig(config: ProbabilityConfigFile) {
@@ -213,8 +252,12 @@ export class ProbabilityService implements OnModuleInit {
       throw new BadRequestException(`Stage ${stage.stageNumber} high table needs at least one weighted prize.`);
     }
 
+    if (!stage.prizes.some((prize) => prize.prizeWeight > 0)) {
+      throw new BadRequestException(`Stage ${stage.stageNumber} prize table needs at least one weighted prize.`);
+    }
+
     for (const prize of stage.prizes) {
-      if (prize.amountPoints < 0 || prize.lowWeight < 0 || prize.highWeight < 0) {
+      if (prize.amountPoints < 0 || prize.lowWeight < 0 || prize.highWeight < 0 || prize.prizeWeight < 0) {
         throw new BadRequestException(`Stage ${stage.stageNumber} reward ${prize.rewardCode} contains negative numeric values.`);
       }
     }

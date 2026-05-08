@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Player, ProbabilityImportPreview, ProbabilityImportUpload, StageConfig } from './types';
+import type { AwardOverrideRule, Player, ProbabilityImportPreview, ProbabilityImportUpload, StageConfig } from './types';
 
 const TOKEN_KEY = 'wheel-admin-token';
 
@@ -79,4 +79,21 @@ export async function downloadProbabilityImport(upload: ProbabilityImportUpload)
 export async function fetchPlayerByExternalId(externalId: string) {
   const { data } = await api.get<{ player: Player | null }>('/players', { params: { externalId } });
   return data.player;
+}
+
+export async function fetchPendingAwardOverrides(externalId?: string) {
+  const { data } = await api.get<{ rules: AwardOverrideRule[] }>('/award-overrides', {
+    params: { status: 'pending', externalId: externalId || undefined },
+  });
+  return data.rules;
+}
+
+export async function createAwardOverrides(values: { externalId: string; stageNumbers: number[]; reason?: string }) {
+  const { data } = await api.post<{ rules: AwardOverrideRule[] }>('/award-overrides', values);
+  return data.rules;
+}
+
+export async function cancelAwardOverride(id: string) {
+  const { data } = await api.patch<{ rule: AwardOverrideRule }>(`/award-overrides/${id}/cancel`);
+  return data.rule;
 }

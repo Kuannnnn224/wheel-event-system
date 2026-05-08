@@ -5,7 +5,7 @@ export interface WeightedPrize {
   amountPoints: number;
 }
 
-export type ProbabilityTable = 'low' | 'high';
+export type ProbabilityTable = 'low' | 'high' | 'prize';
 
 export function pickWeightedItem<T>(items: T[], getWeight: (item: T) => number, rng = Math.random): T {
   const weightedItems = items.filter((item) => getWeight(item) > 0);

@@ -3,6 +3,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import { useState } from 'react';
 import { api } from '../api/client';
 import type { RangeReport, SpinRecord } from '../api/types';
+import ProbabilityTableTag from '../components/ProbabilityTableTag';
 
 const { RangePicker } = DatePicker;
 
@@ -134,7 +135,7 @@ export default function ReportsPage() {
                     <Table<SpinRecord> rowKey="id" dataSource={player.spins} columns={[
                       { title: '日期', dataIndex: 'businessDate' },
                       { title: '階段', dataIndex: 'stageNumber' },
-                      { title: '表', dataIndex: 'probabilityTable', render: (value: string) => value?.toUpperCase?.() ?? '-' },
+                      { title: '表', dataIndex: 'probabilityTable', render: (value: string) => <ProbabilityTableTag value={value} /> },
                       { title: '獎項', dataIndex: 'prizeName' },
                       { title: '點數', dataIndex: 'amountPoints', render: (value: number) => value.toLocaleString() },
                     ]} />

@@ -20,16 +20,18 @@ interface ProbabilitySourceWorkbooks {
   configWorkbook: XLSX.WorkBook;
   lowWorkbook: XLSX.WorkBook;
   highWorkbook: XLSX.WorkBook;
+  prizeWorkbook: XLSX.WorkBook;
   weightWorkbook: XLSX.WorkBook;
 }
 
 export function parseProbabilityXlsxDirectory(sourceDir: string): ProbabilityConfigFile {
   const resolvedSourceDir = resolveSourceDirectory(sourceDir);
   return parseProbabilityWorkbooks({
-    configWorkbook: XLSX.readFile(join(resolvedSourceDir, 'config.xlsx')),
-    lowWorkbook: XLSX.readFile(join(resolvedSourceDir, 'low.xlsx')),
-    highWorkbook: XLSX.readFile(join(resolvedSourceDir, 'high.xlsx')),
-    weightWorkbook: XLSX.readFile(join(resolvedSourceDir, 'weight.xlsx')),
+    configWorkbook: XLSX.readFile(requireSourceFile(resolvedSourceDir, 'config.xlsx')),
+    lowWorkbook: XLSX.readFile(requireSourceFile(resolvedSourceDir, 'low.xlsx')),
+    highWorkbook: XLSX.readFile(requireSourceFile(resolvedSourceDir, 'high.xlsx')),
+    prizeWorkbook: XLSX.readFile(requireSourceFile(resolvedSourceDir, 'prize.xlsx')),
+    weightWorkbook: XLSX.readFile(requireSourceFile(resolvedSourceDir, 'weight.xlsx')),
   });
 }
 
@@ -52,6 +54,7 @@ export function parseProbabilityXlsxZip(zipBuffer: Buffer): ProbabilityConfigFil
     configWorkbook: XLSX.read(requireZipEntry(files, 'config.xlsx'), { type: 'buffer' }),
     lowWorkbook: XLSX.read(requireZipEntry(files, 'low.xlsx'), { type: 'buffer' }),
     highWorkbook: XLSX.read(requireZipEntry(files, 'high.xlsx'), { type: 'buffer' }),
+    prizeWorkbook: XLSX.read(requireZipEntry(files, 'prize.xlsx'), { type: 'buffer' }),
     weightWorkbook: XLSX.read(requireZipEntry(files, 'weight.xlsx'), { type: 'buffer' }),
   });
 }
@@ -63,7 +66,13 @@ function parseProbabilityWorkbooks(workbooks: ProbabilitySourceWorkbooks): Proba
   return {
     version: 1,
     stages: [1, 2, 3, 4, 5].map((stageNumber) => {
-      const prizes = parseStagePrizes(workbooks.configWorkbook, workbooks.lowWorkbook, workbooks.highWorkbook, stageNumber);
+      const prizes = parseStagePrizes(
+        workbooks.configWorkbook,
+        workbooks.lowWorkbook,
+        workbooks.highWorkbook,
+        workbooks.prizeWorkbook,
+        stageNumber,
+      );
       const split = tableWeights.get(stageNumber);
 
       if (!split) {
@@ -88,6 +97,15 @@ function requireZipEntry(files: Map<string, Buffer>, fileName: string) {
   }
 
   return file;
+}
+
+function requireSourceFile(sourceDir: string, fileName: string) {
+  const path = join(sourceDir, fileName);
+  if (!existsSync(path)) {
+    throw new Error(`Missing ${fileName} in probability source directory.`);
+  }
+
+  return path;
 }
 
 function resolveSourceDirectory(sourceDir: string) {
@@ -124,20 +142,23 @@ function parseStagePrizes(
   configWorkbook: XLSX.WorkBook,
   lowWorkbook: XLSX.WorkBook,
   highWorkbook: XLSX.WorkBook,
+  prizeWorkbook: XLSX.WorkBook,
   stageNumber: number,
 ): ProbabilityPrizeConfig[] {
   const lowWeights = parsePrizeWeights(lowWorkbook, stageNumber, 'low');
   const highWeights = parsePrizeWeights(highWorkbook, stageNumber, 'high');
+  const prizeWeights = parsePrizeWeights(prizeWorkbook, stageNumber, 'prize');
 
   return parsePrizeAmounts(configWorkbook, stageNumber).map((prize) => ({
     ...prize,
     lowWeight: requireNumber(lowWeights.get(prize.rewardCode), `stage ${stageNumber} ${prize.rewardCode} low weight`),
     highWeight: requireNumber(highWeights.get(prize.rewardCode), `stage ${stageNumber} ${prize.rewardCode} high weight`),
+    prizeWeight: requireNumber(prizeWeights.get(prize.rewardCode), `stage ${stageNumber} ${prize.rewardCode} prize weight`),
   }));
 }
 
 function parsePrizeAmounts(workbook: XLSX.WorkBook, stageNumber: number) {
-  const prizes: Array<Omit<ProbabilityPrizeConfig, 'lowWeight' | 'highWeight'>> = [];
+  const prizes: Array<Omit<ProbabilityPrizeConfig, 'lowWeight' | 'highWeight' | 'prizeWeight'>> = [];
   for (const row of getSheetRows(workbook, `PrizeLV${stageNumber}`)) {
     const rewardIndex = row.findIndex((cell) => REWARD_CODES.includes(normalizeText(cell)));
     if (rewardIndex < 0) {

@@ -3,6 +3,8 @@ import dayjs from 'dayjs';
 import { useEffect, useMemo, useState } from 'react';
 import { api, fetchPlayerByExternalId, fetchStages } from '../api/client';
 import type { Player, PlayerDailyProgress, SpinRecord, StageConfig } from '../api/types';
+import AwardOverridePanel from '../components/AwardOverridePanel';
+import ProbabilityTableTag from '../components/ProbabilityTableTag';
 
 interface SearchValues {
   externalId: string;
@@ -188,7 +190,7 @@ export default function PlayerLookupPage() {
             <>
               <div className="player-stage-prize">{spin.prizeName}</div>
               <div className="player-stage-meta">
-                <Tag color={spin.probabilityTable === 'high' ? 'cyan' : 'blue'}>{spin.probabilityTable.toUpperCase()}</Tag>
+                <ProbabilityTableTag value={spin.probabilityTable} />
                 派發 {formatPoints(spin.amountPoints)} 點
               </div>
             </>
@@ -234,6 +236,14 @@ export default function PlayerLookupPage() {
       {stageConfigError ? <Alert type="warning" showIcon message={stageConfigError} /> : null}
       {player === null && !progress ? <Alert type="info" showIcon message="尚未載入玩家資料" /> : null}
       {player && !progress ? <Alert type="warning" showIcon message="玩家存在，但此日期尚無流水或抽獎紀錄" /> : null}
+
+      {player ? (
+        <AwardOverridePanel
+          fixedExternalId={player.externalId}
+          title="指定派獎"
+          description="查詢此玩家當日 pending 指定派獎，並可直接新增 VIP 階段或取消規則"
+        />
+      ) : null}
 
       {progress ? (
         <>
@@ -300,7 +310,7 @@ export default function PlayerLookupPage() {
                 {
                   title: '表',
                   dataIndex: 'probabilityTable',
-                  render: (value: string) => <Tag color={value === 'high' ? 'cyan' : 'blue'}>{value?.toUpperCase?.() ?? '-'}</Tag>,
+                  render: (value: string) => <ProbabilityTableTag value={value} />,
                 },
                 { title: '獎項', dataIndex: 'prizeName' },
                 {

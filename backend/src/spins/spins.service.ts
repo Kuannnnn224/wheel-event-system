@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { AwardOverridesService } from '../award-overrides/award-overrides.service';
 import { resolveCurrentBusinessDate } from '../common/business-date';
 import { validateRealSpinRule } from '../domain/spin-rules';
 import { DemoTokenService } from '../demo-token/demo-token.service';
@@ -17,8 +18,10 @@ export class SpinsService {
     private readonly spinRecordRepository: Repository<SpinRecord>,
     @InjectRepository(PlayerDailyProgress)
     private readonly progressRepository: Repository<PlayerDailyProgress>,
+    private readonly dataSource: DataSource,
     private readonly probabilityService: ProbabilityService,
     private readonly demoTokenService: DemoTokenService,
+    private readonly awardOverridesService: AwardOverridesService,
   ) {}
 
   async simulate(dto: SimulateSpinDto) {
@@ -37,44 +40,56 @@ export class SpinsService {
   async realSpin(dto: RealSpinDto) {
     const player = await this.demoTokenService.validateToken(dto.token);
     const businessDate = resolveCurrentBusinessDate(dto.date);
-    const progress = await this.progressRepository.findOne({ where: { playerId: player.id, businessDate } });
-    const existingSpins = await this.spinRecordRepository.find({
-      where: { playerId: player.id, businessDate },
-      order: { stageNumber: 'ASC' },
-    });
-    const rule = validateRealSpinRule({
-      requestedStage: dto.stageNumber,
-      unlockedStage: progress?.unlockedStage ?? 0,
-      playedStages: existingSpins.map((spin) => spin.stageNumber),
-    });
 
-    if (!rule.allowed) {
-      throw new BadRequestException(rule.reason);
-    }
+    return this.dataSource.transaction(async (manager) => {
+      const progressRepository = manager.getRepository(PlayerDailyProgress);
+      const spinRecordRepository = manager.getRepository(SpinRecord);
+      const progress = await progressRepository.findOne({ where: { playerId: player.id, businessDate } });
+      const existingSpins = await spinRecordRepository.find({
+        where: { playerId: player.id, businessDate },
+        order: { stageNumber: 'ASC' },
+      });
+      const rule = validateRealSpinRule({
+        requestedStage: dto.stageNumber,
+        unlockedStage: progress?.unlockedStage ?? 0,
+        playedStages: existingSpins.map((spin) => spin.stageNumber),
+      });
 
-    const draw = await this.probabilityService.drawPrize(dto.stageNumber);
-    const spin = await this.spinRecordRepository.save(
-      this.spinRecordRepository.create({
-        playerId: player.id,
+      if (!rule.allowed) {
+        throw new BadRequestException(rule.reason);
+      }
+
+      const overrideRule = await this.awardOverridesService.findPendingForSpin(player.id, businessDate, dto.stageNumber, manager);
+      const draw = overrideRule
+        ? await this.probabilityService.drawPrizeForTable(dto.stageNumber, 'prize')
+        : await this.probabilityService.drawPrize(dto.stageNumber);
+      const spin = await spinRecordRepository.save(
+        spinRecordRepository.create({
+          playerId: player.id,
+          player,
+          businessDate,
+          stageNumber: dto.stageNumber,
+          probabilityTable: draw.table,
+          prizeName: draw.prize.name,
+          amountPoints: draw.prize.amountPoints,
+        }),
+      );
+
+      if (overrideRule) {
+        await this.awardOverridesService.consume(overrideRule, spin.id, manager);
+      }
+
+      return {
         player,
         businessDate,
-        stageNumber: dto.stageNumber,
+        spin,
         probabilityTable: draw.table,
-        prizeName: draw.prize.name,
-        amountPoints: draw.prize.amountPoints,
-      }),
-    );
-
-    return {
-      player,
-      businessDate,
-      spin,
-      probabilityTable: draw.table,
-      prize: {
-        rewardCode: draw.prize.rewardCode,
-        name: draw.prize.name,
-        amountPoints: draw.prize.amountPoints,
-      },
-    };
+        prize: {
+          rewardCode: draw.prize.rewardCode,
+          name: draw.prize.name,
+          amountPoints: draw.prize.amountPoints,
+        },
+      };
+    });
   }
 }

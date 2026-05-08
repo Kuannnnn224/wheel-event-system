@@ -75,6 +75,7 @@ The source directory currently uses these files:
 - `weight.xlsx`: per-stage low/high table split weights.
 - `low.xlsx`: A-E weights for the low table.
 - `high.xlsx`: A-E weights for the high table.
+- `prize.xlsx`: A-E weights for admin award override prize draws.
 
-The command writes `backend/config/probability.json` by default. `prize.xlsx` and `daily-limit.xlsx` are kept as source material but are not wired into the first low/high draw flow until their business rules are confirmed.
+The command writes `backend/config/probability.json` by default. `daily-limit.xlsx` is kept as source material but is not wired into the first draw flow until its business rules are confirmed.
 Admin uploads are saved under `storage/probability-imports/` so PMs can download the original zip later. Runtime storage files are ignored by Git.

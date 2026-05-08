@@ -61,6 +61,14 @@ describe('parseProbabilityXlsxDirectory', () => {
       LV5: [[null, null, null, 'A', 40], [null, null, null, 'B', 50], [null, null, null, 'C', 7], [null, null, null, 'D', 3], [null, null, null, 'E', 0]],
     });
 
+    writeWorkbook(join(dir, 'prize.xlsx'), {
+      LV1: [[null, null, null, 'A', 11], [null, null, null, 'B', 22], [null, null, null, 'C', 33], [null, null, null, 'D', 44], [null, null, null, 'E', 55]],
+      LV2: [[null, null, null, 'A', 12], [null, null, null, 'B', 22], [null, null, null, 'C', 33], [null, null, null, 'D', 44], [null, null, null, 'E', 55]],
+      LV3: [[null, null, null, 'A', 13], [null, null, null, 'B', 22], [null, null, null, 'C', 33], [null, null, null, 'D', 44], [null, null, null, 'E', 55]],
+      LV4: [[null, null, null, 'A', 14], [null, null, null, 'B', 22], [null, null, null, 'C', 33], [null, null, null, 'D', 44], [null, null, null, 'E', 55]],
+      LV5: [[null, null, null, 'A', 15], [null, null, null, 'B', 22], [null, null, null, 'C', 33], [null, null, null, 'D', 44], [null, null, null, 'E', 55]],
+    });
+
     writeWorkbook(join(dir, 'weight.xlsx'), {
       Weight: [
         [null, null, null, null, null, '第一組轉盤'],
@@ -93,6 +101,7 @@ describe('parseProbabilityXlsxDirectory', () => {
       amountPoints: 1,
       lowWeight: 64,
       highWeight: 41,
+      prizeWeight: 11,
       sortOrder: 1,
     });
     expect(config.stages[0]).not.toHaveProperty('enabled');

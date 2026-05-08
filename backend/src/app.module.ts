@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AwardOverridesModule } from './award-overrides/award-overrides.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { DemoTokenModule } from './demo-token/demo-token.module';
@@ -34,6 +35,7 @@ import { TurnoverModule } from './turnover/turnover.module';
     PlayersModule,
     ProbabilityModule,
     ProbabilityImportsModule,
+    AwardOverridesModule,
     TurnoverModule,
     SpinsModule,
     ReportsModule,

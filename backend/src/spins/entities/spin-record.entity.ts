@@ -35,7 +35,7 @@ export class SpinRecord {
   @Column({ name: 'created_at', type: 'int', unsigned: true, comment: '抽獎建立 Unix timestamp 秒數' })
   createdAt: number;
 
-  @Column({ name: 'probability_table', length: 10, default: 'low', comment: '本次命中的機率分流表，low 或 high' })
+  @Column({ name: 'probability_table', length: 10, default: 'low', comment: '本次命中的機率表，low、high 或 prize' })
   probabilityTable: string;
 
   @BeforeInsert()

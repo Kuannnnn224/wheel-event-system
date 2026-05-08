@@ -22,8 +22,9 @@ Keep root-level files limited to project docs, environment examples, Docker setu
 - Probability configs live in `backend/config/probability.json`, not MySQL.
 - Probability JSON is read on demand so PM/parser updates can hot-load without a backend restart.
 - XLSX parser output must keep the same JSON shape rather than changing runtime draw logic.
-- Current XLSX import uses `config.xlsx`, `weight.xlsx`, `low.xlsx`, and `high.xlsx`; `prize.xlsx` and `daily-limit.xlsx` are source files reserved for future rules until the business meaning is confirmed.
+- Current XLSX import uses `config.xlsx`, `weight.xlsx`, `low.xlsx`, `high.xlsx`, and `prize.xlsx`; `daily-limit.xlsx` is a source file reserved for future rules until the business meaning is confirmed.
 - Probability configs do not carry enabled/disabled flags; set the relevant weights to `0` when a stage split or prize should stop being selected.
+- Admin award overrides use the `prize` probability table for the selected player/stage on the current business date only; pending rules from past dates must not affect today's real spins.
 - Uploaded PM probability zip files are stored under `storage/probability-imports/` for later PM download and are ignored by Git.
 - Bulk simulations are one-off in-memory jobs and must not write real player spin records.
 
@@ -36,6 +37,7 @@ NestJS modules are split by business ownership:
 - `turnover`: admin/platform turnover adjustments and progress updates.
 - `probability`: JSON probability config loading, stage thresholds, low/high table split, weighted draw logic.
 - `probability-imports`: PM zip upload/download, XLSX parsing, import diff preview, and applying imported JSON configs.
+- `award-overrides`: admin指定派獎 rules, pending/cancel/consume lifecycle, and current-day rule lookup for real spins.
 - `spins`: real spin and single-spin simulation orchestration.
 - `reports`: player and daily aggregate queries.
 - `simulations`: large async simulation jobs.
@@ -49,10 +51,11 @@ The admin console uses sidebar routes:
 
 - `/spin-simulator`: single simulated spin, no DB writes.
 - `/players`: player lookup, daily progress, admin turnover adjustment.
+- `/award-overrides`: admin指定派獎 creation, pending list, and cancellation.
 - `/reports`: daily and player reports.
 - `/bulk-simulation`: async large simulation jobs with polling.
 - `/demo`: create player/demo token/webview URL.
-- `/probability`: view/edit the JSON-backed stage thresholds, low/high split, and A-E prize weights.
+- `/probability`: view/edit the JSON-backed stage thresholds, low/high/prize weights, and A-E prize settings.
 
 Keep API calls in `frontend/src/api` when shared across pages. Page-specific request code may stay inside the page until it is reused.
 

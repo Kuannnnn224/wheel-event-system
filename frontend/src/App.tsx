@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { clearStoredToken, getStoredToken } from './api/client';
 import AppLayout from './components/AppLayout';
+import AwardOverridesPage from './pages/AwardOverridesPage';
 import BulkSimulationPage from './pages/BulkSimulationPage';
 import DemoSitePage from './pages/DemoSitePage';
 import LoginPage from './pages/LoginPage';
@@ -30,6 +31,7 @@ export default function App() {
               <Route path="/" element={<Navigate to="/spin-simulator" replace />} />
               <Route path="/spin-simulator" element={<SpinSimulatorPage />} />
               <Route path="/players" element={<PlayerLookupPage />} />
+              <Route path="/award-overrides" element={<AwardOverridesPage />} />
               <Route path="/reports" element={<ReportsPage />} />
               <Route path="/bulk-simulation" element={<BulkSimulationPage />} />
               <Route path="/demo" element={<DemoSitePage />} />

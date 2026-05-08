@@ -11,6 +11,7 @@ export interface PrizeConfig {
   name: string;
   lowWeight: number;
   highWeight: number;
+  prizeWeight: number;
   amountPoints: number;
   sortOrder: number;
 }
@@ -57,10 +58,30 @@ export interface SpinRecord {
   playerId: string;
   businessDate: string;
   stageNumber: number;
-  probabilityTable: 'low' | 'high';
+  probabilityTable: 'low' | 'high' | 'prize';
   prizeName: string;
   amountPoints: number;
   createdAt: number;
+}
+
+export interface AwardOverrideRule {
+  id: string;
+  playerId: string;
+  player?: {
+    id: string;
+    externalId: string;
+  };
+  businessDate: string;
+  stageNumber: number;
+  status: 'pending' | 'consumed' | 'cancelled';
+  reason?: string;
+  createdByAdminId?: string;
+  cancelledByAdminId?: string;
+  consumedSpinRecordId?: string;
+  createdAt: number;
+  updatedAt: number;
+  consumedAt?: number;
+  cancelledAt?: number;
 }
 
 export interface PlayerDailyProgress {
@@ -100,11 +121,11 @@ export interface SimulationJob {
   totalAmountPoints: number;
   averageAmountPoints: number;
   tableResults: Array<{
-    probabilityTable: 'low' | 'high';
+    probabilityTable: 'low' | 'high' | 'prize';
     count: number;
   }>;
   prizeResults: Array<{
-    probabilityTable?: 'low' | 'high';
+    probabilityTable?: 'low' | 'high' | 'prize';
     rewardCode: string;
     name: string;
     amountPoints: number;

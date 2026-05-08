@@ -3,6 +3,7 @@ import {
   ClockCircleOutlined,
   ControlOutlined,
   ExperimentOutlined,
+  GiftOutlined,
   LogoutOutlined,
   PlayCircleOutlined,
   SettingOutlined,
@@ -26,6 +27,7 @@ interface AppLayoutProps {
 const primaryMenuItems = [
   { key: '/spin-simulator', icon: <PlayCircleOutlined />, label: '抽獎模擬' },
   { key: '/players', icon: <TeamOutlined />, label: '查詢玩家' },
+  { key: '/award-overrides', icon: <GiftOutlined />, label: '指定派獎' },
   { key: '/reports', icon: <BarChartOutlined />, label: '報表統計' },
   { key: '/bulk-simulation', icon: <ExperimentOutlined />, label: '多次模擬' },
   { key: '/probability', icon: <SettingOutlined />, label: '機率設定' },
