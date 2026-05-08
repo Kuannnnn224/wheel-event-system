@@ -95,6 +95,7 @@ docker compose up -d
 - Keep TypeScript strictness meaningful; avoid `any` unless integrating unknown external payloads.
 - Add focused tests around business rules before changing stage unlock, weighted draw, or real spin validation behavior.
 - Do not commit `.env`, `node_modules`, `dist`, or generated coverage.
+- Keep local dev server logs under `logs/`; generated `.log` files are ignored.
 - First-version TypeORM uses `synchronize=true` for local development only. Use migrations before production use.
 - The webview HTML is intentionally not implemented yet. Preserve `POST /demo/session` and `POST /spins/real` as the future integration points.
 - Do not add DB tables for probability settings unless explicitly requested. Probability data belongs in JSON generated from XLSX.
@@ -102,8 +103,8 @@ docker compose up -d
 ## Commit Discipline
 
 - Commit after each meaningful, complete feature/fix/refactor slice.
-- Use Conventional Commits, such as `feat: add stage reward preview`, `fix: remove duplicate page title`, `docs: document local startup`.
-- Keep commit messages specific to the actual change; do not use vague messages like `update`, `changes`, or `misc`.
-- Add a short commit body when useful, especially for behavior changes, testing notes, or follow-up constraints.
+- Use Conventional Commits with English type and Chinese subject/body, such as `feat: 新增階段獎勵預覽`, `fix: 移除重複頁面標題`, `docs: 補充本機啟動說明`.
+- Keep commit messages specific to the actual change; do not use vague messages like `update`, `changes`, `misc`, or `調整`.
+- Add a short Chinese commit body when useful, especially for behavior changes, testing notes, or follow-up constraints.
 - Before committing, check `git status` and avoid staging unrelated user changes.
 - Prefer one coherent commit per completed user-facing or backend behavior change.

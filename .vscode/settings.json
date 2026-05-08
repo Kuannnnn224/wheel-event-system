@@ -1,0 +1,18 @@
+{
+  "cSpell.enableFiletypes": ["!json", "!jsonc"],
+  "cSpell.ignorePaths": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/coverage/**",
+    "**/package-lock.json",
+    "**/*.log",
+    "**/logs/**",
+    "**/tsconfig*.json"
+  ],
+  "cSpell.words": [
+    "nestjs",
+    "typeorm",
+    "webview",
+    "turnover"
+  ]
+}

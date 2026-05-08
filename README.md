@@ -39,6 +39,7 @@ npm run dev
 
 Frontend runs at `http://127.0.0.1:5173`.
 Backend runs at `http://127.0.0.1:3001`.
+Local dev logs should stay under `logs/`; generated `.log` files are ignored by Git.
 
 Default backend admin login:
 

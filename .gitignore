@@ -4,6 +4,8 @@ coverage/
 .env
 .DS_Store
 *.log
+logs/*
+!logs/.gitkeep
 
 backend/node_modules/
 backend/dist/
