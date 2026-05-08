@@ -1,6 +1,7 @@
 import { BeforeInsert, BeforeUpdate, Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { unixTimestampSeconds } from '../../common/unix-timestamp';
 import { Player } from '../../players/entities/player.entity';
+import { SpinRecord } from '../../spins/entities/spin-record.entity';
 
 export type AwardOverrideStatus = 'pending' | 'consumed' | 'cancelled';
 
@@ -43,6 +44,10 @@ export class AwardOverrideRule {
 
   @Column({ name: 'consumed_spin_record_id', type: 'varchar', length: 36, nullable: true, comment: '消耗此規則的 spin_records.id' })
   consumedSpinRecordId?: string | null;
+
+  @ManyToOne(() => SpinRecord, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'consumed_spin_record_id' })
+  consumedSpinRecord?: SpinRecord | null;
 
   @Column({ name: 'created_at', type: 'int', unsigned: true, comment: '規則建立 Unix timestamp 秒數' })
   createdAt: number;

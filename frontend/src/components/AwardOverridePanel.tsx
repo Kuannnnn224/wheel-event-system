@@ -1,6 +1,7 @@
 import { Alert, Button, Checkbox, Form, Input, Space, Table, Tag, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { cancelAwardOverride, createAwardOverrides, fetchAwardOverrides, getApiErrorMessage } from '../api/client';
 import type { AwardOverrideRule } from '../api/types';
 
@@ -35,11 +36,16 @@ function formatTimestamp(value?: number) {
   return dayjs(value > 1_000_000_000_000 ? value : value * 1000).format('YYYY-MM-DD HH:mm:ss');
 }
 
+function formatPoints(value?: number | null) {
+  return Number(value ?? 0).toLocaleString();
+}
+
 export default function AwardOverridePanel({
   fixedExternalId,
   title = '指定派獎',
   description = '建立與管理當日所有指定派獎紀錄',
 }: AwardOverridePanelProps) {
+  const navigate = useNavigate();
   const [form] = Form.useForm<AwardOverrideFormValues>();
   const [rules, setRules] = useState<AwardOverrideRule[]>([]);
   const [filterExternalId, setFilterExternalId] = useState(fixedExternalId ?? '');
@@ -113,6 +119,33 @@ export default function AwardOverridePanel({
     }
   }
 
+  function openPlayerLookup(rule: AwardOverrideRule) {
+    const externalId = rule.player?.externalId ?? activeExternalId;
+
+    if (!externalId) {
+      return;
+    }
+
+    navigate(`/players?externalId=${encodeURIComponent(externalId)}`);
+  }
+
+  function renderConsumedReward(rule: AwardOverrideRule) {
+    if (rule.status !== 'consumed') {
+      return <Typography.Text type="secondary">-</Typography.Text>;
+    }
+
+    if (!rule.consumedSpinRecord) {
+      return <Typography.Text type="secondary">已派彩，無抽獎明細</Typography.Text>;
+    }
+
+    return (
+      <Space direction="vertical" size={0}>
+        <Typography.Text strong>{rule.consumedSpinRecord.prizeName}</Typography.Text>
+        <Typography.Text type="secondary">派發 {formatPoints(rule.consumedSpinRecord.amountPoints)} 點</Typography.Text>
+      </Space>
+    );
+  }
+
   return (
     <section className="award-override-panel">
       <div className="award-override-header">
@@ -173,7 +206,18 @@ export default function AwardOverridePanel({
         columns={[
           {
             title: '玩家 ID',
-            render: (_, rule) => rule.player?.externalId ?? (activeExternalId || rule.playerId),
+            render: (_, rule) => {
+              const externalId = rule.player?.externalId ?? (activeExternalId || rule.playerId);
+
+              return (
+                <Space size={8}>
+                  <Typography.Text>{externalId}</Typography.Text>
+                  <Button size="small" aria-label={`查詢玩家 ${externalId}`} onClick={() => openPlayerLookup(rule)}>
+                    查詢
+                  </Button>
+                </Space>
+              );
+            },
           },
           {
             title: '日期',
@@ -191,6 +235,10 @@ export default function AwardOverridePanel({
               const meta = STATUS_META[value] ?? { label: value, color: 'default' };
               return <Tag color={meta.color}>{meta.label}</Tag>;
             },
+          },
+          {
+            title: '實際獎勵',
+            render: (_, rule) => renderConsumedReward(rule),
           },
           {
             title: '備註',

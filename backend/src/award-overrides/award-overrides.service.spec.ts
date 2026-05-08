@@ -55,6 +55,7 @@ describe('AwardOverridesService', () => {
     expect(overrideRepository.find).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.not.objectContaining({ status: expect.anything() }),
+        relations: { player: true, consumedSpinRecord: true },
       }),
     );
   });

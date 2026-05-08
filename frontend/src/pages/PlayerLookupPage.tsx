@@ -1,6 +1,7 @@
 import { Alert, Button, Form, Input, InputNumber, Table, Tag, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api, fetchPlayerByExternalId, fetchStages } from '../api/client';
 import type { Player, PlayerDailyProgress, SpinRecord, StageConfig } from '../api/types';
 import AwardOverridePanel from '../components/AwardOverridePanel';
@@ -99,19 +100,31 @@ function getStageTagColor(state: StageState) {
 }
 
 export default function PlayerLookupPage() {
+  const [searchForm] = Form.useForm<SearchValues>();
   const [adjustmentForm] = Form.useForm<TurnoverValues>();
+  const [searchParams] = useSearchParams();
   const [player, setPlayer] = useState<Player | null>(null);
   const [progress, setProgress] = useState<PlayerDailyProgress>();
   const [stages, setStages] = useState<StageConfig[]>([]);
   const [stageConfigError, setStageConfigError] = useState<string>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
+  const queryExternalId = searchParams.get('externalId')?.trim() ?? '';
 
   useEffect(() => {
     fetchStages()
       .then(setStages)
       .catch(() => setStageConfigError('階段設定讀取失敗，門檻暫時以 - 顯示'));
   }, []);
+
+  useEffect(() => {
+    if (!queryExternalId) {
+      return;
+    }
+
+    searchForm.setFieldsValue({ externalId: queryExternalId });
+    void search({ externalId: queryExternalId });
+  }, [queryExternalId, searchForm]);
 
   const stagesByNumber = useMemo(() => new Map(stages.map((stage) => [stage.stageNumber, stage])), [stages]);
   const spinsByStage = useMemo(
@@ -215,7 +228,7 @@ export default function PlayerLookupPage() {
         </div>
       </div>
 
-      <Form className="lookup-search-panel toolbar" layout="vertical" onFinish={search}>
+      <Form form={searchForm} className="lookup-search-panel toolbar" layout="vertical" onFinish={search}>
         <Form.Item label="玩家 ID" name="externalId" rules={[{ required: true }]}>
           <Input placeholder="external id" />
         </Form.Item>

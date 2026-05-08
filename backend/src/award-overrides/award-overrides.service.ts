@@ -38,7 +38,7 @@ export class AwardOverridesService {
         ...(normalizedStatus ? { status: normalizedStatus } : {}),
         ...(playerId ? { playerId } : {}),
       },
-      relations: { player: true },
+      relations: { player: true, consumedSpinRecord: true },
       order: { createdAt: 'DESC', stageNumber: 'ASC' },
     });
   }

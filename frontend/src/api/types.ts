@@ -78,6 +78,7 @@ export interface AwardOverrideRule {
   createdByAdminId?: string;
   cancelledByAdminId?: string;
   consumedSpinRecordId?: string;
+  consumedSpinRecord?: SpinRecord | null;
   createdAt: number;
   updatedAt: number;
   consumedAt?: number;
