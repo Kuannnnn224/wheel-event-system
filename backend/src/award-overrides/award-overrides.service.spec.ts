@@ -1,4 +1,4 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { AwardOverridesService } from './award-overrides.service';
 import { AwardOverrideRule } from './entities/award-override-rule.entity';
 
@@ -55,13 +55,17 @@ describe('AwardOverridesService', () => {
   it('rejects creating rules for stages already played today', async () => {
     const { service } = createService({ existingSpins: [{ stageNumber: 1 }] });
 
-    await expect(service.create({ externalId: 'player-001', stageNumbers: [1, 3] }, 'admin-id')).rejects.toThrow(BadRequestException);
+    await expect(service.create({ externalId: 'player-001', stageNumbers: [1, 3] }, 'admin-id')).rejects.toThrow(
+      '玩家 player-001 今天 VIP1 已經抽過，該階段轉盤次數已用盡，不能新增指定派獎。',
+    );
   });
 
   it('rejects duplicate pending rules for the same player date and stage', async () => {
     const { service } = createService({ existingRules: [{ stageNumber: 3 }] });
 
-    await expect(service.create({ externalId: 'player-001', stageNumbers: [3] }, 'admin-id')).rejects.toThrow(BadRequestException);
+    await expect(service.create({ externalId: 'player-001', stageNumbers: [3] }, 'admin-id')).rejects.toThrow(
+      '玩家 player-001 今天 VIP3 已有等待中的指定派獎，請先取消原規則。',
+    );
   });
 
   it('creates one pending rule per selected stage', async () => {

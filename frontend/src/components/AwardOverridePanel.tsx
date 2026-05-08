@@ -1,7 +1,7 @@
 import { Alert, Button, Checkbox, Form, Input, Space, Table, Tag, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { useEffect, useMemo, useState } from 'react';
-import { cancelAwardOverride, createAwardOverrides, fetchPendingAwardOverrides } from '../api/client';
+import { cancelAwardOverride, createAwardOverrides, fetchPendingAwardOverrides, getApiErrorMessage } from '../api/client';
 import type { AwardOverrideRule } from '../api/types';
 
 const STAGE_OPTIONS = [1, 2, 3, 4, 5].map((stageNumber) => ({
@@ -54,7 +54,7 @@ export default function AwardOverridePanel({
     try {
       setRules(await fetchPendingAwardOverrides(nextExternalId.trim() || undefined));
     } catch (err) {
-      setError(err instanceof Error ? err.message : '指定派獎讀取失敗');
+      setError(getApiErrorMessage(err, '指定派獎讀取失敗'));
     } finally {
       setLoading(false);
     }
@@ -87,7 +87,7 @@ export default function AwardOverridePanel({
       form.resetFields(['stageNumbers', 'reason']);
       await loadRules(externalId);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '指定派獎建立失敗');
+      setError(getApiErrorMessage(err, '指定派獎建立失敗'));
     } finally {
       setSubmitting(false);
     }
@@ -101,7 +101,7 @@ export default function AwardOverridePanel({
       await cancelAwardOverride(rule.id);
       await loadRules(activeExternalId);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '取消指定派獎失敗');
+      setError(getApiErrorMessage(err, '取消指定派獎失敗'));
     } finally {
       setCancellingId(undefined);
     }

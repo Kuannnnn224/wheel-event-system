@@ -45,7 +45,6 @@ export default function ProbabilitySettingsPage() {
   const highSplitRate = formatWeightRate(currentStage?.highTableWeight ?? 0, currentSplitTotal);
   const lowPrizeWeightTotal = currentPrizes.reduce((sum, prize) => sum + prize.lowWeight, 0);
   const highPrizeWeightTotal = currentPrizes.reduce((sum, prize) => sum + prize.highWeight, 0);
-  const prizeWeightTotal = currentPrizes.reduce((sum, prize) => sum + (prize.prizeWeight ?? 0), 0);
 
   useEffect(() => {
     void load();
@@ -337,7 +336,6 @@ export default function ProbabilitySettingsPage() {
             <Space wrap>
               <Tag color="blue">Low {currentStage.lowTableWeight.toLocaleString()} / {lowSplitRate}</Tag>
               <Tag color="cyan">High {currentStage.highTableWeight.toLocaleString()} / {highSplitRate}</Tag>
-              <Tag color="magenta">Prize 權重 {prizeWeightTotal.toLocaleString()}</Tag>
             </Space>
           </div>
           <Form layout="vertical" className="probability-setting-grid">
@@ -378,7 +376,6 @@ export default function ProbabilitySettingsPage() {
             <Space wrap>
               <Tag>Low 權重合計 {lowPrizeWeightTotal.toLocaleString()}</Tag>
               <Tag>High 權重合計 {highPrizeWeightTotal.toLocaleString()}</Tag>
-              <Tag color="magenta">Prize 權重合計 {prizeWeightTotal.toLocaleString()}</Tag>
             </Space>
           </div>
           <Table<PrizeConfig>
@@ -415,7 +412,7 @@ export default function ProbabilitySettingsPage() {
                 ),
               },
               {
-                title: 'Prize 權重',
+                title: '指定派獎權重',
                 dataIndex: 'prizeWeight',
                 width: 132,
                 render: (value: number | undefined, row) => (

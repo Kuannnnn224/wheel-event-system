@@ -47,7 +47,7 @@ export class AwardOverridesService {
     const player = await this.playersService.findByExternalId(dto.externalId);
 
     if (!player) {
-      throw new NotFoundException('Player not found.');
+      throw new NotFoundException('找不到玩家，請先建立玩家後再新增指定派獎。');
     }
 
     const stageNumbers = this.normalizeStageNumbers(dto.stageNumbers);
@@ -67,7 +67,9 @@ export class AwardOverridesService {
 
       if (existingSpins.length > 0) {
         const playedStages = existingSpins.map((spin) => spin.stageNumber).sort((a, b) => a - b);
-        throw new BadRequestException(`Stage ${playedStages.join(', ')} already has spin records for today.`);
+        throw new BadRequestException(
+          `玩家 ${player.externalId} 今天 ${this.formatStages(playedStages)} 已經抽過，該階段轉盤次數已用盡，不能新增指定派獎。`,
+        );
       }
 
       const pendingKeys = stageNumbers.map((stageNumber) => this.buildPendingKey(player.id, businessDate, stageNumber));
@@ -75,7 +77,7 @@ export class AwardOverridesService {
 
       if (existingRules.length > 0) {
         const duplicatedStages = existingRules.map((rule) => rule.stageNumber).sort((a, b) => a - b);
-        throw new BadRequestException(`Stage ${duplicatedStages.join(', ')} already has pending award override.`);
+        throw new BadRequestException(`玩家 ${player.externalId} 今天 ${this.formatStages(duplicatedStages)} 已有等待中的指定派獎，請先取消原規則。`);
       }
 
       const rules = stageNumbers.map((stageNumber) =>
@@ -103,7 +105,7 @@ export class AwardOverridesService {
     });
 
     if (!rule) {
-      throw new NotFoundException('Pending award override not found.');
+      throw new NotFoundException('找不到今日等待中的指定派獎，可能已被取消或已被抽獎消耗。');
     }
 
     rule.status = 'cancelled';
@@ -143,12 +145,12 @@ export class AwardOverridesService {
     const normalized = [...stageNumbers].sort((a, b) => a - b);
 
     if (new Set(normalized).size !== normalized.length) {
-      throw new BadRequestException('stageNumbers cannot contain duplicates.');
+      throw new BadRequestException('指定階段不能重複。');
     }
 
     for (const stageNumber of normalized) {
       if (!Number.isInteger(stageNumber) || stageNumber < 1 || stageNumber > 5) {
-        throw new BadRequestException('stageNumbers must be integers between 1 and 5.');
+        throw new BadRequestException('指定階段只能是 VIP1 到 VIP5。');
       }
     }
 
@@ -159,9 +161,13 @@ export class AwardOverridesService {
     return `${playerId}:${businessDate}:${stageNumber}`;
   }
 
+  private formatStages(stageNumbers: number[]) {
+    return stageNumbers.map((stageNumber) => `VIP${stageNumber}`).join('、');
+  }
+
   private assertStatus(status: string): AwardOverrideStatus {
     if (!AWARD_OVERRIDE_STATUSES.includes(status as AwardOverrideStatus)) {
-      throw new BadRequestException('Invalid award override status.');
+      throw new BadRequestException('指定派獎狀態不正確。');
     }
 
     return status as AwardOverrideStatus;

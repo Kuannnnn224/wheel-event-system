@@ -3,6 +3,11 @@ import type { AwardOverrideRule, Player, ProbabilityImportPreview, ProbabilityIm
 
 const TOKEN_KEY = 'wheel-admin-token';
 
+interface ApiErrorPayload {
+  message?: string | string[];
+  error?: string;
+}
+
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001',
 });
@@ -27,6 +32,32 @@ export function setStoredToken(token: string) {
 
 export function clearStoredToken() {
   localStorage.removeItem(TOKEN_KEY);
+}
+
+export function getApiErrorMessage(error: unknown, fallback: string) {
+  if (axios.isAxiosError<ApiErrorPayload>(error)) {
+    if (!error.response) {
+      return error.message || fallback;
+    }
+
+    const responseMessage = error.response.data?.message;
+
+    if (Array.isArray(responseMessage) && responseMessage.length > 0) {
+      return responseMessage.join('、');
+    }
+
+    if (typeof responseMessage === 'string' && responseMessage.trim()) {
+      return responseMessage;
+    }
+
+    if (typeof error.response.data?.error === 'string' && error.response.data.error.trim()) {
+      return error.response.data.error;
+    }
+
+    return fallback;
+  }
+
+  return error instanceof Error ? error.message : fallback;
 }
 
 export async function login(username: string, password: string) {
