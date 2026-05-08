@@ -5,8 +5,12 @@ import { CreateSimulationDto } from './dto/create-simulation.dto';
 
 export type SimulationStatus = 'queued' | 'running' | 'completed' | 'failed';
 
-export interface SimulationPrizeResult {
+export interface SimulationTableResult {
   probabilityTable: 'low' | 'high';
+  count: number;
+}
+
+export interface SimulationPrizeResult {
   rewardCode: string;
   name: string;
   amountPoints: number;
@@ -22,6 +26,8 @@ export interface SimulationJob {
   completedCount: number;
   progressPercent: number;
   totalAmountPoints: number;
+  averageAmountPoints: number;
+  tableResults: SimulationTableResult[];
   prizeResults: SimulationPrizeResult[];
   error?: string;
   createdAt: string;
@@ -45,6 +51,11 @@ export class SimulationsService {
       completedCount: 0,
       progressPercent: 0,
       totalAmountPoints: 0,
+      averageAmountPoints: 0,
+      tableResults: [
+        { probabilityTable: 'low', count: 0 },
+        { probabilityTable: 'high', count: 0 },
+      ],
       prizeResults: [],
       createdAt: new Date().toISOString(),
     };
@@ -77,6 +88,10 @@ export class SimulationsService {
       const startedMs = Date.now();
       const drawConfig = await this.probabilityService.getDrawConfigForStage(job.stageNumber);
       const resultMap = new Map<string, SimulationPrizeResult>();
+      const tableCounts: Record<'low' | 'high', number> = {
+        low: 0,
+        high: 0,
+      };
       const chunkSize = 50_000;
 
       while (job.completedCount < job.requestedCount) {
@@ -84,9 +99,10 @@ export class SimulationsService {
 
         for (let index = 0; index < limit; index += 1) {
           const draw = this.probabilityService.drawPrizeFromConfig(drawConfig);
-          const key = `${draw.table}:${draw.prize.rewardCode}:${draw.prize.name}:${draw.prize.amountPoints}`;
+          tableCounts[draw.table] += 1;
+
+          const key = `${draw.prize.rewardCode}:${draw.prize.name}:${draw.prize.amountPoints}`;
           const current = resultMap.get(key) ?? {
-            probabilityTable: draw.table,
             rewardCode: draw.prize.rewardCode,
             name: draw.prize.name,
             amountPoints: draw.prize.amountPoints,
@@ -101,7 +117,12 @@ export class SimulationsService {
 
         job.completedCount += limit;
         job.progressPercent = Math.floor((job.completedCount / job.requestedCount) * 100);
-        job.prizeResults = [...resultMap.values()].sort((a, b) => b.totalAmountPoints - a.totalAmountPoints);
+        job.averageAmountPoints = job.completedCount > 0 ? job.totalAmountPoints / job.completedCount : 0;
+        job.tableResults = [
+          { probabilityTable: 'low', count: tableCounts.low },
+          { probabilityTable: 'high', count: tableCounts.high },
+        ];
+        job.prizeResults = [...resultMap.values()].sort((a, b) => a.rewardCode.localeCompare(b.rewardCode));
         await new Promise((resolve) => setImmediate(resolve));
       }
 

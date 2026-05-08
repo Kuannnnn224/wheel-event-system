@@ -271,6 +271,118 @@ body {
   background: #ffffff;
 }
 
+.simulation-control-panel {
+  padding: 18px;
+  background: #ffffff;
+  border: 1px solid #dde5ef;
+  border-radius: 8px;
+  box-shadow: 0 14px 34px rgba(31, 42, 68, 0.06);
+}
+
+.page-stack > .simulation-form {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.simulation-control-header,
+.simulation-job-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.simulation-control-header h4 {
+  margin: 2px 0 0;
+}
+
+.simulation-count-panel {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e5edf6;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.simulation-count-panel h4 {
+  margin: 2px 0 0;
+}
+
+.count-option-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(136px, 1fr));
+  gap: 12px;
+}
+
+.count-option-card {
+  min-height: 78px;
+  padding: 12px 14px;
+  border: 1px solid #d8e2ee;
+  border-radius: 8px;
+  background: #f9fbfe;
+  color: #172033;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease,
+    background 160ms ease;
+}
+
+.count-option-card:hover {
+  border-color: #8fb8ff;
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.11);
+  transform: translateY(-1px);
+}
+
+.count-option-card.is-selected {
+  border-color: #2563eb;
+  background: #edf5ff;
+  box-shadow: 0 16px 34px rgba(37, 99, 235, 0.16);
+}
+
+.count-option-title {
+  color: #172033;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.count-option-meta {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.simulation-result-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.simulation-job-header {
+  margin-bottom: 0;
+}
+
+.simulation-job-header > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.simulation-metrics {
+  margin-top: 4px;
+}
+
 .import-preview-panel,
 .import-history-panel {
   padding: 16px;
@@ -523,5 +635,15 @@ body {
 
   .stage-reward-header {
     flex-direction: column;
+  }
+
+  .simulation-control-header,
+  .simulation-job-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .count-option-grid {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
   }
 }

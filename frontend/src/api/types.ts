@@ -81,8 +81,13 @@ export interface SimulationJob {
   completedCount: number;
   progressPercent: number;
   totalAmountPoints: number;
-  prizeResults: Array<{
+  averageAmountPoints: number;
+  tableResults: Array<{
     probabilityTable: 'low' | 'high';
+    count: number;
+  }>;
+  prizeResults: Array<{
+    probabilityTable?: 'low' | 'high';
     rewardCode: string;
     name: string;
     amountPoints: number;
