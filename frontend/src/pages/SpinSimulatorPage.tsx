@@ -148,9 +148,24 @@ export default function SpinSimulatorPage() {
           )}
         </div>
         <div className="spin-action-bar">
-          <div>
-            <Typography.Text type="secondary">已選階段</Typography.Text>
-            <Typography.Title level={4}>Stage {selectedStage}</Typography.Title>
+          <div className="spin-selection-summary">
+            <div>
+              <Typography.Text type="secondary">已選階段</Typography.Text>
+              <Typography.Title level={4}>Stage {selectedStage}</Typography.Title>
+            </div>
+            {mutation.data ? (
+              <div className="inline-spin-result">
+                <Typography.Text type="secondary">本次結果</Typography.Text>
+                <div className="inline-spin-result-main">
+                  <Tag color={mutation.data.probabilityTable === 'high' ? 'cyan' : 'blue'}>
+                    {mutation.data.probabilityTable.toUpperCase()} 表
+                  </Tag>
+                  <Tag>{mutation.data.prize.rewardCode} 獎</Tag>
+                  <Typography.Text strong>{mutation.data.prize.name}</Typography.Text>
+                  <Typography.Text>{mutation.data.prize.amountPoints.toLocaleString()} 點</Typography.Text>
+                </div>
+              </div>
+            ) : null}
           </div>
           <Button
             type="primary"
@@ -165,17 +180,6 @@ export default function SpinSimulatorPage() {
       </section>
       {stagesQuery.isError ? <Alert type="warning" showIcon message="階段設定載入失敗，暫時使用預設 5 階段顯示。" /> : null}
       {mutation.isError ? <Alert type="error" showIcon message={(mutation.error as Error).message} /> : null}
-      {mutation.data ? (
-        <section className="result-panel">
-          <Space direction="vertical">
-            <Typography.Text>
-              Stage {mutation.data.stageNumber} / {mutation.data.probabilityTable.toUpperCase()} 表 / {mutation.data.prize.rewardCode} 獎
-            </Typography.Text>
-            <Typography.Title level={4}>{mutation.data.prize.name}</Typography.Title>
-            <Typography.Text strong>{mutation.data.prize.amountPoints.toLocaleString()} 點</Typography.Text>
-          </Space>
-        </section>
-      ) : null}
     </div>
   );
 }

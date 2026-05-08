@@ -289,6 +289,27 @@ body {
   margin: 2px 0 0;
 }
 
+.spin-selection-summary {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  min-width: 0;
+}
+
+.inline-spin-result {
+  padding-left: 20px;
+  border-left: 1px solid #dce6f2;
+  min-width: 0;
+}
+
+.inline-spin-result-main {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -409,6 +430,17 @@ body {
   .spin-action-bar {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .spin-selection-summary {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .inline-spin-result {
+    padding-left: 0;
+    border-left: 0;
   }
 
   .stage-reward-header {
