@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { resolveBusinessDate } from '../common/business-date';
+import { resolveCurrentBusinessDate } from '../common/business-date';
 import { SpinRecord } from '../spins/entities/spin-record.entity';
 import { PlayerDailyProgress } from './entities/player-daily-progress.entity';
 import { Player } from './entities/player.entity';
@@ -50,7 +50,7 @@ export class PlayersService {
 
   async getDailyProgress(playerId: string, date?: string) {
     const player = await this.getById(playerId);
-    const businessDate = resolveBusinessDate(date);
+    const businessDate = resolveCurrentBusinessDate(date);
     const progress = await this.progressRepository.findOne({ where: { playerId, businessDate } });
     const spins = await this.spinRecordRepository.find({
       where: { playerId, businessDate },

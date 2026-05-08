@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomBytes } from 'crypto';
 import { Repository } from 'typeorm';
-import { resolveBusinessDate } from '../common/business-date';
+import { resolveCurrentBusinessDate } from '../common/business-date';
 import { unixTimestampSeconds } from '../common/unix-timestamp';
 import { Player } from '../players/entities/player.entity';
 import { PlayersService } from '../players/players.service';
@@ -52,7 +52,7 @@ export class DemoTokenService {
 
   async getSessionState(token: string, date?: string) {
     const session = await this.findValidSession(token);
-    const businessDate = resolveBusinessDate(date);
+    const businessDate = resolveCurrentBusinessDate(date);
     const [progress, stages] = await Promise.all([
       this.playersService.getDailyProgress(session.playerId, businessDate),
       this.probabilityService.getStages(),

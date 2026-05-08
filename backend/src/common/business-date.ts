@@ -1,3 +1,5 @@
+import { BadRequestException } from '@nestjs/common';
+
 const BUSINESS_TIME_ZONE = 'Asia/Taipei';
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -23,4 +25,15 @@ export function assertBusinessDate(value: string): string {
 
 export function resolveBusinessDate(value?: string): string {
   return value ? assertBusinessDate(value) : getBusinessDate();
+}
+
+export function resolveCurrentBusinessDate(value?: string): string {
+  const businessDate = resolveBusinessDate(value);
+  const currentBusinessDate = getBusinessDate();
+
+  if (businessDate !== currentBusinessDate) {
+    throw new BadRequestException(`Only current business date ${currentBusinessDate} is allowed.`);
+  }
+
+  return businessDate;
 }

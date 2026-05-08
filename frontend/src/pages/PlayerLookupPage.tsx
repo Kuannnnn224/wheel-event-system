@@ -1,12 +1,11 @@
-import { Alert, Button, DatePicker, Form, Input, InputNumber, Table, Tag, Typography } from 'antd';
-import dayjs, { Dayjs } from 'dayjs';
+import { Alert, Button, Form, Input, InputNumber, Table, Tag, Typography } from 'antd';
+import dayjs from 'dayjs';
 import { useEffect, useMemo, useState } from 'react';
 import { api, fetchPlayerByExternalId, fetchStages } from '../api/client';
 import type { Player, PlayerDailyProgress, SpinRecord, StageConfig } from '../api/types';
 
 interface SearchValues {
   externalId: string;
-  date: Dayjs;
 }
 
 interface TurnoverValues {
@@ -105,7 +104,6 @@ export default function PlayerLookupPage() {
   const [stageConfigError, setStageConfigError] = useState<string>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
-  const [date, setDate] = useState(dayjs());
 
   useEffect(() => {
     fetchStages()
@@ -120,10 +118,8 @@ export default function PlayerLookupPage() {
   );
   const dailyStatus = getDailyStatus(progress);
 
-  async function loadProgress(nextPlayer: Player, businessDate: Dayjs) {
-    const { data } = await api.get<PlayerDailyProgress>(`/players/${nextPlayer.id}/daily-progress`, {
-      params: { date: businessDate.format('YYYY-MM-DD') },
-    });
+  async function loadProgress(nextPlayer: Player) {
+    const { data } = await api.get<PlayerDailyProgress>(`/players/${nextPlayer.id}/daily-progress`);
     setProgress(data);
   }
 
@@ -131,14 +127,13 @@ export default function PlayerLookupPage() {
     setLoading(true);
     setError(undefined);
     setProgress(undefined);
-    setDate(values.date);
 
     try {
       const found = await fetchPlayerByExternalId(values.externalId);
       setPlayer(found);
 
       if (found) {
-        await loadProgress(found, values.date);
+        await loadProgress(found);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : '查詢失敗');
@@ -159,7 +154,6 @@ export default function PlayerLookupPage() {
       const { data } = await api.post<PlayerDailyProgress>(`/players/${player.id}/turnover-adjustments`, {
         amountPoints: values.amountPoints,
         reason: values.reason,
-        date: date.format('YYYY-MM-DD'),
       });
       setProgress(data);
       adjustmentForm.resetFields();
@@ -220,12 +214,9 @@ export default function PlayerLookupPage() {
         {progress ? <Tag color={dailyStatus.color}>{dailyStatus.label}</Tag> : null}
       </div>
 
-      <Form className="lookup-search-panel toolbar" layout="vertical" initialValues={{ date }} onFinish={search}>
+      <Form className="lookup-search-panel toolbar" layout="vertical" onFinish={search}>
         <Form.Item label="玩家 ID" name="externalId" rules={[{ required: true }]}>
           <Input placeholder="external id" />
-        </Form.Item>
-        <Form.Item label="日期" name="date" rules={[{ required: true }]}>
-          <DatePicker />
         </Form.Item>
         <Form.Item>
           <Button type="primary" htmlType="submit" loading={loading}>
@@ -235,7 +226,7 @@ export default function PlayerLookupPage() {
         {player && progress ? (
           <div className="lookup-query-summary">
             <span>玩家 {player.externalId}</span>
-            <span>{date.format('YYYY-MM-DD')}</span>
+            <span>{progress.businessDate}</span>
           </div>
         ) : null}
       </Form>

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import { resolveBusinessDate } from '../common/business-date';
+import { resolveCurrentBusinessDate } from '../common/business-date';
 import { calculateUnlockedStage } from '../domain/stage-progress';
 import { PlayerDailyProgress } from '../players/entities/player-daily-progress.entity';
 import { PlayersService } from '../players/players.service';
@@ -21,7 +21,7 @@ export class TurnoverService {
 
   async addAdjustment(playerId: string, dto: AddTurnoverAdjustmentDto) {
     const player = await this.playersService.getById(playerId);
-    const businessDate = resolveBusinessDate(dto.date);
+    const businessDate = resolveCurrentBusinessDate(dto.date);
     const stageThresholds = await this.probabilityService.getStageThresholds();
 
     await this.dataSource.transaction(async (manager) => {

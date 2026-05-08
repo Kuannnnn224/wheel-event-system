@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { resolveBusinessDate } from '../common/business-date';
+import { resolveCurrentBusinessDate } from '../common/business-date';
 import { validateRealSpinRule } from '../domain/spin-rules';
 import { DemoTokenService } from '../demo-token/demo-token.service';
 import { PlayerDailyProgress } from '../players/entities/player-daily-progress.entity';
@@ -36,7 +36,7 @@ export class SpinsService {
 
   async realSpin(dto: RealSpinDto) {
     const player = await this.demoTokenService.validateToken(dto.token);
-    const businessDate = resolveBusinessDate(dto.date);
+    const businessDate = resolveCurrentBusinessDate(dto.date);
     const progress = await this.progressRepository.findOne({ where: { playerId: player.id, businessDate } });
     const existingSpins = await this.spinRecordRepository.find({
       where: { playerId: player.id, businessDate },
