@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsBoolean, IsInt, IsString, Matches, Max, Min, ValidateNested } from 'class-validator';
+import { IsArray, IsInt, IsString, Matches, Max, Min, ValidateNested } from 'class-validator';
 
 export class PrizeConfigInputDto {
   @IsString()
@@ -20,9 +20,6 @@ export class PrizeConfigInputDto {
   @IsInt()
   @Min(0)
   amountPoints: number;
-
-  @IsBoolean()
-  enabled: boolean;
 
   @IsInt()
   @Min(0)
@@ -46,9 +43,6 @@ export class StageConfigInputDto {
   @IsInt()
   @Min(0)
   highTableWeight: number;
-
-  @IsBoolean()
-  enabled: boolean;
 
   @IsArray()
   @ValidateNested({ each: true })

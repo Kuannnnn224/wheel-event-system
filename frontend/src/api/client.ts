@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Player, StageConfig } from './types';
+import type { Player, ProbabilityImportPreview, ProbabilityImportUpload, StageConfig } from './types';
 
 const TOKEN_KEY = 'wheel-admin-token';
 
@@ -43,6 +43,38 @@ export async function fetchStages() {
 export async function saveStages(stages: StageConfig[]) {
   const { data } = await api.put<StageConfig[]>('/probability/stages', { stages });
   return data;
+}
+
+export async function previewProbabilityImport(file: File) {
+  const formData = new FormData();
+  formData.append('file', file);
+  const { data } = await api.post<ProbabilityImportPreview>('/probability/imports/preview', formData);
+  return data;
+}
+
+export async function applyProbabilityImport(uploadId: string) {
+  const { data } = await api.post<{ upload: ProbabilityImportUpload; diff: ProbabilityImportPreview['diff']; stages: StageConfig[] }>(
+    '/probability/imports/apply',
+    { uploadId },
+  );
+  return data;
+}
+
+export async function fetchProbabilityImports() {
+  const { data } = await api.get<ProbabilityImportUpload[]>('/probability/imports');
+  return data;
+}
+
+export async function downloadProbabilityImport(upload: ProbabilityImportUpload) {
+  const { data } = await api.get<Blob>(`/probability/imports/${upload.id}/download`, { responseType: 'blob' });
+  const url = URL.createObjectURL(data);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = upload.originalFilename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 
 export async function fetchPlayerByExternalId(externalId: string) {

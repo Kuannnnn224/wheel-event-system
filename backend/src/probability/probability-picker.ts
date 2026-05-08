@@ -3,7 +3,6 @@ export interface WeightedPrize {
   name: string;
   weight: number;
   amountPoints: number;
-  enabled?: boolean;
 }
 
 export type ProbabilityTable = 'low' | 'high';
@@ -40,21 +39,21 @@ export function pickProbabilityTable(lowWeight: number, highWeight: number, rng 
 }
 
 export function pickWeightedPrize<T extends WeightedPrize>(prizes: T[], rng = Math.random): T {
-  const enabledPrizes = prizes.filter((prize) => prize.enabled !== false && prize.weight > 0);
-  const totalWeight = enabledPrizes.reduce((sum, prize) => sum + prize.weight, 0);
+  const weightedPrizes = prizes.filter((prize) => prize.weight > 0);
+  const totalWeight = weightedPrizes.reduce((sum, prize) => sum + prize.weight, 0);
 
   if (totalWeight <= 0) {
-    throw new Error('At least one enabled prize with positive weight is required.');
+    throw new Error('At least one prize with positive weight is required.');
   }
 
   let roll = rng() * totalWeight;
 
-  for (const prize of enabledPrizes) {
+  for (const prize of weightedPrizes) {
     roll -= prize.weight;
     if (roll < 0) {
       return prize;
     }
   }
 
-  return enabledPrizes[enabledPrizes.length - 1];
+  return weightedPrizes[weightedPrizes.length - 1];
 }

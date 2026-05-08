@@ -22,6 +22,8 @@ Keep root-level files limited to project docs, environment examples, Docker setu
 - Probability JSON is read on demand so PM/parser updates can hot-load without a backend restart.
 - XLSX parser output must keep the same JSON shape rather than changing runtime draw logic.
 - Current XLSX import uses `config.xlsx`, `weight.xlsx`, `low.xlsx`, and `high.xlsx`; `prize.xlsx` and `daily-limit.xlsx` are source files reserved for future rules until the business meaning is confirmed.
+- Probability configs do not carry enabled/disabled flags; set the relevant weights to `0` when a stage split or prize should stop being selected.
+- Uploaded PM probability zip files are stored under `storage/probability-imports/` for later PM download and are ignored by Git.
 - Bulk simulations are one-off in-memory jobs and must not write real player spin records.
 
 ## Backend Boundaries

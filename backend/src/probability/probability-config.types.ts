@@ -6,14 +6,12 @@ export interface ProbabilityPrizeConfig {
   amountPoints: number;
   lowWeight: number;
   highWeight: number;
-  enabled: boolean;
   sortOrder: number;
 }
 
 export interface ProbabilityStageConfig {
   stageNumber: number;
   turnoverThresholdPoints: number;
-  enabled: boolean;
   lowTableWeight: number;
   highTableWeight: number;
   prizes: ProbabilityPrizeConfig[];
@@ -32,4 +30,20 @@ export interface DrawPrizeResult {
 export interface StageDrawConfig {
   stage: ProbabilityStageConfig;
   prizes: ProbabilityPrizeConfig[];
+}
+
+export interface ProbabilityImportDiffItem {
+  key: string;
+  stageNumber: number;
+  rewardCode?: string;
+  field: string;
+  label: string;
+  before: string | number | null;
+  after: string | number | null;
+}
+
+export interface ProbabilityImportPreview {
+  filename: string;
+  diff: ProbabilityImportDiffItem[];
+  proposedConfig: ProbabilityConfigFile;
 }

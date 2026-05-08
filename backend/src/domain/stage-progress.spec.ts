@@ -1,11 +1,11 @@
 import { calculateUnlockedStage } from './stage-progress';
 
 const stages = [
-  { stageNumber: 1, turnoverThresholdPoints: 1000, enabled: true },
-  { stageNumber: 2, turnoverThresholdPoints: 3000, enabled: true },
-  { stageNumber: 3, turnoverThresholdPoints: 6000, enabled: true },
-  { stageNumber: 4, turnoverThresholdPoints: 10000, enabled: true },
-  { stageNumber: 5, turnoverThresholdPoints: 15000, enabled: true },
+  { stageNumber: 1, turnoverThresholdPoints: 1000 },
+  { stageNumber: 2, turnoverThresholdPoints: 3000 },
+  { stageNumber: 3, turnoverThresholdPoints: 6000 },
+  { stageNumber: 4, turnoverThresholdPoints: 10000 },
+  { stageNumber: 5, turnoverThresholdPoints: 15000 },
 ];
 
 describe('calculateUnlockedStage', () => {
@@ -19,7 +19,7 @@ describe('calculateUnlockedStage', () => {
     expect(calculateUnlockedStage(15000, stages)).toBe(5);
   });
 
-  it('ignores disabled stages', () => {
-    expect(calculateUnlockedStage(15000, [{ ...stages[4], enabled: false }])).toBe(0);
+  it('uses threshold only because stages are always enabled', () => {
+    expect(calculateUnlockedStage(15000, [stages[4]])).toBe(5);
   });
 });

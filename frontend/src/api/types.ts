@@ -12,7 +12,6 @@ export interface PrizeConfig {
   lowWeight: number;
   highWeight: number;
   amountPoints: number;
-  enabled: boolean;
   sortOrder: number;
 }
 
@@ -22,8 +21,35 @@ export interface StageConfig {
   turnoverThresholdPoints: number;
   lowTableWeight: number;
   highTableWeight: number;
-  enabled: boolean;
   prizes: PrizeConfig[];
+}
+
+export interface ProbabilityImportDiffItem {
+  key: string;
+  stageNumber: number;
+  rewardCode?: string;
+  field: string;
+  label: string;
+  before: string | number | null;
+  after: string | number | null;
+}
+
+export interface ProbabilityImportUpload {
+  id: string;
+  originalFilename: string;
+  storedFilename: string;
+  fileSize: number;
+  uploadedAt: string;
+}
+
+export interface ProbabilityImportPreview {
+  filename: string;
+  upload: ProbabilityImportUpload;
+  diff: ProbabilityImportDiffItem[];
+  proposedConfig: {
+    version: number;
+    stages: StageConfig[];
+  };
 }
 
 export interface SpinRecord {

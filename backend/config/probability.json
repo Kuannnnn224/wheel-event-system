@@ -4,7 +4,6 @@
     {
       "stageNumber": 1,
       "turnoverThresholdPoints": 500,
-      "enabled": true,
       "lowTableWeight": 960,
       "highTableWeight": 40,
       "prizes": [
@@ -14,8 +13,7 @@
           "amountPoints": 1,
           "sortOrder": 1,
           "lowWeight": 64,
-          "highWeight": 41,
-          "enabled": true
+          "highWeight": 41
         },
         {
           "rewardCode": "B",
@@ -23,8 +21,7 @@
           "amountPoints": 3,
           "sortOrder": 2,
           "lowWeight": 30,
-          "highWeight": 50,
-          "enabled": true
+          "highWeight": 50
         },
         {
           "rewardCode": "C",
@@ -32,8 +29,7 @@
           "amountPoints": 10,
           "sortOrder": 3,
           "lowWeight": 5,
-          "highWeight": 7,
-          "enabled": true
+          "highWeight": 7
         },
         {
           "rewardCode": "D",
@@ -41,8 +37,7 @@
           "amountPoints": 25,
           "sortOrder": 4,
           "lowWeight": 1,
-          "highWeight": 2,
-          "enabled": true
+          "highWeight": 2
         },
         {
           "rewardCode": "E",
@@ -50,15 +45,13 @@
           "amountPoints": 500,
           "sortOrder": 5,
           "lowWeight": 0,
-          "highWeight": 0,
-          "enabled": true
+          "highWeight": 0
         }
       ]
     },
     {
       "stageNumber": 2,
       "turnoverThresholdPoints": 5000,
-      "enabled": true,
       "lowTableWeight": 950,
       "highTableWeight": 50,
       "prizes": [
@@ -68,8 +61,7 @@
           "amountPoints": 3,
           "sortOrder": 1,
           "lowWeight": 64,
-          "highWeight": 40,
-          "enabled": true
+          "highWeight": 40
         },
         {
           "rewardCode": "B",
@@ -77,8 +69,7 @@
           "amountPoints": 8,
           "sortOrder": 2,
           "lowWeight": 30,
-          "highWeight": 50,
-          "enabled": true
+          "highWeight": 50
         },
         {
           "rewardCode": "C",
@@ -86,8 +77,7 @@
           "amountPoints": 50,
           "sortOrder": 3,
           "lowWeight": 5,
-          "highWeight": 7,
-          "enabled": true
+          "highWeight": 7
         },
         {
           "rewardCode": "D",
@@ -95,8 +85,7 @@
           "amountPoints": 250,
           "sortOrder": 4,
           "lowWeight": 1,
-          "highWeight": 3,
-          "enabled": true
+          "highWeight": 3
         },
         {
           "rewardCode": "E",
@@ -104,15 +93,13 @@
           "amountPoints": 5000,
           "sortOrder": 5,
           "lowWeight": 0,
-          "highWeight": 0,
-          "enabled": true
+          "highWeight": 0
         }
       ]
     },
     {
       "stageNumber": 3,
       "turnoverThresholdPoints": 20000,
-      "enabled": true,
       "lowTableWeight": 940,
       "highTableWeight": 60,
       "prizes": [
@@ -122,8 +109,7 @@
           "amountPoints": 8,
           "sortOrder": 1,
           "lowWeight": 64,
-          "highWeight": 40,
-          "enabled": true
+          "highWeight": 40
         },
         {
           "rewardCode": "B",
@@ -131,8 +117,7 @@
           "amountPoints": 15,
           "sortOrder": 2,
           "lowWeight": 30,
-          "highWeight": 50,
-          "enabled": true
+          "highWeight": 50
         },
         {
           "rewardCode": "C",
@@ -140,8 +125,7 @@
           "amountPoints": 50,
           "sortOrder": 3,
           "lowWeight": 5,
-          "highWeight": 7,
-          "enabled": true
+          "highWeight": 7
         },
         {
           "rewardCode": "D",
@@ -149,8 +133,7 @@
           "amountPoints": 300,
           "sortOrder": 4,
           "lowWeight": 1,
-          "highWeight": 3,
-          "enabled": true
+          "highWeight": 3
         },
         {
           "rewardCode": "E",
@@ -158,15 +141,13 @@
           "amountPoints": 20000,
           "sortOrder": 5,
           "lowWeight": 0,
-          "highWeight": 0,
-          "enabled": true
+          "highWeight": 0
         }
       ]
     },
     {
       "stageNumber": 4,
       "turnoverThresholdPoints": 50000,
-      "enabled": true,
       "lowTableWeight": 930,
       "highTableWeight": 70,
       "prizes": [
@@ -176,8 +157,7 @@
           "amountPoints": 15,
           "sortOrder": 1,
           "lowWeight": 64,
-          "highWeight": 40,
-          "enabled": true
+          "highWeight": 40
         },
         {
           "rewardCode": "B",
@@ -185,8 +165,7 @@
           "amountPoints": 30,
           "sortOrder": 2,
           "lowWeight": 30,
-          "highWeight": 50,
-          "enabled": true
+          "highWeight": 50
         },
         {
           "rewardCode": "C",
@@ -194,8 +173,7 @@
           "amountPoints": 80,
           "sortOrder": 3,
           "lowWeight": 5,
-          "highWeight": 7,
-          "enabled": true
+          "highWeight": 7
         },
         {
           "rewardCode": "D",
@@ -203,8 +181,7 @@
           "amountPoints": 500,
           "sortOrder": 4,
           "lowWeight": 1,
-          "highWeight": 3,
-          "enabled": true
+          "highWeight": 3
         },
         {
           "rewardCode": "E",
@@ -212,15 +189,13 @@
           "amountPoints": 50000,
           "sortOrder": 5,
           "lowWeight": 0,
-          "highWeight": 0,
-          "enabled": true
+          "highWeight": 0
         }
       ]
     },
     {
       "stageNumber": 5,
       "turnoverThresholdPoints": 100000,
-      "enabled": true,
       "lowTableWeight": 920,
       "highTableWeight": 80,
       "prizes": [
@@ -230,8 +205,7 @@
           "amountPoints": 30,
           "sortOrder": 1,
           "lowWeight": 64,
-          "highWeight": 40,
-          "enabled": true
+          "highWeight": 40
         },
         {
           "rewardCode": "B",
@@ -239,8 +213,7 @@
           "amountPoints": 80,
           "sortOrder": 2,
           "lowWeight": 30,
-          "highWeight": 50,
-          "enabled": true
+          "highWeight": 50
         },
         {
           "rewardCode": "C",
@@ -248,8 +221,7 @@
           "amountPoints": 300,
           "sortOrder": 3,
           "lowWeight": 5,
-          "highWeight": 7,
-          "enabled": true
+          "highWeight": 7
         },
         {
           "rewardCode": "D",
@@ -257,8 +229,7 @@
           "amountPoints": 1000,
           "sortOrder": 4,
           "lowWeight": 1,
-          "highWeight": 3,
-          "enabled": true
+          "highWeight": 3
         },
         {
           "rewardCode": "E",
@@ -266,8 +237,7 @@
           "amountPoints": 100000,
           "sortOrder": 5,
           "lowWeight": 0,
-          "highWeight": 0,
-          "enabled": true
+          "highWeight": 0
         }
       ]
     }

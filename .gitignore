@@ -7,6 +7,8 @@ coverage/
 *.log
 logs/*
 !logs/.gitkeep
+storage/*
+!storage/.gitkeep
 
 backend/node_modules/
 backend/dist/

@@ -20,7 +20,6 @@ const fallbackStages: StageConfig[] = Array.from({ length: 5 }, (_, index) => ({
   turnoverThresholdPoints: 0,
   lowTableWeight: 80,
   highTableWeight: 20,
-  enabled: true,
   prizes: [],
 }));
 
@@ -46,10 +45,10 @@ export default function SpinSimulatorPage() {
     [selectedStageConfig?.prizes],
   );
   const lowEnabledWeight = selectedPrizes
-    .filter((prize) => prize.enabled && prize.lowWeight > 0)
+    .filter((prize) => prize.lowWeight > 0)
     .reduce((sum, prize) => sum + prize.lowWeight, 0);
   const highEnabledWeight = selectedPrizes
-    .filter((prize) => prize.enabled && prize.highWeight > 0)
+    .filter((prize) => prize.highWeight > 0)
     .reduce((sum, prize) => sum + prize.highWeight, 0);
   const tableSplitTotal = (selectedStageConfig?.lowTableWeight ?? 0) + (selectedStageConfig?.highTableWeight ?? 0);
   const lowSplitRate = tableSplitTotal > 0 ? (((selectedStageConfig?.lowTableWeight ?? 0) / tableSplitTotal) * 100).toFixed(2) : '0.00';
@@ -67,8 +66,7 @@ export default function SpinSimulatorPage() {
               <button
                 key={stage.stageNumber}
                 type="button"
-                className={`stage-card ${isSelected ? 'is-selected' : ''} ${stage.enabled ? '' : 'is-disabled'}`}
-                disabled={!stage.enabled}
+                className={`stage-card ${isSelected ? 'is-selected' : ''}`}
                 onClick={() => {
                   setSelectedStage(stage.stageNumber);
                   mutation.reset();
@@ -76,7 +74,6 @@ export default function SpinSimulatorPage() {
               >
                 <span className="stage-card-top">
                   <span className="stage-badge">Stage {stage.stageNumber}</span>
-                  <Tag color={stage.enabled ? 'processing' : 'default'}>{stage.enabled ? '啟用' : '停用'}</Tag>
                 </span>
                 <span className="stage-card-title">第 {stage.stageNumber} 階段</span>
                 <span className="stage-card-meta">流水門檻 {stage.turnoverThresholdPoints.toLocaleString()} 點</span>
@@ -109,17 +106,16 @@ export default function SpinSimulatorPage() {
                     <th>Low 命中率</th>
                     <th>High 權重</th>
                     <th>High 命中率</th>
-                    <th>狀態</th>
                   </tr>
                 </thead>
                 <tbody>
                   {selectedPrizes.map((prize) => {
                     const lowHitRate =
-                      prize.enabled && prize.lowWeight > 0 && lowEnabledWeight > 0
+                      prize.lowWeight > 0 && lowEnabledWeight > 0
                         ? `${((prize.lowWeight / lowEnabledWeight) * 100).toFixed(2)}%`
                         : '0.00%';
                     const highHitRate =
-                      prize.enabled && prize.highWeight > 0 && highEnabledWeight > 0
+                      prize.highWeight > 0 && highEnabledWeight > 0
                         ? `${((prize.highWeight / highEnabledWeight) * 100).toFixed(2)}%`
                         : '0.00%';
 
@@ -134,9 +130,6 @@ export default function SpinSimulatorPage() {
                         <td>{lowHitRate}</td>
                         <td>{prize.highWeight.toLocaleString()}</td>
                         <td>{highHitRate}</td>
-                        <td>
-                          <Tag color={prize.enabled ? 'success' : 'default'}>{prize.enabled ? '啟用' : '停用'}</Tag>
-                        </td>
                       </tr>
                     );
                   })}
@@ -171,7 +164,7 @@ export default function SpinSimulatorPage() {
             type="primary"
             size="large"
             loading={mutation.isPending}
-            disabled={!selectedStageConfig?.enabled}
+            disabled={!selectedStageConfig}
             onClick={() => mutation.mutate(selectedStage)}
           >
             Spin

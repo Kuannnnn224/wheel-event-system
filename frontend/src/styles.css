@@ -182,13 +182,6 @@ body {
   box-shadow: 0 16px 34px rgba(37, 99, 235, 0.16);
 }
 
-.stage-card.is-disabled {
-  cursor: not-allowed;
-  color: #94a3b8;
-  background: #f3f5f8;
-  box-shadow: none;
-}
-
 .stage-card-top {
   display: flex;
   justify-content: space-between;
@@ -273,6 +266,31 @@ body {
   border: 1px dashed #cbd7e6;
   border-radius: 8px;
   background: #ffffff;
+}
+
+.import-preview-panel,
+.import-history-panel {
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid #dde5ef;
+  border-radius: 8px;
+  box-shadow: 0 14px 34px rgba(31, 42, 68, 0.05);
+}
+
+.import-preview-header {
+  margin-bottom: 14px;
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.import-preview-header h4 {
+  margin: 2px 0 0;
+}
+
+.import-history-header {
+  margin-bottom: 10px;
 }
 
 .spin-action-bar {

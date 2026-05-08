@@ -1,8 +1,9 @@
 import { mkdtempSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
+import AdmZip = require('adm-zip');
 import * as XLSX from 'xlsx';
-import { parseProbabilityXlsxDirectory } from './probability-xlsx.parser';
+import { parseProbabilityXlsxDirectory, parseProbabilityXlsxZip } from './probability-xlsx.parser';
 
 function writeWorkbook(path: string, sheets: Record<string, unknown[][]>) {
   const workbook = XLSX.utils.book_new();
@@ -92,10 +93,17 @@ describe('parseProbabilityXlsxDirectory', () => {
       amountPoints: 1,
       lowWeight: 64,
       highWeight: 41,
-      enabled: true,
       sortOrder: 1,
     });
+    expect(config.stages[0]).not.toHaveProperty('enabled');
+    expect(config.stages[0].prizes[0]).not.toHaveProperty('enabled');
     expect(config.stages[4].lowTableWeight).toBe(920);
     expect(config.stages[4].highTableWeight).toBe(80);
+
+    const zip = new AdmZip();
+    zip.addLocalFolder(dir, 'source');
+    const zipConfig = parseProbabilityXlsxZip(zip.toBuffer());
+
+    expect(zipConfig).toEqual(config);
   });
 });

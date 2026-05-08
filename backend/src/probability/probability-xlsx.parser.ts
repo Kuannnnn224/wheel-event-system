@@ -1,5 +1,6 @@
 import { existsSync } from 'fs';
 import { join } from 'path';
+import AdmZip = require('adm-zip');
 import * as XLSX from 'xlsx';
 import { ProbabilityConfigFile, ProbabilityPrizeConfig } from './probability-config.types';
 
@@ -15,20 +16,54 @@ const STAGE_TEXT_MAP = new Map([
   ['五', 5],
 ]);
 
+interface ProbabilitySourceWorkbooks {
+  configWorkbook: XLSX.WorkBook;
+  lowWorkbook: XLSX.WorkBook;
+  highWorkbook: XLSX.WorkBook;
+  weightWorkbook: XLSX.WorkBook;
+}
+
 export function parseProbabilityXlsxDirectory(sourceDir: string): ProbabilityConfigFile {
   const resolvedSourceDir = resolveSourceDirectory(sourceDir);
-  const configWorkbook = XLSX.readFile(join(resolvedSourceDir, 'config.xlsx'));
-  const lowWorkbook = XLSX.readFile(join(resolvedSourceDir, 'low.xlsx'));
-  const highWorkbook = XLSX.readFile(join(resolvedSourceDir, 'high.xlsx'));
-  const weightWorkbook = XLSX.readFile(join(resolvedSourceDir, 'weight.xlsx'));
+  return parseProbabilityWorkbooks({
+    configWorkbook: XLSX.readFile(join(resolvedSourceDir, 'config.xlsx')),
+    lowWorkbook: XLSX.readFile(join(resolvedSourceDir, 'low.xlsx')),
+    highWorkbook: XLSX.readFile(join(resolvedSourceDir, 'high.xlsx')),
+    weightWorkbook: XLSX.readFile(join(resolvedSourceDir, 'weight.xlsx')),
+  });
+}
 
-  const thresholds = parseThresholds(configWorkbook);
-  const tableWeights = parseTableWeights(weightWorkbook);
+export function parseProbabilityXlsxZip(zipBuffer: Buffer): ProbabilityConfigFile {
+  const zip = new AdmZip(zipBuffer);
+  const files = new Map<string, Buffer>();
+
+  for (const entry of zip.getEntries()) {
+    if (entry.isDirectory) {
+      continue;
+    }
+
+    const fileName = entry.entryName.split(/[\\/]/).pop()?.toLowerCase();
+    if (fileName) {
+      files.set(fileName, entry.getData());
+    }
+  }
+
+  return parseProbabilityWorkbooks({
+    configWorkbook: XLSX.read(requireZipEntry(files, 'config.xlsx'), { type: 'buffer' }),
+    lowWorkbook: XLSX.read(requireZipEntry(files, 'low.xlsx'), { type: 'buffer' }),
+    highWorkbook: XLSX.read(requireZipEntry(files, 'high.xlsx'), { type: 'buffer' }),
+    weightWorkbook: XLSX.read(requireZipEntry(files, 'weight.xlsx'), { type: 'buffer' }),
+  });
+}
+
+function parseProbabilityWorkbooks(workbooks: ProbabilitySourceWorkbooks): ProbabilityConfigFile {
+  const thresholds = parseThresholds(workbooks.configWorkbook);
+  const tableWeights = parseTableWeights(workbooks.weightWorkbook);
 
   return {
     version: 1,
     stages: [1, 2, 3, 4, 5].map((stageNumber) => {
-      const prizes = parseStagePrizes(configWorkbook, lowWorkbook, highWorkbook, stageNumber);
+      const prizes = parseStagePrizes(workbooks.configWorkbook, workbooks.lowWorkbook, workbooks.highWorkbook, stageNumber);
       const split = tableWeights.get(stageNumber);
 
       if (!split) {
@@ -38,13 +73,21 @@ export function parseProbabilityXlsxDirectory(sourceDir: string): ProbabilityCon
       return {
         stageNumber,
         turnoverThresholdPoints: requireNumber(thresholds.get(stageNumber), `stage ${stageNumber} threshold`),
-        enabled: true,
         lowTableWeight: split.low,
         highTableWeight: split.high,
         prizes,
       };
     }),
   };
+}
+
+function requireZipEntry(files: Map<string, Buffer>, fileName: string) {
+  const file = files.get(fileName);
+  if (!file) {
+    throw new Error(`Missing ${fileName} in uploaded probability zip.`);
+  }
+
+  return file;
 }
 
 function resolveSourceDirectory(sourceDir: string) {
@@ -90,12 +133,11 @@ function parseStagePrizes(
     ...prize,
     lowWeight: requireNumber(lowWeights.get(prize.rewardCode), `stage ${stageNumber} ${prize.rewardCode} low weight`),
     highWeight: requireNumber(highWeights.get(prize.rewardCode), `stage ${stageNumber} ${prize.rewardCode} high weight`),
-    enabled: true,
   }));
 }
 
 function parsePrizeAmounts(workbook: XLSX.WorkBook, stageNumber: number) {
-  const prizes: Array<Omit<ProbabilityPrizeConfig, 'lowWeight' | 'highWeight' | 'enabled'>> = [];
+  const prizes: Array<Omit<ProbabilityPrizeConfig, 'lowWeight' | 'highWeight'>> = [];
   for (const row of getSheetRows(workbook, `PrizeLV${stageNumber}`)) {
     const rewardIndex = row.findIndex((cell) => REWARD_CODES.includes(normalizeText(cell)));
     if (rewardIndex < 0) {
