@@ -1,0 +1,471 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: #030010;
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Arial Black', Arial, sans-serif;
+}
+
+/* ═══ 1170×720 全版面框架 ═══ */
+.frame {
+  position: relative;
+  width: 1170px; height: 720px;
+  flex: 0 0 auto;
+  overflow: hidden;
+  transform: scale(var(--frame-scale, 1));
+  transform-origin: center center;
+  /* 底層漸層，圖片蓋上後作為補底 */
+  background: linear-gradient(180deg, #1a0645 0%, #08021a 50%, #0f0330 100%);
+}
+
+/* 共用 absolute 元素 */
+.frame img {
+  position: absolute;
+  display: block;
+}
+
+/* ═══ 得獎跑馬燈 ═══ */
+.ticker-wrap {
+  position: absolute;
+  left: 133px; top: 293px;
+  width: 244px; height: 265px; /* 原始高度備註：114px */
+  overflow: hidden;
+}
+.ticker-inner {
+  padding: 0 14px;
+  display: flex; flex-direction: column;
+  /* 15 rows × 22px = 330px；JS initTicker() 複製後無縫循環 */
+  animation: tickerScroll 28s linear infinite;
+}
+@keyframes tickerScroll {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-330px); }
+}
+.t-row {
+  display: grid;
+  grid-template-columns: 76px 58px 1fr;
+  align-items: center;
+  height: 22px;
+  border-bottom: 1px solid rgba(130, 70, 240, 0.22);
+}
+.t-row:last-child { border-bottom: none; }
+.t-name {
+  font-family: Arial, sans-serif;
+  font-size: 15px; font-weight: 700;
+  color: #D3A4FF;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+.t-amt {
+  font-family: 'Arial Black', Arial, sans-serif;
+  font-size: 15px; font-weight: 900;
+  color: #ffdd44;
+  text-align: center;
+  letter-spacing: 0.3px;
+}
+.t-time {
+  font-family: 'Arial Black', Arial, sans-serif;
+  font-size: 15px; font-weight: 400;
+  color: #D3A4FF;
+  text-align: right;
+  letter-spacing: 0.1px;
+}
+
+/* ═══ 轉盤旋轉容器 ═══
+   Pencil 座標: left=441 top=57 width=441 height=407
+   CSS: 繞元素中心旋轉 (transform-origin 預設 50% 50%)
+*/
+#wheelRotator {
+  position: absolute;
+  left: 450px; top: 50px;
+  width: 430px; height: 430px;
+  transform-origin: center center;
+  /* transition 由 JS 設定 */
+}
+#wheelRotator > img.wheel-bg {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: contain; /* 保持圓形，不壓扁 */
+}
+.prize-icon {
+  position: absolute;
+  object-fit: contain;
+  transform-origin: 0 0; /* Pencil 繞左上角旋轉 */
+}
+#prizeLabels {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; z-index: 2;
+}
+
+/* ═══ SPIN 按鈕
+   視覺位置: left=579 top=182 w=163 h=166
+   (Pencil 旋轉後已換算好)
+*/
+#spinBtn {
+  position: absolute;
+  left: 579px; top: 182px;
+  width: 163px; height: 166px;
+  border-radius: 50%; z-index: 20; cursor: pointer;
+  transition: filter .15s;
+}
+#spinBtn:hover  { filter: brightness(1.15) drop-shadow(0 0 14px rgba(255,180,0,.7)); }
+#spinBtn img    { width: 100%; height: 100%; border-radius: 50%; object-fit: contain; display:block; }
+#spinBtn.spinning { animation: spinPulse .7s ease-in-out infinite alternate; }
+/* 灰按鈕（未儲值）停用狀態 */
+#spinBtn.spin-disabled         { cursor: not-allowed !important; }
+#spinBtn.spin-disabled:hover   { filter: brightness(0.9) grayscale(0.2); }
+
+/* ═══ 儲值提示彈窗 ═══ */
+.deposit-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.82);
+  z-index: 300; align-items: center; justify-content: center;
+}
+.deposit-overlay.show { display: flex; }
+.deposit-box {
+  background: url('assets/window.png') no-repeat center center;
+  background-size: 100% 100%;
+  border: none; border-radius: 0;
+  /* padding-top: 0 讓標題從頂端開始，對齊藍色標題框 */
+  padding: 0 46px 32px;
+  text-align: center; min-width: 280px;
+  box-shadow: none;
+  animation: popIn .35s cubic-bezier(.34,1.56,.64,1);
+}
+.deposit-title {
+  /* height 撐開藍色區高度，flex 垂直置中文字 */
+  height: 56px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 900; letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #ffffff;
+  text-shadow: -2px -2px 0 #000, 2px -2px 0 #000,
+               -2px  2px 0 #000, 2px  2px 0 #000,
+                0px -2px 0 #000, 0px  2px 0 #000,
+               -2px  0px 0 #000, 2px  0px 0 #000;
+  margin-bottom: 12px;
+}
+.deposit-msg {
+  font-size: 13px; color: #9080b8; line-height: 1.6; margin-bottom: 20px;
+}
+.deposit-msg strong { color: #ffdd44; }
+.deposit-btn {
+  background: url('assets/button1.png') no-repeat center center;
+  background-size: 100% 100%;
+  border: none; border-radius: 0;
+  width: 155px; height: 67px;
+  color: #fff;
+  text-shadow: -2px -2px 0 #000, 2px -2px 0 #000,
+               -2px  2px 0 #000, 2px  2px 0 #000,
+                0px -2px 0 #000, 0px  2px 0 #000,
+               -2px  0px 0 #000, 2px  0px 0 #000;
+  font-size: 15px; font-weight: 900;
+  letter-spacing: 1px; cursor: pointer;
+  transition: transform .1s, filter .1s;
+  margin-right: 10px;
+}
+.deposit-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+.deposit-close-btn {
+  background: url('assets/button2.png') no-repeat center center;
+  background-size: 100% 100%;
+  border: none; border-radius: 0;
+  width: 155px; height: 67px;
+  color: #fff;
+  text-shadow: -2px -2px 0 #000, 2px -2px 0 #000,
+               -2px  2px 0 #000, 2px  2px 0 #000,
+                0px -2px 0 #000, 0px  2px 0 #000,
+               -2px  0px 0 #000, 2px  0px 0 #000;
+  font-size: 15px; font-weight: 900;
+  letter-spacing: 1px; cursor: pointer;
+  transition: transform .1s, filter .1s;
+}
+.deposit-close-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+@keyframes spinPulse {
+  from { filter: brightness(1)    drop-shadow(0 0  8px rgba(255,180,0,.5)); }
+  to   { filter: brightness(1.28) drop-shadow(0 0 22px rgba(255,210,0,.9)); }
+}
+
+/* SPIN 按鈕待機呼吸燈（金按鈕可用、未旋轉時持續發光） */
+@keyframes spinIdleBreathe {
+  from { filter: brightness(1)    drop-shadow(0 0 10px rgba(255,180,0,.5)); }
+  to   { filter: brightness(1.20) drop-shadow(0 0 26px rgba(255,210,0,.9)); }
+}
+#spinBtn.spin-idle { animation: spinIdleBreathe 1.6s ease-in-out infinite alternate; }
+
+/* 流水進度條（金按鈕可用時才顯示） */
+.progress-bar {
+  position: absolute;
+  display: none;
+  left: 510px;
+  top: 528px;
+  width: 307px;
+  height: 35px;
+  background: url('assets/progress_bar.png') no-repeat center;
+  background-size: 100% 100%;
+  z-index: 6;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Arial Black', Arial, sans-serif;
+  font-weight: 900;
+  font-size: 16px;
+  color: #ffffff;
+  letter-spacing: 1.2px;
+  text-shadow: -2px -2px 0 #d36a05, 2px -2px 0 #d36a05,
+               -2px  2px 0 #d36a05, 2px  2px 0 #d36a05,
+                0px -2px 0 #d36a05, 0px  2px 0 #d36a05,
+               -2px  0px 0 #d36a05, 2px  0px 0 #d36a05;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.progress-bar.show { display: flex; }
+
+/* Deposit Now 按鈕（NEED_DEPOSIT 狀態才顯示，金色按鈕，可點觸發儲值彈窗）
+   元素 61×322 直立 box，CSS rotate(-90deg) → 視覺 322×61 水平膠囊
+   注意：class 名稱「不能」叫 .deposit-btn，會與 popup 內 <button class="deposit-btn">
+        的 hover scale(1.05) 衝突，導致 rotate(-90deg) 被覆蓋。 */
+.deposit-area {
+  position: absolute;
+  display: block;
+  left: 503px; top: 614px;
+  width: 61px; height: 322px;
+  transform: rotate(-90deg);
+  transform-origin: 0 0;
+  z-index: 13;
+  cursor: pointer;
+  background: url('assets/btn_deposit.png') no-repeat center;
+  background-size: 100% 100%;
+  filter: drop-shadow(0 4px 16px rgba(255,140,0,.7));
+}
+
+/* 文字背景（usable 狀態才顯示，紫色膠囊 9-slice 拼接）
+   位置/尺寸獨立於 deposit-btn：51×322 旋轉後視覺 322×51 水平膠囊。
+   border-image-slice: 35 0 35 0 → 原圖上下 35px 為 caps、中段 51px 沿垂直拉伸；
+   旋轉後 = 左右兩端圓角保留 + 中間延伸 */
+.text-bg {
+  position: absolute;
+  display: none;
+  left: 470px; top: 614px;
+  width: 51px; height: 322px;
+  transform: rotate(-90deg);
+  transform-origin: 0 0;
+  z-index: 13;
+  pointer-events: none;
+  border-style: solid;
+  border-color: transparent;
+  border-width: 15px 0;
+  box-sizing: border-box;
+  border-image-source: url('assets/text_background.png');
+  border-image-slice: 35 0 35 0 fill;
+  border-image-repeat: stretch stretch;
+}
+.text-bg.show { display: block; }
+
+/* text-bg 上的訊息文字（usable 狀態才顯示，疊在 text_background 上）*/
+.text-bg-message {
+  position: absolute;
+  display: none;
+  /* 對齊 text-bg 視覺位置 470-792, 563-614（rotate 後的水平範圍）*/
+  left: 470px; top: 563px;
+  width: 322px; height: 51px;
+  align-items: center;
+  justify-content: center;
+  z-index: 14;
+  font-family: 'Arial Black', Arial, sans-serif;
+  font-weight: 900;
+  font-size: 14px;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  text-shadow: -2px -2px 0 #000, 2px -2px 0 #000,
+               -2px  2px 0 #000, 2px  2px 0 #000,
+                0px -2px 0 #000, 0px  2px 0 #000,
+               -2px  0px 0 #000, 2px  0px 0 #000;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.text-bg-message.show { display: flex; }
+
+/* Go Bet 按鈕（usable 狀態才顯示，置於 text-bg 右側）
+   - 點擊呼叫 window.onGoBet() 給後端串接，未綁定時 console.log */
+/* 注意：用 img.go-bet-btn（含 type 選擇器）提升 specificity 到 (0,1,1)，
+   否則會被開頭的 .frame img { display: block; } 覆蓋掉。 */
+img.go-bet-btn {
+  position: absolute;
+  display: none;
+  left: 755px; top: 556px;
+  width: 102px; height: 57px;
+  cursor: pointer;
+  z-index: 14;
+  filter: drop-shadow(0 2px 8px rgba(255,140,0,.5));
+  transition: transform .1s, filter .1s;
+}
+img.go-bet-btn.show { display: block; }
+img.go-bet-btn:hover { transform: scale(1.05); filter: brightness(1.1) drop-shadow(0 2px 12px rgba(255,180,0,.7)); }
+img.go-bet-btn:active { transform: scale(0.96); }
+
+/* ═══ VIP 等級文字 ═══ */
+.vip-text {
+  position: absolute; z-index: 5;
+  width: 185px;
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center;
+  pointer-events: none; gap: 2px;
+}
+.vip-name {
+  font-family: 'Arial Black', 'Arial Bold', Arial, sans-serif;
+  font-size: 20px; font-weight: 900; letter-spacing: 1.5px;
+  line-height: 1.15; text-transform: uppercase;
+  color: #d8cfff;
+  text-shadow: 0 0 8px rgba(160,120,255,.6), 0 1px 2px rgba(0,0,0,.8);
+}
+.vip-amount {
+  font-family: 'Arial Black', 'Arial Bold', Arial, sans-serif;
+  font-size: 18px; font-weight: 900; color: #c8c0f0;
+  line-height: 1.2; letter-spacing: 0.5px;
+  text-shadow: 0 0 6px rgba(140,100,255,.5), 0 1px 2px rgba(0,0,0,.8);
+}
+/* 當前 VIP 列：亮青色發光 */
+.vip-text.active .vip-name {
+  color: #ffffff;
+  text-shadow: 0 0 10px #00f0ff, 0 0 20px #00c8ff, 0 1px 2px rgba(0,0,0,.9);
+}
+.vip-text.active .vip-amount {
+  color: #aaf8ff;
+  text-shadow: 0 0 8px #00e0ff, 0 1px 2px rgba(0,0,0,.9);
+}
+
+/* ═══ 按鈕區塊文字 ═══ */
+.btn-subtitle {
+  position: absolute;
+  /* 對齊新 按鈕底板：left:440 width:447 */
+  left: 440px; top: 532px; width: 447px;
+  text-align: center; z-index: 6;
+  font-family: 'Arial Black', Arial, sans-serif;
+  font-size: 13px; font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.4px;
+  text-shadow: 0 1px 4px rgba(0,0,0,.9), 0 0 10px rgba(255,160,0,.3);
+  pointer-events: none;
+}
+.btn-badge-text {
+  position: absolute;
+  /* 標籤.png 旋轉後視覺範圍：left:695 top:547 w:133 h:33 */
+  left: 695px; top: 547px; width: 133px; height: 33px;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 14;
+  font-family: 'Arial Black', Arial, sans-serif;
+  font-size: 14px; font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 3px rgba(0,0,0,.7);
+  pointer-events: none;
+}
+
+/* ═══ SPIN 按鈕：圖檔文字為正向，無需旋轉 ═══ */
+
+/* 閃爍箭頭 */
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+.blink { animation: blink 1.1s infinite; }
+
+/* ═══ 舞台聚光燈呼吸效果 ═══ */
+@keyframes spotBreathe {
+  0%, 100% { filter: brightness(0.45) drop-shadow(0 0 4px rgba(255,220,80,.15)); }
+  50%       { filter: brightness(1.15) drop-shadow(0 0 28px rgba(255,230,120,.55)); }
+}
+.spot-left,
+.spot-right { animation: spotBreathe 3.6s ease-in-out infinite; }
+
+/* ═══ 轉盤輪框跑馬燈 ═══
+   6 燈順時鐘：上左(3)→上右(2)→右(1)→下右(0)→下左(5)→左(4)
+   週期 1.8s，每顆亮 0.27s（15% 週期），依序 delay 0.3s
+*/
+@keyframes wheelChase {
+  0%   { opacity: 1; }
+  9%   { opacity: 1; }
+  14%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+@keyframes wheelFlashAll {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.15; }
+}
+.wlb {
+  position: absolute;
+  width: 35px; height: 41px; z-index: 11;
+  animation: wheelChase 3.0s linear infinite;
+  opacity: 0;
+  pointer-events: none;
+}
+/* 順時鐘 delay，步距 = 3.0s ÷ 6 = 0.5s */
+#wlb-3 { left:492px; top:86px;  animation-delay: 0s;   }
+#wlb-2 { left:808px; top:93px;  animation-delay: 0.5s; }
+#wlb-1 { left:863px; top:217px; animation-delay: 1.0s; }
+#wlb-0 { left:830px; top:349px; animation-delay: 1.5s; }
+#wlb-5 { left:445px; top:344px; animation-delay: 2.0s; }
+#wlb-4 { left:410px; top:204px; animation-delay: 2.5s; }
+
+/* ═══ 勝利彈窗 ═══ */
+.result-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.80);
+  z-index: 200; align-items: center; justify-content: center;
+}
+.result-overlay.show { display: flex; }
+.result-box {
+  background: url('assets/window.png') no-repeat center center;
+  background-size: 100% 100%;
+  border: none; border-radius: 0;
+  padding: 25px 30px; text-align: center;
+  box-shadow: none;
+  animation: popIn .4s cubic-bezier(.34,1.56,.64,1);
+  min-width: 260px;
+}
+@keyframes popIn {
+  from { transform: scale(.5) rotate(-8deg); opacity:0; }
+  to   { transform: scale(1)  rotate(0);     opacity:1; }
+}
+.result-congrats {
+  font-size: 30px; font-weight: 900;
+  color: #ffffff;
+  text-shadow: -2px -2px 0 #000, 2px -2px 0 #000,
+               -2px  2px 0 #000, 2px  2px 0 #000,
+                0px -2px 0 #000, 0px  2px 0 #000,
+               -2px  0px 0 #000, 2px  0px 0 #000;
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px;
+}
+.result-prize {
+  font-size:60px; font-weight:900;
+  background: linear-gradient(180deg,#ffe566,#ff8800);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  /* 黑色描邊：paint-order 確保描邊在填色之下 */
+  -webkit-text-stroke: 3px rgba(0,0,0,0.85);
+  paint-order: stroke fill;
+  filter: drop-shadow(0 2px 10px rgba(255,160,0,.7));
+  line-height:1;
+}
+.result-icon-img { width:80px; height:80px; object-fit:contain; margin:10px auto; display:block; }
+.result-sub { color:#9080b8; font-size:12px; margin-top:6px; }
+.result-close-btn {
+  margin-top: 22px;
+  background: url('assets/button1.png') no-repeat center center;
+  background-size: 100% 100%;
+  border: none; border-radius: 0;
+  width: 155px; height: 67px;
+  color: #fff;
+  text-shadow: -2px -2px 0 #000, 2px -2px 0 #000,
+               -2px  2px 0 #000, 2px  2px 0 #000,
+                0px -2px 0 #000, 0px  2px 0 #000,
+               -2px  0px 0 #000, 2px  0px 0 #000;
+  font-size: 15px; font-weight: 900;
+  letter-spacing: 1px; cursor: pointer;
+  transition: transform .1s, filter .1s;
+}
+.result-close-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
