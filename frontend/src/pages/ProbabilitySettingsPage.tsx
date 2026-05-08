@@ -1,4 +1,4 @@
-import { DownloadOutlined, UploadOutlined } from '@ant-design/icons';
+import { DownOutlined, DownloadOutlined, RightOutlined, UploadOutlined } from '@ant-design/icons';
 import { Alert, Button, Form, Input, InputNumber, Space, Table, Tag, Typography, Upload, message } from 'antd';
 import { useEffect, useState } from 'react';
 import {
@@ -29,6 +29,7 @@ export default function ProbabilitySettingsPage() {
   const [applyLoading, setApplyLoading] = useState(false);
   const [downloadingImportId, setDownloadingImportId] = useState<string>();
   const [downloadNotice, setDownloadNotice] = useState<string>();
+  const [isImportHistoryOpen, setIsImportHistoryOpen] = useState(false);
   const [messageApi, messageContextHolder] = message.useMessage();
   const currentStage = stages.find((stage) => stage.stageNumber === selectedStage);
 
@@ -233,43 +234,59 @@ export default function ProbabilitySettingsPage() {
       ) : null}
       {imports.length ? (
         <section className="import-history-panel">
-          <div className="import-history-header">
-            <Typography.Text type="secondary">已保存 ZIP</Typography.Text>
-          </div>
-          <Table<ProbabilityImportUpload>
-            rowKey="id"
-            size="small"
-            dataSource={imports.slice(0, 5)}
-            pagination={false}
-            columns={[
-              {
-                title: '檔名',
-                dataIndex: 'originalFilename',
-              },
-              {
-                title: '上傳時間',
-                dataIndex: 'uploadedAt',
-                render: (value: string) => new Date(value).toLocaleString(),
-              },
-              {
-                title: '大小',
-                dataIndex: 'fileSize',
-                render: (value: number) => `${(value / 1024).toFixed(1)} KB`,
-              },
-              {
-                title: '',
-                render: (_, upload) => (
-                  <Button
-                    icon={<DownloadOutlined />}
-                    loading={downloadingImportId === upload.id}
-                    onClick={() => void downloadImport(upload)}
-                  >
-                    下載
-                  </Button>
-                ),
-              },
-            ]}
-          />
+          <button
+            type="button"
+            className="import-history-toggle"
+            aria-expanded={isImportHistoryOpen}
+            onClick={() => setIsImportHistoryOpen((value) => !value)}
+          >
+            <span className="import-history-title">
+              {isImportHistoryOpen ? <DownOutlined /> : <RightOutlined />}
+              <span className="import-history-title-copy">
+                <span className="import-history-kicker">已保存 ZIP</span>
+                <span className="import-history-heading">上傳紀錄</span>
+              </span>
+            </span>
+            <span className="import-history-meta">{imports.length} 筆</span>
+          </button>
+          {isImportHistoryOpen ? (
+            <div className="import-history-content">
+              <Table<ProbabilityImportUpload>
+                rowKey="id"
+                size="small"
+                dataSource={imports.slice(0, 5)}
+                pagination={false}
+                columns={[
+                  {
+                    title: '檔名',
+                    dataIndex: 'originalFilename',
+                  },
+                  {
+                    title: '上傳時間',
+                    dataIndex: 'uploadedAt',
+                    render: (value: string) => new Date(value).toLocaleString(),
+                  },
+                  {
+                    title: '大小',
+                    dataIndex: 'fileSize',
+                    render: (value: number) => `${(value / 1024).toFixed(1)} KB`,
+                  },
+                  {
+                    title: '',
+                    render: (_, upload) => (
+                      <Button
+                        icon={<DownloadOutlined />}
+                        loading={downloadingImportId === upload.id}
+                        onClick={() => void downloadImport(upload)}
+                      >
+                        下載
+                      </Button>
+                    ),
+                  },
+                ]}
+              />
+            </div>
+          ) : null}
         </section>
       ) : null}
       {currentStage ? (
