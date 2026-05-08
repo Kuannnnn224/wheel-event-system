@@ -23,9 +23,6 @@ export class SpinRecord {
   @Column({ name: 'stage_number', type: 'tinyint', unsigned: true, comment: '抽獎階段，1 到 5' })
   stageNumber: number;
 
-  @Column({ name: 'probability_table', length: 10, default: 'low', comment: '本次命中的機率分流表，low 或 high' })
-  probabilityTable: string;
-
   @Column({ name: 'prize_config_id', nullable: true, comment: '獎項設定識別，JSON 設定來源時可為空' })
   prizeConfigId?: number;
 
@@ -37,6 +34,9 @@ export class SpinRecord {
 
   @Column({ name: 'created_at', type: 'int', unsigned: true, comment: '抽獎建立 Unix timestamp 秒數' })
   createdAt: number;
+
+  @Column({ name: 'probability_table', length: 10, default: 'low', comment: '本次命中的機率分流表，low 或 high' })
+  probabilityTable: string;
 
   @BeforeInsert()
   setCreateTimestamp() {
