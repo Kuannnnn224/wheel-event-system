@@ -8,6 +8,725 @@
 2. 每日活動不是靠刪資料重置，而是靠 `businessDate` 分日隔離。
 3. 機率設定不在 DB，runtime 讀 `backend/config/probability.json`。
 
+## 框架入門：先建立心智模型
+
+如果你第一次接觸 NestJS、TypeORM、React，可以先把它們想成三個不同職責的工具：
+
+```text
+React
+  負責畫面、使用者操作、呼叫 API
+
+NestJS
+  負責 API、登入權限、業務規則、錯誤處理
+
+TypeORM
+  負責讓 NestJS 用 TypeScript 操作 MySQL
+
+Migration
+  負責正式環境的 DB 結構版本管理
+```
+
+這個專案的主要資料流是：
+
+```text
+後控頁面或 webview
+  -> axios / fetch 呼叫 API
+  -> NestJS Controller 接 request
+  -> NestJS Service 跑業務邏輯
+  -> TypeORM Repository 查寫 MySQL
+  -> 回傳 JSON 給前端
+```
+
+官方文件：
+
+- NestJS 官方文件：https://docs.nestjs.com
+- React 官方文件：https://react.dev/learn
+- TypeORM 官方文件：https://typeorm.io
+
+## NestJS 入門
+
+NestJS 是 Node.js 後端框架。它的價值不是只幫你開 API，而是強迫後端程式有穩定結構：API 入口、業務邏輯、資料格式、權限、測試都放在各自位置。
+
+### Module
+
+Module 是 NestJS 的功能邊界。你可以把 module 想成一個業務資料夾。
+
+例如本專案：
+
+```text
+backend/src/spins
+backend/src/players
+backend/src/award-overrides
+backend/src/probability
+```
+
+每個 module 通常會有：
+
+```text
+xxx.module.ts      組裝 controller、service、entity
+xxx.controller.ts  API route 入口
+xxx.service.ts     業務邏輯
+dto/               request body/query 格式
+entities/          DB table mapping
+```
+
+官方說明：NestJS module 是用 `@Module()` decorator 標記的 class，Nest 會透過 module 組織 application graph，管理 module 與 provider 之間的依賴關係。
+
+本專案例子：
+
+```ts
+@Module({
+  imports: [TypeOrmModule.forFeature([SpinRecord, PlayerDailyProgress]), DemoTokenModule, AwardOverridesModule],
+  controllers: [SpinsController],
+  providers: [SpinsService],
+})
+export class SpinsModule {}
+```
+
+意思是：
+
+- `SpinsController` 負責接 `/spins` API。
+- `SpinsService` 負責抽獎流程。
+- 這個 module 需要用到 `SpinRecord`、`PlayerDailyProgress` 兩個 repository。
+- 這個 module 也依賴 demo token 與指定派獎 module。
+
+### Controller
+
+Controller 是 HTTP API 入口。它應該薄一點，不要塞大量業務邏輯。
+
+典型長相：
+
+```ts
+@Controller('spins')
+export class SpinsController {
+  constructor(private readonly spinsService: SpinsService) {}
+
+  @Post('real')
+  realSpin(@Body() dto: RealSpinDto) {
+    return this.spinsService.realSpin(dto);
+  }
+}
+```
+
+這段代表：
+
+```text
+POST /spins/real
+  -> SpinsController.realSpin()
+  -> SpinsService.realSpin()
+```
+
+Controller 常見 decorator：
+
+- `@Controller('players')`：API prefix。
+- `@Get()`：GET route。
+- `@Post()`：POST route。
+- `@Patch()`：PATCH route。
+- `@Body()`：讀 request body。
+- `@Query()`：讀 query string。
+- `@Param()`：讀 URL path 參數。
+
+### Service
+
+Service 是業務邏輯主體。
+
+你的專案裡，service 會負責：
+
+- 檢查玩家是否存在。
+- 檢查今天是否可抽。
+- 查今日流水。
+- 計算解鎖階段。
+- 決定走 low/high/prize 哪張表。
+- 寫 DB。
+- 回傳前端需要的資料。
+
+Service 應該描述業務流程，不應該直接處理畫面格式。
+
+例如真實抽獎大致是：
+
+```text
+SpinsService.realSpin()
+  驗 token
+  取今日 businessDate
+  查今日玩家進度
+  查今日已抽紀錄
+  validateRealSpinRule()
+  查指定派獎 pending 規則
+  ProbabilityService 抽獎
+  寫 spin_records
+  有指定派獎就 consume
+```
+
+### Provider 與 Dependency Injection
+
+NestJS 裡 service 也是 provider。Dependency Injection 是「你宣告需要什麼，Nest 幫你準備好」。
+
+你會看到這種寫法：
+
+```ts
+constructor(
+  private readonly probabilityService: ProbabilityService,
+  private readonly awardOverridesService: AwardOverridesService,
+) {}
+```
+
+這代表 `SpinsService` 需要用到 `ProbabilityService` 和 `AwardOverridesService`。你不需要自己 `new` 它們，Nest 會根據 module 設定注入。
+
+這樣做的好處：
+
+- service 之間依賴清楚。
+- 測試時可以替換成 mock。
+- 不同業務比較不會混在一起。
+
+### DTO 與 ValidationPipe
+
+DTO 是 API 輸入資料的規格。
+
+例如新增指定派獎：
+
+```ts
+export class CreateAwardOverridesDto {
+  @IsString()
+  externalId: string;
+
+  @IsArray()
+  @ArrayNotEmpty()
+  stageNumbers: number[];
+
+  @IsOptional()
+  @IsString()
+  reason?: string;
+}
+```
+
+前端如果送錯格式，例如 `stageNumbers` 是空陣列，後端會在進 service 前擋掉。
+
+這是因為 `backend/src/main.ts` 啟用了：
+
+```ts
+app.useGlobalPipes(
+  new ValidationPipe({
+    transform: true,
+    whitelist: true,
+    forbidNonWhitelisted: true,
+  }),
+);
+```
+
+意思是：
+
+- `transform: true`：嘗試把 query/body 轉成 DTO 期待型別。
+- `whitelist: true`：DTO 沒宣告的欄位會被移除。
+- `forbidNonWhitelisted: true`：送了不允許欄位會直接報錯。
+
+### Guard
+
+Guard 是權限守門員。你的專案使用 JWT guard 保護後控 API。
+
+概念上是：
+
+```text
+request 進來
+  -> Guard 檢查 Authorization Bearer token
+  -> 通過才進 Controller
+  -> 不通過回 401
+```
+
+這也是為什麼前端 `api/client.ts` 會自動帶：
+
+```ts
+config.headers.Authorization = `Bearer ${token}`;
+```
+
+### Exception
+
+NestJS 內建很多 HTTP exception：
+
+```ts
+throw new BadRequestException('玩家今天 VIP5 已經抽過，不能新增指定派獎。');
+throw new NotFoundException('找不到玩家。');
+throw new UnauthorizedException('Token 已過期。');
+```
+
+這些會被 NestJS 自動轉成 HTTP response，例如 400、404、401。
+
+前端再透過 `getApiErrorMessage()` 把訊息顯示給操作者。
+
+## TypeORM 入門
+
+TypeORM 是 ORM。ORM 是 Object Relational Mapper，意思是把資料表映射成 TypeScript class。
+
+你不用每次都手寫 SQL，而是用 Entity 和 Repository：
+
+```ts
+const player = await this.playerRepository.findOne({
+  where: { externalId },
+});
+```
+
+### Entity
+
+Entity 是資料表定義。
+
+例如：
+
+```ts
+@Entity({ name: 'players', comment: '玩家主檔' })
+export class Player {
+  @PrimaryGeneratedColumn('uuid', { comment: '玩家 UUID' })
+  id: string;
+
+  @Column({ name: 'external_id', unique: true, comment: '平台玩家 ID' })
+  externalId: string;
+}
+```
+
+這會對應到 MySQL：
+
+```text
+players
+  id
+  external_id
+```
+
+常見 decorator：
+
+- `@Entity()`：宣告這是一張表。
+- `@Column()`：宣告欄位。
+- `@PrimaryGeneratedColumn()`：主鍵，自動產生。
+- `@Index()`：索引。
+- `@Unique()`：唯一限制。
+- `@ManyToOne()`：多對一關聯。
+- `@JoinColumn()`：指定 foreign key 欄位。
+
+### Repository
+
+Repository 是操作某張表的工具。每個 Entity 都可以有自己的 Repository。
+
+常見方法：
+
+```ts
+repository.find()
+repository.findOne()
+repository.findOneBy()
+repository.create()
+repository.save()
+repository.update()
+repository.delete()
+```
+
+例子：
+
+```ts
+const progress = await progressRepository.findOne({
+  where: { playerId, businessDate },
+});
+
+progress.turnoverPoints += dto.amountPoints;
+await progressRepository.save(progress);
+```
+
+這段就是：
+
+```text
+查今日玩家進度
+  -> 修改流水
+  -> save 回 DB
+```
+
+### Relation
+
+Relation 是表和表之間的關係。
+
+例如一個玩家可以有很多每日進度：
+
+```ts
+@OneToMany(() => PlayerDailyProgress, (progress) => progress.player)
+dailyProgress: PlayerDailyProgress[];
+```
+
+而每日進度屬於一個玩家：
+
+```ts
+@ManyToOne(() => Player, (player) => player.dailyProgress, { onDelete: 'CASCADE' })
+@JoinColumn({ name: 'player_id' })
+player: Player;
+```
+
+DB 觀念就是：
+
+```text
+player_daily_progress.player_id -> players.id
+```
+
+### Transaction
+
+Transaction 是交易。當一個流程需要多個 DB 操作一起成功，就要用 transaction。
+
+真實抽獎就是典型例子：
+
+```text
+寫 spin_records
+消耗 award_override_rules
+```
+
+這兩件事不能只成功一半。
+
+所以用：
+
+```ts
+return this.dataSource.transaction(async (manager) => {
+  const spinRecordRepository = manager.getRepository(SpinRecord);
+  const overrideRepository = manager.getRepository(AwardOverrideRule);
+});
+```
+
+在 transaction 裡要使用 `manager.getRepository()`，不要用外面的 repository，這樣操作才會在同一個交易裡。
+
+### synchronize
+
+目前本機使用：
+
+```ts
+synchronize: true
+```
+
+意思是 NestJS 啟動時，TypeORM 會根據 Entity 嘗試自動同步 MySQL schema。
+
+優點：
+
+- 開發快。
+- 改 Entity 後重啟就能看到欄位。
+
+缺點：
+
+- 正式環境危險。
+- 可能自動改表造成資料風險。
+- 不容易 code review DB 結構變動。
+
+所以本機可以用，正式環境要改 migration。
+
+## Migration 入門
+
+Migration 是 DB schema 的版本管理。你可以把它想成「資料表結構的 Git commit」。
+
+程式碼有 Git：
+
+```text
+commit A: 新增指定派獎功能
+commit B: 調整報表查詢
+```
+
+DB 也需要版本：
+
+```text
+migration A: 建立 award_override_rules
+migration B: spin_records 新增 probability_table
+```
+
+### 為什麼需要 migration
+
+假設正式環境已經有 10 萬筆抽獎紀錄，現在你要新增欄位：
+
+```text
+spin_records.source
+```
+
+如果用 `synchronize=true`，TypeORM 可能自動改表，但你很難在部署前精準知道它會跑什麼 SQL。
+
+Migration 則是你明確寫出：
+
+```ts
+await queryRunner.query(`
+  ALTER TABLE spin_records
+  ADD COLUMN source varchar(20) NULL COMMENT '抽獎來源'
+`);
+```
+
+好處：
+
+- DB 變更可以 code review。
+- 可以知道正式環境跑過哪些變更。
+- 可以配合部署流程。
+- 可以寫 rollback。
+
+### Migration 基本結構
+
+典型 migration 長這樣：
+
+```ts
+import { MigrationInterface, QueryRunner } from 'typeorm';
+
+export class AddSpinSource1780000000000 implements MigrationInterface {
+  name = 'AddSpinSource1780000000000';
+
+  async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
+      ALTER TABLE spin_records
+      ADD COLUMN source varchar(20) NULL COMMENT '抽獎來源'
+    `);
+  }
+
+  async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
+      ALTER TABLE spin_records
+      DROP COLUMN source
+    `);
+  }
+}
+```
+
+- `up()`：部署時套用。
+- `down()`：需要回滾時撤回。
+
+### 本專案未來導入 migration 的方向
+
+目前尚未導入正式 migration 流程。未來建議：
+
+```text
+backend/src/migrations/
+  1780000000000-CreateInitialSchema.ts
+  1780000001000-AddAwardOverrides.ts
+```
+
+並把正式環境設定改成：
+
+```ts
+synchronize: false
+migrations: [...]
+migrationsRun: false
+```
+
+正式部署流程：
+
+```text
+build backend
+run migration
+start backend
+```
+
+TypeORM 官方也建議：正式環境有資料後，不要依賴 `synchronize: true`，應使用 migrations。
+
+## React 入門
+
+React 是前端 UI 框架。它的核心是 component：把畫面拆成小積木，再由資料決定畫面長什麼樣。
+
+### Component
+
+Component 是一段可以重複使用的 UI。
+
+```tsx
+function PlayerBadge({ externalId }: { externalId: string }) {
+  return <span>玩家 {externalId}</span>;
+}
+```
+
+使用時：
+
+```tsx
+<PlayerBadge externalId="46466" />
+```
+
+### Props
+
+Props 是父元件傳給子元件的資料。它像函式參數。
+
+```tsx
+function StageCard({ stageNumber }: { stageNumber: number }) {
+  return <div>VIP{stageNumber}</div>;
+}
+```
+
+`stageNumber` 是 props。子元件不應該直接改 props。
+
+### State
+
+State 是 component 自己的記憶。只要 state 改變，React 就會重新 render。
+
+```tsx
+const [externalId, setExternalId] = useState('');
+```
+
+意思是：
+
+- `externalId`：目前狀態。
+- `setExternalId`：更新狀態的 function。
+
+適合放 state 的資料：
+
+- 使用者輸入。
+- 目前選中的 stage。
+- modal 是否開啟。
+- API 回來後要顯示的資料。
+
+不適合放 state 的資料：
+
+- 可以從其他 state 算出來的資料。
+- 固定不變的設定。
+- 父層已經透過 props 傳下來的資料。
+
+### Hook
+
+Hook 是 React function component 使用 React 能力的方式。Hook 名稱通常以 `use` 開頭。
+
+常見 Hook：
+
+```ts
+useState      元件記憶
+useEffect     副作用，例如載入資料、設定 timer
+useMemo       避免重複計算
+useCallback   避免重複建立 function
+```
+
+例子：
+
+```tsx
+useEffect(() => {
+  void loadPlayer();
+}, [externalId]);
+```
+
+意思是 `externalId` 變了，就重新執行 `loadPlayer()`。
+
+### React Router
+
+React Router 負責前端路由。
+
+你的 `frontend/src/App.tsx` 有：
+
+```tsx
+<Route path="/players" element={<PlayerLookupPage />} />
+<Route path="/award-overrides" element={<AwardOverridesPage />} />
+<Route path="/reports" element={<ReportsPage />} />
+```
+
+意思是：
+
+```text
+/players          -> PlayerLookupPage
+/award-overrides  -> AwardOverridesPage
+/reports          -> ReportsPage
+```
+
+### TanStack Query
+
+TanStack Query 負責管理 API 資料狀態，例如：
+
+- loading。
+- error。
+- data。
+- refetch。
+- cache。
+
+這讓頁面不用自己重複管理很多 API 狀態。
+
+第一版有些頁面仍直接用 axios 和 local state，之後如果頁面變複雜，可以逐步改成 TanStack Query。
+
+### Ant Design
+
+Ant Design 是 UI 元件庫。你的後控大量使用：
+
+- `Form`
+- `Input`
+- `Button`
+- `Table`
+- `Tag`
+- `Card`
+- `Alert`
+
+這些元件能讓後控快速有一致 UI，不需要每個按鈕、表格都自己從零寫 CSS。
+
+## 本專案框架對照表
+
+```text
+想找畫面
+  -> frontend/src/pages
+
+想找共用畫面外框
+  -> frontend/src/components/AppLayout.tsx
+
+想找 API 呼叫
+  -> frontend/src/api/client.ts
+
+想找 API route
+  -> backend/src/<module>/<module>.controller.ts
+
+想找業務邏輯
+  -> backend/src/<module>/<module>.service.ts
+
+想找 DB table
+  -> backend/src/<module>/entities/*.entity.ts
+
+想找 request body 格式
+  -> backend/src/<module>/dto/*.dto.ts
+
+想找純規則
+  -> backend/src/domain
+
+想找測試
+  -> *.spec.ts
+```
+
+## 以本專案功能理解框架
+
+### 查詢玩家
+
+```text
+PlayerLookupPage.tsx
+  -> fetchPlayerByExternalId()
+  -> GET /players?externalId=...
+  -> PlayersController
+  -> PlayersService
+  -> Player Entity / PlayerDailyProgress Entity / SpinRecord Entity
+  -> MySQL
+```
+
+### 後控加流水
+
+```text
+PlayerLookupPage.tsx
+  -> POST /players/:playerId/turnover-adjustments
+  -> TurnoverController
+  -> TurnoverService
+  -> calculateUnlockedStage()
+  -> player_daily_progress
+  -> turnover_adjustments
+```
+
+### 真實抽獎
+
+```text
+webview.html
+  -> POST /spins/real
+  -> SpinsController
+  -> SpinsService
+  -> DemoTokenService
+  -> validateRealSpinRule()
+  -> AwardOverridesService
+  -> ProbabilityService
+  -> spin_records
+```
+
+### 指定派獎
+
+```text
+AwardOverridesPage.tsx 或 PlayerLookupPage.tsx
+  -> POST /award-overrides
+  -> AwardOverridesController
+  -> AwardOverridesService
+  -> award_override_rules
+```
+
+玩家真的抽到該 VIP 時：
+
+```text
+SpinsService.realSpin()
+  -> findPendingForSpin()
+  -> drawPrizeForTable(stage, 'prize')
+  -> spin_records.probability_table = 'prize'
+  -> award_override_rules.status = 'consumed'
+```
+
 ## 目錄總覽
 
 ```text
