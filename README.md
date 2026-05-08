@@ -50,7 +50,8 @@ Change these in `backend/.env` before using real data.
 
 ## Business Rules
 
-- Business dates are formatted as `YYYY-MM-DD` in the `Asia/Taipei` timezone.
+- Business dates are formatted as `YYYY-MM-DD` in the configured business timezone.
+- Backend `BUSINESS_TIME_ZONE` can be set to an IANA timezone such as `America/New_York`; leave it empty to use the server/runtime local timezone.
 - A player has one daily progress row per business date.
 - Turnover unlocks five stages by configured cumulative thresholds.
 - Real spins must be played in order from stage 1 to stage 5.

@@ -16,7 +16,7 @@ import { api } from '../api/client';
 import type { DailyReport } from '../api/types';
 
 const { Header, Sider, Content } = Layout;
-const BUSINESS_TIME_ZONE = 'Asia/Taipei';
+const LOCAL_TIME_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -32,9 +32,9 @@ const primaryMenuItems = [
   { key: '/demo', icon: <ControlOutlined />, label: 'Demo 網站' },
 ];
 
-function getTaipeiParts(date = new Date()) {
+function getLocalTimeParts(date = new Date()) {
   const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: BUSINESS_TIME_ZONE,
+    timeZone: LOCAL_TIME_ZONE,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -48,26 +48,26 @@ function getTaipeiParts(date = new Date()) {
   return Object.fromEntries(parts.map((part) => [part.type, part.value]));
 }
 
-function formatTaipeiDateTime(date = new Date()) {
-  const parts = getTaipeiParts(date);
+function formatLocalDateTime(date = new Date()) {
+  const parts = getLocalTimeParts(date);
   return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}:${parts.second}`;
 }
 
-function formatTaipeiDate(date = new Date()) {
-  const parts = getTaipeiParts(date);
+function formatLocalDate(date = new Date()) {
+  const parts = getLocalTimeParts(date);
   return `${parts.year}-${parts.month}-${parts.day}`;
 }
 
 export default function AppLayout({ children, onLogout }: AppLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [currentDateTime, setCurrentDateTime] = useState(() => formatTaipeiDateTime());
+  const [currentDateTime, setCurrentDateTime] = useState(() => formatLocalDateTime());
   const [dailyReport, setDailyReport] = useState<DailyReport>();
   const [dailyReportError, setDailyReportError] = useState(false);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
-      setCurrentDateTime(formatTaipeiDateTime());
+      setCurrentDateTime(formatLocalDateTime());
     }, 1000);
 
     return () => window.clearInterval(timer);
@@ -79,7 +79,7 @@ export default function AppLayout({ children, onLogout }: AppLayoutProps) {
     async function loadDailyReport() {
       try {
         const { data } = await api.get<DailyReport>('/reports/daily', {
-          params: { date: formatTaipeiDate() },
+          params: { date: formatLocalDate() },
         });
 
         if (active) {
@@ -129,13 +129,12 @@ export default function AppLayout({ children, onLogout }: AppLayoutProps) {
       </Sider>
       <Layout>
         <Header className="app-header">
-          <Typography.Text className="section-kicker">每日 5 階段轉盤活動</Typography.Text>
           <Space size={12}>
             <span className="header-clock">
               <ClockCircleOutlined />
               {currentDateTime}
             </span>
-            <Tag color="processing">Asia/Taipei</Tag>
+            <Tag color="processing">{LOCAL_TIME_ZONE}</Tag>
             <Button icon={<LogoutOutlined />} onClick={onLogout}>
               登出
             </Button>

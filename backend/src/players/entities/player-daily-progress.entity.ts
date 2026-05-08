@@ -16,7 +16,7 @@ export class PlayerDailyProgress {
   player: Player;
 
   @Index()
-  @Column({ name: 'business_date', length: 10, comment: '業務日期，Asia/Taipei YYYY-MM-DD' })
+  @Column({ name: 'business_date', length: 10, comment: '業務日期，依部署業務時區計算的 YYYY-MM-DD' })
   businessDate: string;
 
   @Column({ name: 'turnover_points', type: 'int', unsigned: true, default: 0, comment: '當日累積流水點數' })

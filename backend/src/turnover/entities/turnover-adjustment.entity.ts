@@ -16,7 +16,7 @@ export class TurnoverAdjustment {
   player: Player;
 
   @Index()
-  @Column({ name: 'business_date', length: 10, comment: '套用流水的業務日期，Asia/Taipei YYYY-MM-DD' })
+  @Column({ name: 'business_date', length: 10, comment: '套用流水的業務日期，依部署業務時區計算的 YYYY-MM-DD' })
   businessDate: string;
 
   @Column({ name: 'amount_points', type: 'int', unsigned: true, comment: '本次新增流水點數' })

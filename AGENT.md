@@ -11,7 +11,8 @@ Keep root-level files limited to project docs, environment examples, Docker setu
 
 ## Core Business Rules
 
-- Business dates use `YYYY-MM-DD` in `Asia/Taipei`.
+- Business dates use `YYYY-MM-DD` in the configured business timezone.
+- Backend `BUSINESS_TIME_ZONE` is optional; leave it empty to use the server/runtime local timezone.
 - The activity is a daily five-stage wheel.
 - Player turnover unlocks stages by cumulative daily thresholds.
 - A player can play each stage at most once per business date.

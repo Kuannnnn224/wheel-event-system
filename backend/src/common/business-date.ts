@@ -1,11 +1,15 @@
 import { BadRequestException } from '@nestjs/common';
 
-const BUSINESS_TIME_ZONE = 'Asia/Taipei';
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
+export function getBusinessTimeZone(): string | undefined {
+  return process.env.BUSINESS_TIME_ZONE?.trim() || Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
 export function getBusinessDate(date = new Date()): string {
+  const businessTimeZone = getBusinessTimeZone();
   const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: BUSINESS_TIME_ZONE,
+    ...(businessTimeZone ? { timeZone: businessTimeZone } : {}),
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',

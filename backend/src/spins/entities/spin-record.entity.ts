@@ -17,7 +17,7 @@ export class SpinRecord {
   player: Player;
 
   @Index()
-  @Column({ name: 'business_date', length: 10, comment: '抽獎業務日期，Asia/Taipei YYYY-MM-DD' })
+  @Column({ name: 'business_date', length: 10, comment: '抽獎業務日期，依部署業務時區計算的 YYYY-MM-DD' })
   businessDate: string;
 
   @Column({ name: 'stage_number', type: 'tinyint', unsigned: true, comment: '抽獎階段，1 到 5' })
