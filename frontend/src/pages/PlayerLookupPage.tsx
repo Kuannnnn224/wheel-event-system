@@ -1,20 +1,124 @@
-import { Alert, Button, DatePicker, Form, Input, InputNumber, Table, Typography } from 'antd';
+import { Alert, Button, DatePicker, Form, Input, InputNumber, Table, Tag, Typography } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
-import { useState } from 'react';
-import { api, fetchPlayerByExternalId } from '../api/client';
-import type { Player, PlayerDailyProgress, SpinRecord } from '../api/types';
+import { useEffect, useMemo, useState } from 'react';
+import { api, fetchPlayerByExternalId, fetchStages } from '../api/client';
+import type { Player, PlayerDailyProgress, SpinRecord, StageConfig } from '../api/types';
 
 interface SearchValues {
   externalId: string;
   date: Dayjs;
 }
 
+interface TurnoverValues {
+  amountPoints: number;
+  reason?: string;
+}
+
+type StageState = 'done' | 'active' | 'waiting' | 'locked';
+
+const STAGE_NUMBERS = [1, 2, 3, 4, 5];
+
+function formatPoints(value?: number | null) {
+  return Number(value ?? 0).toLocaleString();
+}
+
+function getNextPlayableStage(progress?: PlayerDailyProgress) {
+  if (!progress) return 0;
+
+  for (let stageNumber = 1; stageNumber <= progress.unlockedStage; stageNumber += 1) {
+    if (!progress.playedStages.includes(stageNumber)) {
+      return stageNumber;
+    }
+  }
+
+  return 0;
+}
+
+function getDailyStatus(progress?: PlayerDailyProgress) {
+  if (!progress) {
+    return { label: '尚未查詢', color: 'default' };
+  }
+
+  if (progress.unlockedStage >= 5 && progress.playedStages.length >= 5) {
+    return { label: '今日已完成', color: 'green' };
+  }
+
+  const nextPlayableStage = getNextPlayableStage(progress);
+  if (nextPlayableStage > 0) {
+    return { label: `可抽 VIP${nextPlayableStage}`, color: 'processing' };
+  }
+
+  if (progress.unlockedStage > 0) {
+    return { label: '等待前階完成', color: 'gold' };
+  }
+
+  return { label: '尚未解鎖', color: 'default' };
+}
+
+function getStageState(progress: PlayerDailyProgress, stageNumber: number): StageState {
+  if (progress.playedStages.includes(stageNumber)) {
+    return 'done';
+  }
+
+  if (stageNumber === getNextPlayableStage(progress)) {
+    return 'active';
+  }
+
+  if (stageNumber <= progress.unlockedStage) {
+    return 'waiting';
+  }
+
+  return 'locked';
+}
+
+function getStageStateLabel(state: StageState) {
+  switch (state) {
+    case 'done':
+      return '已抽';
+    case 'active':
+      return '可抽';
+    case 'waiting':
+      return '待前階';
+    case 'locked':
+      return '未解鎖';
+  }
+}
+
+function getStageTagColor(state: StageState) {
+  switch (state) {
+    case 'done':
+      return 'green';
+    case 'active':
+      return 'processing';
+    case 'waiting':
+      return 'gold';
+    case 'locked':
+      return 'default';
+  }
+}
+
 export default function PlayerLookupPage() {
+  const [adjustmentForm] = Form.useForm<TurnoverValues>();
   const [player, setPlayer] = useState<Player | null>(null);
   const [progress, setProgress] = useState<PlayerDailyProgress>();
+  const [stages, setStages] = useState<StageConfig[]>([]);
+  const [stageConfigError, setStageConfigError] = useState<string>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
   const [date, setDate] = useState(dayjs());
+
+  useEffect(() => {
+    fetchStages()
+      .then(setStages)
+      .catch(() => setStageConfigError('階段設定讀取失敗，門檻暫時以 - 顯示'));
+  }, []);
+
+  const stagesByNumber = useMemo(() => new Map(stages.map((stage) => [stage.stageNumber, stage])), [stages]);
+  const spinsByStage = useMemo(
+    () => new Map((progress?.spins ?? []).map((spin) => [spin.stageNumber, spin])),
+    [progress],
+  );
+  const dailyStatus = getDailyStatus(progress);
 
   async function loadProgress(nextPlayer: Player, businessDate: Dayjs) {
     const { data } = await api.get<PlayerDailyProgress>(`/players/${nextPlayer.id}/daily-progress`, {
@@ -43,7 +147,7 @@ export default function PlayerLookupPage() {
     }
   }
 
-  async function addTurnover(values: { amountPoints: number; reason?: string }) {
+  async function addTurnover(values: TurnoverValues) {
     if (!player) {
       return;
     }
@@ -58,6 +162,7 @@ export default function PlayerLookupPage() {
         date: date.format('YYYY-MM-DD'),
       });
       setProgress(data);
+      adjustmentForm.resetFields();
     } catch (err) {
       setError(err instanceof Error ? err.message : '加流水失敗');
     } finally {
@@ -65,10 +170,57 @@ export default function PlayerLookupPage() {
     }
   }
 
+  function renderStageCard(stageNumber: number) {
+    if (!progress) return null;
+
+    const stage = stagesByNumber.get(stageNumber);
+    const spin = spinsByStage.get(stageNumber);
+    const state = getStageState(progress, stageNumber);
+    const threshold = stage?.turnoverThresholdPoints;
+    const remaining = threshold === undefined ? undefined : Math.max(threshold - progress.turnoverPoints, 0);
+
+    return (
+      <div className={`player-stage-card is-${state}`} key={stageNumber}>
+        <div className="player-stage-card-top">
+          <span className="stage-badge">VIP{stageNumber}</span>
+          <Tag color={getStageTagColor(state)}>{getStageStateLabel(state)}</Tag>
+        </div>
+        <div>
+          <div className="player-stage-title">第 {stageNumber} 階段</div>
+          <div className="player-stage-meta">流水門檻 {threshold === undefined ? '-' : `${formatPoints(threshold)} 點`}</div>
+        </div>
+        <div className="player-stage-detail">
+          {spin ? (
+            <>
+              <div className="player-stage-prize">{spin.prizeName}</div>
+              <div className="player-stage-meta">
+                <Tag color={spin.probabilityTable === 'high' ? 'cyan' : 'blue'}>{spin.probabilityTable.toUpperCase()}</Tag>
+                派發 {formatPoints(spin.amountPoints)} 點
+              </div>
+            </>
+          ) : state === 'locked' ? (
+            <span>{remaining === undefined ? '等待階段設定' : `尚差 ${formatPoints(remaining)} 流水`}</span>
+          ) : state === 'active' ? (
+            <span>玩家今日可抽此階段</span>
+          ) : (
+            <span>需先完成前一階段</span>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="page-stack">
-      <Typography.Title level={3}>查詢玩家</Typography.Title>
-      <Form className="toolbar" layout="vertical" initialValues={{ date }} onFinish={search}>
+    <div className="page-stack player-lookup-page">
+      <div className="page-title-row">
+        <div>
+          <Typography.Title level={3}>查詢玩家</Typography.Title>
+          <Typography.Text type="secondary">查看玩家當日輪盤解鎖、抽獎與派發狀態</Typography.Text>
+        </div>
+        {progress ? <Tag color={dailyStatus.color}>{dailyStatus.label}</Tag> : null}
+      </div>
+
+      <Form className="lookup-search-panel toolbar" layout="vertical" initialValues={{ date }} onFinish={search}>
         <Form.Item label="玩家 ID" name="externalId" rules={[{ required: true }]}>
           <Input placeholder="external id" />
         </Form.Item>
@@ -80,34 +232,57 @@ export default function PlayerLookupPage() {
             查詢
           </Button>
         </Form.Item>
+        {player && progress ? (
+          <div className="lookup-query-summary">
+            <span>玩家 {player.externalId}</span>
+            <span>{date.format('YYYY-MM-DD')}</span>
+          </div>
+        ) : null}
       </Form>
 
       {error ? <Alert type="error" showIcon message={error} /> : null}
+      {stageConfigError ? <Alert type="warning" showIcon message={stageConfigError} /> : null}
       {player === null && !progress ? <Alert type="info" showIcon message="尚未載入玩家資料" /> : null}
       {player && !progress ? <Alert type="warning" showIcon message="玩家存在，但此日期尚無流水或抽獎紀錄" /> : null}
 
       {progress ? (
         <>
-          <div className="metrics-grid">
-            <div className="metric">
-              <span className="metric-label">累積流水</span>
-              <span className="metric-value">{progress.turnoverPoints.toLocaleString()}</span>
+          <section className="player-status-panel">
+            <div className="player-status-header">
+              <div>
+                <span className="section-kicker">Daily Wheel Status</span>
+                <Typography.Title level={4}>今日輪盤狀態</Typography.Title>
+              </div>
+              <Tag color={dailyStatus.color}>{dailyStatus.label}</Tag>
             </div>
-            <div className="metric">
-              <span className="metric-label">解鎖階段</span>
-              <span className="metric-value">{progress.unlockedStage}</span>
-            </div>
-            <div className="metric">
-              <span className="metric-label">已玩階段</span>
-              <span className="metric-value">{progress.playedStages.join(', ') || '-'}</span>
-            </div>
-            <div className="metric">
-              <span className="metric-label">中獎點數</span>
-              <span className="metric-value">{progress.totalWinPoints.toLocaleString()}</span>
-            </div>
-          </div>
 
-          <Form className="toolbar" layout="vertical" onFinish={addTurnover}>
+            <div className="metrics-grid">
+              <div className="metric">
+                <span className="metric-label">累積流水</span>
+                <span className="metric-value">{formatPoints(progress.turnoverPoints)}</span>
+              </div>
+              <div className="metric">
+                <span className="metric-label">解鎖階段</span>
+                <span className="metric-value">{progress.unlockedStage ? `VIP${progress.unlockedStage}` : '-'}</span>
+              </div>
+              <div className="metric">
+                <span className="metric-label">已抽次數</span>
+                <span className="metric-value">{progress.playedStages.length} / 5</span>
+              </div>
+              <div className="metric">
+                <span className="metric-label">中獎點數</span>
+                <span className="metric-value">{formatPoints(progress.totalWinPoints)}</span>
+              </div>
+            </div>
+
+            <div className="player-stage-grid">{STAGE_NUMBERS.map(renderStageCard)}</div>
+          </section>
+
+          <Form form={adjustmentForm} className="lookup-adjustment-panel toolbar" layout="vertical" onFinish={addTurnover}>
+            <div className="lookup-panel-heading">
+              <span className="section-kicker">PM Control</span>
+              <Typography.Title level={4}>後控加流水</Typography.Title>
+            </div>
             <Form.Item label="新增流水" name="amountPoints" rules={[{ required: true }]}>
               <InputNumber min={1} precision={0} />
             </Form.Item>
@@ -121,18 +296,33 @@ export default function PlayerLookupPage() {
             </Form.Item>
           </Form>
 
-          <Table<SpinRecord>
-            rowKey="id"
-            dataSource={progress.spins}
-            pagination={false}
-            columns={[
-              { title: '階段', dataIndex: 'stageNumber' },
-              { title: '表', dataIndex: 'probabilityTable', render: (value: string) => value?.toUpperCase?.() ?? '-' },
-              { title: '獎項', dataIndex: 'prizeName' },
-              { title: '點數', dataIndex: 'amountPoints', render: (value: number) => value.toLocaleString() },
-              { title: '時間', dataIndex: 'createdAt', render: (value: number) => dayjs.unix(value).format('YYYY-MM-DD HH:mm:ss') },
-            ]}
-          />
+          <section className="lookup-history-panel">
+            <div className="lookup-panel-heading">
+              <span className="section-kicker">Spin History</span>
+              <Typography.Title level={4}>抽獎歷程</Typography.Title>
+            </div>
+            <Table<SpinRecord>
+              rowKey="id"
+              dataSource={progress.spins}
+              pagination={false}
+              columns={[
+                { title: '階段', dataIndex: 'stageNumber', render: (value: number) => `VIP${value}` },
+                {
+                  title: '表',
+                  dataIndex: 'probabilityTable',
+                  render: (value: string) => <Tag color={value === 'high' ? 'cyan' : 'blue'}>{value?.toUpperCase?.() ?? '-'}</Tag>,
+                },
+                { title: '獎項', dataIndex: 'prizeName' },
+                {
+                  title: '點數',
+                  dataIndex: 'amountPoints',
+                  align: 'right',
+                  render: (value: number) => formatPoints(value),
+                },
+                { title: '時間', dataIndex: 'createdAt', render: (value: number) => dayjs.unix(value).format('HH:mm:ss') },
+              ]}
+            />
+          </section>
         </>
       ) : null}
     </div>
