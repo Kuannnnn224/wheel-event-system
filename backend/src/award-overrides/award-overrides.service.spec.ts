@@ -83,7 +83,7 @@ describe('AwardOverridesService', () => {
     const { service } = createService({ existingSpins: [{ stageNumber: 1 }] });
 
     await expect(service.create({ externalId: 'player-001', stageNumbers: [1, 3] }, 'admin-id')).rejects.toThrow(
-      '玩家 player-001 今天 VIP1 已經抽過，該階段轉盤次數已用盡，不能新增指定派獎。',
+      '玩家 player-001 今天 LV1 已經抽過，該階段轉盤次數已用盡，不能新增指定派獎。',
     );
   });
 
@@ -91,14 +91,14 @@ describe('AwardOverridesService', () => {
     const { service } = createService({ existingRules: [{ stageNumber: 3 }] });
 
     await expect(service.create({ externalId: 'player-001', stageNumbers: [3] }, 'admin-id')).rejects.toThrow(
-      '玩家 player-001 今天 VIP3 已有等待中的指定派獎，請先取消原規則。',
+      '玩家 player-001 今天 LV3 已有等待中的指定派獎，請先取消原規則。',
     );
   });
 
   it('creates one pending rule per selected stage', async () => {
     const { service, transactionOverrideRepository } = createService();
 
-    const rules = await service.create({ externalId: 'player-001', stageNumbers: [3, 1], reason: 'vip make-good' }, 'admin-id');
+    const rules = await service.create({ externalId: 'player-001', stageNumbers: [3, 1], reason: 'lv make-good' }, 'admin-id');
 
     expect(rules).toHaveLength(2);
     expect(transactionOverrideRepository.create).toHaveBeenCalledWith(
@@ -106,7 +106,7 @@ describe('AwardOverridesService', () => {
         playerId: 'player-id',
         stageNumber: 1,
         status: 'pending',
-        reason: 'vip make-good',
+        reason: 'lv make-good',
         createdByAdminId: 'admin-id',
       }),
     );

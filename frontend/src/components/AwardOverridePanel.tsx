@@ -6,7 +6,7 @@ import { cancelAwardOverride, createAwardOverrides, fetchAwardOverrides, getApiE
 import type { AwardOverrideRule } from '../api/types';
 
 const STAGE_OPTIONS = [1, 2, 3, 4, 5].map((stageNumber) => ({
-  label: `VIP${stageNumber}`,
+  label: `LV${stageNumber}`,
   value: stageNumber,
 }));
 
@@ -177,7 +177,7 @@ export default function AwardOverridePanel({
             />
           </Form.Item>
         )}
-        <Form.Item label="指定階段" name="stageNumbers" rules={[{ required: true, message: '請選擇至少一個 VIP 階段' }]}>
+        <Form.Item label="指定階段" name="stageNumbers" rules={[{ required: true, message: '請選擇至少一個 LV 階段' }]}>
           <Checkbox.Group options={STAGE_OPTIONS} />
         </Form.Item>
         <Form.Item label="備註" name="reason">
@@ -226,7 +226,7 @@ export default function AwardOverridePanel({
           {
             title: '階段',
             dataIndex: 'stageNumber',
-            render: (value: number) => <Tag color="magenta">VIP{value}</Tag>,
+            render: (value: number) => <Tag color="magenta">LV{value}</Tag>,
           },
           {
             title: '狀態',

@@ -311,7 +311,7 @@ img.go-bet-btn.show { display: block; }
 img.go-bet-btn:hover { transform: scale(1.05); filter: brightness(1.1) drop-shadow(0 2px 12px rgba(255,180,0,.7)); }
 img.go-bet-btn:active { transform: scale(0.96); }
 
-/* ═══ VIP 等級文字 ═══ */
+/* ═══ LV 等級文字 ═══ */
 .vip-text {
   position: absolute; z-index: 5;
   width: 185px;
@@ -332,7 +332,7 @@ img.go-bet-btn:active { transform: scale(0.96); }
   line-height: 1.2; letter-spacing: 0.5px;
   text-shadow: 0 0 6px rgba(140,100,255,.5), 0 1px 2px rgba(0,0,0,.8);
 }
-/* 當前 VIP 列：亮青色發光 */
+/* 當前 LV 列：亮青色發光 */
 .vip-text.active .vip-name {
   color: #ffffff;
   text-shadow: 0 0 10px #00f0ff, 0 0 20px #00c8ff, 0 1px 2px rgba(0,0,0,.9);

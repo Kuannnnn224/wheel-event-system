@@ -150,7 +150,7 @@ export class AwardOverridesService {
 
     for (const stageNumber of normalized) {
       if (!Number.isInteger(stageNumber) || stageNumber < 1 || stageNumber > 5) {
-        throw new BadRequestException('指定階段只能是 VIP1 到 VIP5。');
+        throw new BadRequestException('指定階段只能是 LV1 到 LV5。');
       }
     }
 
@@ -162,7 +162,7 @@ export class AwardOverridesService {
   }
 
   private formatStages(stageNumbers: number[]) {
-    return stageNumbers.map((stageNumber) => `VIP${stageNumber}`).join('、');
+    return stageNumbers.map((stageNumber) => `LV${stageNumber}`).join('、');
   }
 
   private assertStatus(status: string): AwardOverrideStatus {

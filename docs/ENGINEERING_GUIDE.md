@@ -243,7 +243,7 @@ config.headers.Authorization = `Bearer ${token}`;
 NestJS 內建很多 HTTP exception：
 
 ```ts
-throw new BadRequestException('玩家今天 VIP5 已經抽過，不能新增指定派獎。');
+throw new BadRequestException('玩家今天 LV5 已經抽過，不能新增指定派獎。');
 throw new NotFoundException('找不到玩家。');
 throw new UnauthorizedException('Token 已過期。');
 ```
@@ -533,7 +533,7 @@ Props 是父元件傳給子元件的資料。它像函式參數。
 
 ```tsx
 function StageCard({ stageNumber }: { stageNumber: number }) {
-  return <div>VIP{stageNumber}</div>;
+  return <div>LV{stageNumber}</div>;
 }
 ```
 
@@ -717,7 +717,7 @@ AwardOverridesPage.tsx 或 PlayerLookupPage.tsx
   -> award_override_rules
 ```
 
-玩家真的抽到該 VIP 時：
+玩家真的抽到該 LV 時：
 
 ```text
 SpinsService.realSpin()
@@ -934,7 +934,7 @@ GET  /demo/session
 2. 按加流水後呼叫 `POST /players/:playerId/turnover-adjustments`。
 3. `TurnoverService` 找今日 `player_daily_progress`，沒有就建一筆。
 4. 增加 `turnoverPoints`。
-5. 用 `ProbabilityService.getStageThresholds()` 取得 VIP 門檻。
+5. 用 `ProbabilityService.getStageThresholds()` 取得 LV 門檻。
 6. 用 `domain/stage-progress.ts` 算出 `unlockedStage`。
 7. 寫 `turnover_adjustments` audit。
 8. 回傳最新每日進度。
@@ -945,9 +945,9 @@ GET  /demo/session
 2. `DemoTokenService` 驗證 token。
 3. `SpinsService` 取得今日 progress 和今日 spin records。
 4. `domain/spin-rules.ts` 檢查：
-   - 該 VIP 是否已解鎖。
+   - 該 LV 是否已解鎖。
    - 是否依序抽。
-   - 該 VIP 今日是否已抽。
+   - 該 LV 今日是否已抽。
 5. 查 `award-overrides` 是否有今日 pending 指定派獎。
 6. 有指定派獎：用 `prize` 表抽。
 7. 沒指定派獎：先 low/high 分流，再用對應表抽 A-E。
@@ -1017,10 +1017,10 @@ GET  /demo/session
 
 1. `players.external_id` 是否正確。
 2. `player_daily_progress` 今日是否有資料。
-3. `turnover_points` 是否達到 VIP 門檻。
+3. `turnover_points` 是否達到 LV 門檻。
 4. `unlocked_stage` 是否正確。
 5. `spin_records` 今日是否已經有該 stage。
-6. 是否違反順序，例如想抽 VIP3 但 VIP2 未抽。
+6. 是否違反順序，例如想抽 LV3 但 LV2 未抽。
 7. 若是指定派獎，檢查 `award_override_rules` 是否是今日 pending。
 
 ### 指定派獎沒生效
@@ -1029,7 +1029,7 @@ GET  /demo/session
 
 1. `award_override_rules.business_date` 是否是今天。
 2. `status` 是否為 `pending`。
-3. `stage_number` 是否等於玩家抽的 VIP。
+3. `stage_number` 是否等於玩家抽的 LV。
 4. 玩家是否真的走 `POST /spins/real`，模擬不會套用指定派獎。
 5. 抽完後 `spin_records.probability_table` 應為 `prize`。
 6. 抽完後規則應變成 `consumed`，並有 `consumed_spin_record_id`。

@@ -78,9 +78,9 @@ dev log 預期放在 `logs/`，產生的 `.log` 檔不進 Git。
 
 後控目前有這些頁面：
 
-- 抽獎模擬：選 VIP1-VIP5 做單次 spin，不寫入 DB。
+- 抽獎模擬：選 LV1-LV5 做單次 spin，不寫入 DB。
 - 查詢玩家：查玩家當日輪盤狀態、流水、已抽階段、中獎紀錄、後控加流水、指定派獎。
-- 指定派獎：指定玩家當日某些 VIP 階段走 `prize` 機率表，並查看 pending/consumed/cancelled 紀錄。
+- 指定派獎：指定玩家當日某些 LV 階段走 `prize` 機率表，並查看 pending/consumed/cancelled 紀錄。
 - 報表統計：用日期區間查總 spin、玩家數、送出點數、階段統計，也可查指定玩家。
 - 多次模擬：建立大量模擬 job，前端輪詢結果。
 - 機率設定：唯讀檢視目前 JSON 機率，支援 ZIP 上傳、diff、套用、下載歷史 ZIP。
@@ -91,9 +91,9 @@ dev log 預期放在 `logs/`，產生的 `.log` 檔不進 Git。
 - 日期用 `businessDate` 表示，格式 `YYYY-MM-DD`。
 - `BUSINESS_TIME_ZONE` 可設定部署地區時區；未設定時使用伺服器本地時區。
 - 玩家每日流水不跨日。
-- 玩家每天最多抽 VIP1-VIP5 各一次。
-- 解鎖 VIP 階段靠當日累積流水門檻。
-- 玩家即使一次達成最高門檻，也必須依序從 VIP1 抽到 VIP5。
+- 玩家每天最多抽 LV1-LV5 各一次。
+- 解鎖 LV 階段靠當日累積流水門檻。
+- 玩家即使一次達成最高門檻，也必須依序從 LV1 抽到 LV5。
 - 目前沒有每日 12:00 清除資料排程；系統靠 `businessDate` 分日隔離資料。
 - 舊日期 pending 指定派獎不會影響今日抽獎。
 
@@ -109,7 +109,7 @@ backend/config/probability.json
 
 ZIP 匯入目前需要：
 
-- `config.xlsx`：VIP 門檻、A-E 獎項名稱、點數。
+- `config.xlsx`：LV 門檻、A-E 獎項名稱、點數。
 - `config.xlsx` 的 `門檻設置`：可加一列 `每日送出上限`，右側第一個數字會寫入每日預算；`0` 或負數代表停用。
 - `weight.xlsx`：每階段 low/high 分流權重。
 - `low.xlsx`：low 表 A-E 權重。
@@ -117,7 +117,7 @@ ZIP 匯入目前需要：
 - `prize.xlsx`：指定派獎 prize 表 A-E 權重。
 - `daily-limit.xlsx`：每日送出達上限後使用的 dailyLimit 表 A-E 權重。
 
-後控指定派獎的意思是：某玩家今天某 VIP 階段抽獎時，不走 low/high 分流，而是直接用 `prize` 表抽 A-E 獎。成功抽獎後該規則會被標成 consumed。
+後控指定派獎的意思是：某玩家今天某 LV 階段抽獎時，不走 low/high 分流，而是直接用 `prize` 表抽 A-E 獎。成功抽獎後該規則會被標成 consumed。
 
 每日預算控管的意思是：當今日 `spin_records.amount_points` 累計已達 `dailyPayoutLimitPoints`，之後沒有指定派獎的真實抽獎會直接使用 `dailyLimit` 表。指定派獎仍優先使用 `prize` 表。
 

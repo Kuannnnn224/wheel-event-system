@@ -253,7 +253,7 @@ function updateProgressPanel() {
   if (playableStage > 0) {
     const playableTarget = stageConfig(playableStage)?.turnoverThresholdPoints || current;
     setSpinProgress(Math.min(current, playableTarget), playableTarget);
-    setStatusMessage(`VIP${playableStage} 今日可抽獎`);
+    setStatusMessage(`LV${playableStage} 今日可抽獎`);
     setSpinVisualState(SPIN_STATES.READY);
     return;
   }
@@ -293,7 +293,7 @@ function renderHistory(spins) {
     const row = document.createElement('div');
     row.className = `t-row${index === 0 ? ' new-entry' : ''}`;
     row.innerHTML =
-      `<span class="t-name">VIP${spin.stageNumber}</span>` +
+      `<span class="t-name">LV${spin.stageNumber}</span>` +
       `<span class="t-amt">${spin.prizeName || `₱${formatPoints(spin.amountPoints)}`}</span>` +
       `<span class="t-time">${formatHistoryTime(spin.createdAt)}</span>`;
     list.appendChild(row);

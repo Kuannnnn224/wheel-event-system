@@ -47,7 +47,7 @@ function getDailyStatus(progress?: PlayerDailyProgress) {
 
   const nextPlayableStage = getNextPlayableStage(progress);
   if (nextPlayableStage > 0) {
-    return { label: `可抽 VIP${nextPlayableStage}`, color: 'processing' };
+    return { label: `可抽 LV${nextPlayableStage}`, color: 'processing' };
   }
 
   if (progress.unlockedStage > 0) {
@@ -191,7 +191,7 @@ export default function PlayerLookupPage() {
     return (
       <div className={`player-stage-card is-${state}`} key={stageNumber}>
         <div className="player-stage-card-top">
-          <span className="stage-badge">VIP{stageNumber}</span>
+          <span className="stage-badge">LV{stageNumber}</span>
           <Tag color={getStageTagColor(state)}>{getStageStateLabel(state)}</Tag>
         </div>
         <div>
@@ -254,7 +254,7 @@ export default function PlayerLookupPage() {
         <AwardOverridePanel
           fixedExternalId={player.externalId}
           title="指定派獎"
-          description="查詢此玩家當日所有指定派獎紀錄，並可直接新增 VIP 階段或取消等待中規則"
+          description="查詢此玩家當日所有指定派獎紀錄，並可直接新增 LV 階段或取消等待中規則"
         />
       ) : null}
 
@@ -276,7 +276,7 @@ export default function PlayerLookupPage() {
               </div>
               <div className="metric">
                 <span className="metric-label">解鎖階段</span>
-                <span className="metric-value">{progress.unlockedStage ? `VIP${progress.unlockedStage}` : '-'}</span>
+                <span className="metric-value">{progress.unlockedStage ? `LV${progress.unlockedStage}` : '-'}</span>
               </div>
               <div className="metric">
                 <span className="metric-label">已抽次數</span>
@@ -319,7 +319,7 @@ export default function PlayerLookupPage() {
               dataSource={progress.spins}
               pagination={false}
               columns={[
-                { title: '階段', dataIndex: 'stageNumber', render: (value: number) => `VIP${value}` },
+                { title: '階段', dataIndex: 'stageNumber', render: (value: number) => `LV${value}` },
                 {
                   title: '表',
                   dataIndex: 'probabilityTable',

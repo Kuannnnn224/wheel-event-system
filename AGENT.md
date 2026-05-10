@@ -19,8 +19,8 @@
 - `BUSINESS_TIME_ZONE` 可設定部署地區時區；未設定時使用執行環境本地時區。
 - 目前沒有每日 12:00 清除資料排程；每日重置是靠 `businessDate` 隔離資料。
 - 玩家流水不跨日，`player_daily_progress` 每位玩家每天一筆。
-- 玩家每日最多可抽 VIP1 到 VIP5 各一次。
-- 即使玩家一次補滿最高流水，也必須照 VIP1、VIP2、VIP3、VIP4、VIP5 順序抽。
+- 玩家每日最多可抽 LV1 到 LV5 各一次。
+- 即使玩家一次補滿最高流水，也必須照 LV1、LV2、LV3、LV4、LV5 順序抽。
 - 抽獎金額與流水都用整數點數，不使用浮點數。
 - 機率設定來自 XLSX parser 產出的 JSON，不存在 DB。
 - 機率設定頁是唯讀；不得加回前端手動編輯/儲存功能。
@@ -67,7 +67,7 @@ NestJS module 應依業務切開：
 
 目前 ZIP 必須包含：
 
-- `config.xlsx`：VIP 門檻、A-E 獎項名稱與點數。
+- `config.xlsx`：LV 門檻、A-E 獎項名稱與點數。
 - `weight.xlsx`：low/high 分流權重。
 - `low.xlsx`：low 表 A-E 權重。
 - `high.xlsx`：high 表 A-E 權重。

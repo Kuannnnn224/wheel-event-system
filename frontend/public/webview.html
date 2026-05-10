@@ -75,7 +75,7 @@
   <!-- Rectangle: abs(1053,461) 107×162 → images/04_sprite.png -->
   <img style="left:1053px;top:461px;width:107px;height:162px" src="assets/images/04_sprite.png" alt="">
   <!-- 喇叭: Pencil abs(1091,528) 96×134 rot=-96.32°（設計稿原始座標，.frame overflow:hidden 裁切超出部分）
-       z-index:3 確保不被 VIP 面板(z:4)遮蓋 → 但 VIP 面板 x≥916，喇叭視覺 x≈1075~1091，無重疊 ✓ -->
+       z-index:3 確保不被 LV 面板(z:4)遮蓋 → 但 LV 面板 x≥916，喇叭視覺 x≈1075~1091，無重疊 ✓ -->
   <img style="left:921px;top:498px;width:135px;height:96px;transform:rotate(0deg);transform-origin:0 0;z-index:3"
        src="assets/images/30_sprite.png" alt="">
 
@@ -333,57 +333,57 @@
   <div id="labelText" class="btn-badge-text">+₱550</div>
 
   <!-- ══════════════════════════════════
-       VIP 面板（Pencil VIP group at 672,9）
+       LV 面板（Pencil LV group at 672,9）
        ════════════════════════════════== -->
 
-  <!-- VIP 背景: abs(916,9) 185×522 → images/35_sprite.png -->
+  <!-- LV 背景: abs(916,9) 185×522 → images/35_sprite.png -->
   <img style="left:916px;top:9px;width:185px;height:522px;z-index:4;opacity:1"
        src="assets/images/35_sprite.png" alt="">
 
-  <!-- ── VIP rows（JS 動態控制 sprite + 箭頭）────────────────────────────
+  <!-- ── LV rows（JS 動態控制 sprite + 箭頭）────────────────────────────
        每列結構：
          vip-row-bg-N   = 恆顯 inactive 底板（僅 BRONZE 使用）
          vip-row-img-N  = 動態 sprite（unlocked=亮版 / locked=暗版）
        JS setVipLevel(n) 會切換 sprite + opacity + 箭頭位置
   ──────────────────────────────────────────────────────────────────── -->
 
-  <!-- SUPER (VIP5): abs(932,25) 136×94 -->
+  <!-- SUPER (LV5): abs(932,25) 136×94 -->
   <img id="vip-row-img-5"
        style="left:932px;top:25px;width:136px;height:94px;z-index:5"
        src="assets/images/18_sprite.png" alt="">
   <div id="vip-text-5" class="vip-text" style="left:906px;top:40px;z-index:6">
-    <div class="vip-name">VIP5</div>
+    <div class="vip-name">LV5</div>
     <div class="vip-amount" id="lv-threshold-5">—</div>
   </div>
 
-  <!-- DIAMOND (VIP4): abs(932,109) 134×110 -->
+  <!-- DIAMOND (LV4): abs(932,109) 134×110 -->
   <img id="vip-row-img-4"
        style="left:932px;top:108px;width:134px;height:110px;z-index:5"
        src="assets/images/27_sprite.png" alt="">
   <div id="vip-text-4" class="vip-text" style="left:906px;top:135px;z-index:6">
-    <div class="vip-name">VIP4</div>
+    <div class="vip-name">LV4</div>
     <div class="vip-amount" id="lv-threshold-4">—</div>
   </div>
 
-  <!-- GOLD (VIP3): abs(931,210) 135×99 -->
+  <!-- GOLD (LV3): abs(931,210) 135×99 -->
   <img id="vip-row-img-3"
        style="left:931px;top:210px;width:135px;height:99px;z-index:5"
        src="assets/images/29_sprite.png" alt="">
   <div id="vip-text-3" class="vip-text" style="left:906px;top:230px;z-index:6">
-    <div class="vip-name">VIP3</div>
+    <div class="vip-name">LV3</div>
     <div class="vip-amount" id="lv-threshold-3">—</div>
   </div>
 
-  <!-- SILVER (VIP2): abs(935,301) 131×111 -->
+  <!-- SILVER (LV2): abs(935,301) 131×111 -->
   <img id="vip-row-img-2"
        style="left:935px;top:301px;width:131px;height:111px;z-index:5"
        src="assets/images/16_sprite.png" alt="">
   <div id="vip-text-2" class="vip-text" style="left:906px;top:329px;z-index:6">
-    <div class="vip-name">VIP2</div>
+    <div class="vip-name">LV2</div>
     <div class="vip-amount" id="lv-threshold-2">—</div>
   </div>
 
-  <!-- BRONZE (VIP1): abs(932,405) → inactive bg 恆顯；abs(935,399) → 動態亮燈 -->
+  <!-- BRONZE (LV1): abs(932,405) → inactive bg 恆顯；abs(935,399) → 動態亮燈 -->
   <img id="vip-row-bg-1"
        style="left:932px;top:405px;width:134px;height:109px;z-index:5"
        src="assets/images/28_sprite.png" alt="">
@@ -391,7 +391,7 @@
        style="left:935px;top:399px;width:131px;height:119px;z-index:6"
        src="assets/images/20_sprite.png" alt="">
   <div id="vip-text-1" class="vip-text active" style="left:906px;top:434px;z-index:7">
-    <div class="vip-name">VIP1</div>
+    <div class="vip-name">LV1</div>
     <div class="vip-amount" id="lv-threshold-1">—</div>
   </div>
 
