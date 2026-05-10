@@ -38,6 +38,7 @@ export default function ProbabilitySettingsPage() {
   const highSplitRate = formatWeightRate(currentStage?.highTableWeight ?? 0, currentSplitTotal);
   const lowPrizeWeightTotal = currentPrizes.reduce((sum, prize) => sum + prize.lowWeight, 0);
   const highPrizeWeightTotal = currentPrizes.reduce((sum, prize) => sum + prize.highWeight, 0);
+  const prizePrizeWeightTotal = currentPrizes.reduce((sum, prize) => sum + prize.prizeWeight, 0);
   const dailyLimitPrizeWeightTotal = currentPrizes.reduce((sum, prize) => sum + prize.dailyLimitWeight, 0);
 
   useEffect(() => {
@@ -343,6 +344,7 @@ export default function ProbabilitySettingsPage() {
             <Space wrap>
               <Tag>Low 權重合計 {lowPrizeWeightTotal.toLocaleString()}</Tag>
               <Tag>High 權重合計 {highPrizeWeightTotal.toLocaleString()}</Tag>
+              <Tag color="magenta">指定派獎權重合計 {prizePrizeWeightTotal.toLocaleString()}</Tag>
               <Tag color="gold">DailyLimit 權重合計 {dailyLimitPrizeWeightTotal.toLocaleString()}</Tag>
             </Space>
           </div>
