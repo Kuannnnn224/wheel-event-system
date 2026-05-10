@@ -79,19 +79,19 @@ describe('SpinsService realSpin award override integration', () => {
     expect(probabilityService.drawPrize).not.toHaveBeenCalled();
     expect(transactionSpinRecordRepository.sum).not.toHaveBeenCalled();
     expect(awardOverridesService.consume).toHaveBeenCalledWith(overrideRule, 'spin-id', expect.anything());
-    expect(result.probabilityTable).toBe('prize');
-    expect(result.spin.probabilityTable).toBe('prize');
+    expect(transactionSpinRecordRepository.save).toHaveBeenCalledWith(expect.objectContaining({ probabilityTable: 'prize' }));
+    expect(result).not.toHaveProperty('probabilityTable');
+    expect(result.spin).not.toHaveProperty('probabilityTable');
   });
 
   it('keeps the normal low high draw when no current pending override exists', async () => {
     const { service, probabilityService, awardOverridesService } = createService();
 
-    const result = await service.realSpin({ token: 'token', stageNumber: 1 });
+    await service.realSpin({ token: 'token', stageNumber: 1 });
 
     expect(probabilityService.drawPrize).toHaveBeenCalledWith(1);
     expect(probabilityService.drawPrizeForTable).not.toHaveBeenCalled();
     expect(awardOverridesService.consume).not.toHaveBeenCalled();
-    expect(result.probabilityTable).toBe('low');
   });
 
   it('keeps the normal low high draw when the daily payout total is below the limit', async () => {
@@ -100,15 +100,14 @@ describe('SpinsService realSpin award override integration', () => {
       dailyTotalAmountPoints: 100,
     });
 
-    const result = await service.realSpin({ token: 'token', stageNumber: 1 });
+    await service.realSpin({ token: 'token', stageNumber: 1 });
 
     expect(probabilityService.drawPrize).toHaveBeenCalledWith(1);
     expect(probabilityService.drawPrizeForTable).not.toHaveBeenCalled();
-    expect(result.probabilityTable).toBe('low');
   });
 
   it('uses the dailyLimit table once the daily payout total reaches the limit', async () => {
-    const { service, probabilityService, awardOverridesService } = createService({
+    const { service, probabilityService, awardOverridesService, transactionSpinRecordRepository } = createService({
       dailyPayoutLimitPoints: 100,
       dailyTotalAmountPoints: 100,
     });
@@ -118,7 +117,8 @@ describe('SpinsService realSpin award override integration', () => {
     expect(probabilityService.drawPrizeForTable).toHaveBeenCalledWith(1, 'dailyLimit');
     expect(probabilityService.drawPrize).not.toHaveBeenCalled();
     expect(awardOverridesService.consume).not.toHaveBeenCalled();
-    expect(result.probabilityTable).toBe('dailyLimit');
-    expect(result.spin.probabilityTable).toBe('dailyLimit');
+    expect(transactionSpinRecordRepository.save).toHaveBeenCalledWith(expect.objectContaining({ probabilityTable: 'dailyLimit' }));
+    expect(result).not.toHaveProperty('probabilityTable');
+    expect(result.spin).not.toHaveProperty('probabilityTable');
   });
 });

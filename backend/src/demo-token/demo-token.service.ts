@@ -7,6 +7,7 @@ import { resolveCurrentBusinessDate } from '../common/business-date';
 import { unixTimestampSeconds } from '../common/unix-timestamp';
 import { Player } from '../players/entities/player.entity';
 import { PlayersService } from '../players/players.service';
+import type { ProbabilityStageConfig } from '../probability/probability-config.types';
 import { ProbabilityService } from '../probability/probability.service';
 import { DemoSession } from './entities/demo-session.entity';
 
@@ -73,9 +74,41 @@ export class DemoTokenService {
       player: session.player,
       expiresAt: session.expiresAt,
       businessDate,
-      progress,
-      stages,
+      progress: this.toPublicProgress(progress),
+      stages: this.toPublicStages(stages),
     };
+  }
+
+  private toPublicProgress(progress: Awaited<ReturnType<PlayersService['getDailyProgress']>>) {
+    return {
+      player: progress.player,
+      businessDate: progress.businessDate,
+      turnoverPoints: progress.turnoverPoints,
+      unlockedStage: progress.unlockedStage,
+      playedStages: progress.playedStages,
+      totalWinPoints: progress.totalWinPoints,
+      spins: progress.spins.map((spin) => ({
+        id: spin.id,
+        businessDate: spin.businessDate,
+        stageNumber: spin.stageNumber,
+        prizeName: spin.prizeName,
+        amountPoints: spin.amountPoints,
+        createdAt: spin.createdAt,
+      })),
+    };
+  }
+
+  private toPublicStages(stages: ProbabilityStageConfig[]) {
+    return stages.map((stage) => ({
+      stageNumber: stage.stageNumber,
+      turnoverThresholdPoints: stage.turnoverThresholdPoints,
+      prizes: stage.prizes.map((prize) => ({
+        rewardCode: prize.rewardCode,
+        name: prize.name,
+        amountPoints: prize.amountPoints,
+        sortOrder: prize.sortOrder,
+      })),
+    }));
   }
 
   private resolveWebviewBaseUrl(context: WebviewUrlContext) {

@@ -84,8 +84,14 @@ export class SpinsService {
       return {
         player,
         businessDate,
-        spin,
-        probabilityTable: draw.table,
+        spin: {
+          id: spin.id,
+          businessDate: spin.businessDate,
+          stageNumber: spin.stageNumber,
+          prizeName: spin.prizeName,
+          amountPoints: spin.amountPoints,
+          createdAt: spin.createdAt,
+        },
         prize: {
           rewardCode: draw.prize.rewardCode,
           name: draw.prize.name,
