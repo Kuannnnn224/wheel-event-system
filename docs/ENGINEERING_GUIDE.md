@@ -8,6 +8,8 @@
 2. 每日活動不是靠刪資料重置，而是靠 `businessDate` 分日隔離。
 3. 機率設定不在 DB，runtime 讀 `backend/config/probability.json`。
 
+正式 APP 平台與轉盤服務的整合流程圖可看 `docs/APP_INTEGRATION_FLOW.md`。
+
 ## 框架入門：先建立心智模型
 
 如果你第一次接觸 NestJS、TypeORM、React，可以先把它們想成三個不同職責的工具：
