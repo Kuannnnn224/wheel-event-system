@@ -94,7 +94,6 @@ export default function SpinSimulatorPage() {
             <Space wrap>
               <Tag color="blue">Low 表 {selectedStageConfig?.lowTableWeight ?? 0} / {lowSplitRate}%</Tag>
               <Tag color="cyan">High 表 {selectedStageConfig?.highTableWeight ?? 0} / {highSplitRate}%</Tag>
-              <Tag color="gold">DailyLimit 權重 {dailyLimitEnabledWeight.toLocaleString()}</Tag>
             </Space>
           </div>
           {stagesQuery.isLoading ? (
