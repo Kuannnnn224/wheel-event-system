@@ -115,7 +115,7 @@ ZIP 匯入目前需要：
 - `low.xlsx`：low 表 A-E 權重。
 - `high.xlsx`：high 表 A-E 權重。
 - `prize.xlsx`：指定派獎 prize 表 A-E 權重。
-- `dailyLimit.xlsx`：每日送出達上限後使用的 dailyLimit 表 A-E 權重。
+- `daily-limit.xlsx`：每日送出達上限後使用的 dailyLimit 表 A-E 權重。
 
 後控指定派獎的意思是：某玩家今天某 VIP 階段抽獎時，不走 low/high 分流，而是直接用 `prize` 表抽 A-E 獎。成功抽獎後該規則會被標成 consumed。
 

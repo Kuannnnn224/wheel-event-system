@@ -70,7 +70,7 @@ describe('parseProbabilityXlsxDirectory', () => {
       LV5: [[null, null, null, 'A', 15], [null, null, null, 'B', 22], [null, null, null, 'C', 33], [null, null, null, 'D', 44], [null, null, null, 'E', 55]],
     });
 
-    writeWorkbook(join(dir, 'dailyLimit.xlsx'), {
+    writeWorkbook(join(dir, 'daily-limit.xlsx'), {
       LV1: [[null, null, null, 'A', 91], [null, null, null, 'B', 9], [null, null, null, 'C', 0], [null, null, null, 'D', 0], [null, null, null, 'E', 0]],
       LV2: [[null, null, null, 'A', 92], [null, null, null, 'B', 8], [null, null, null, 'C', 0], [null, null, null, 'D', 0], [null, null, null, 'E', 0]],
       LV3: [[null, null, null, 'A', 93], [null, null, null, 'B', 7], [null, null, null, 'C', 0], [null, null, null, 'D', 0], [null, null, null, 'E', 0]],

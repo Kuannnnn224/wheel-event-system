@@ -73,7 +73,7 @@ NestJS module 應依業務切開：
 - `high.xlsx`：high 表 A-E 權重。
 - `prize.xlsx`：指定派獎 prize 表 A-E 權重。
 
-`daily-limit.xlsx` 目前是保留來源檔，業務意義未完全確認前不要接進 runtime 規則。
+- `daily-limit.xlsx`：每日送出達上限後使用的 dailyLimit 表 A-E 權重。
 
 ## DB 與時間
 

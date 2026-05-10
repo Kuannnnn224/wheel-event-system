@@ -32,7 +32,7 @@ export function parseProbabilityXlsxDirectory(sourceDir: string): ProbabilityCon
     lowWorkbook: XLSX.readFile(requireSourceFile(resolvedSourceDir, 'low.xlsx')),
     highWorkbook: XLSX.readFile(requireSourceFile(resolvedSourceDir, 'high.xlsx')),
     prizeWorkbook: XLSX.readFile(requireSourceFile(resolvedSourceDir, 'prize.xlsx')),
-    dailyLimitWorkbook: XLSX.readFile(requireSourceFile(resolvedSourceDir, 'dailyLimit.xlsx')),
+    dailyLimitWorkbook: XLSX.readFile(requireSourceFile(resolvedSourceDir, 'daily-limit.xlsx')),
     weightWorkbook: XLSX.readFile(requireSourceFile(resolvedSourceDir, 'weight.xlsx')),
   });
 }
@@ -57,7 +57,7 @@ export function parseProbabilityXlsxZip(zipBuffer: Buffer): ProbabilityConfigFil
     lowWorkbook: XLSX.read(requireZipEntry(files, 'low.xlsx'), { type: 'buffer' }),
     highWorkbook: XLSX.read(requireZipEntry(files, 'high.xlsx'), { type: 'buffer' }),
     prizeWorkbook: XLSX.read(requireZipEntry(files, 'prize.xlsx'), { type: 'buffer' }),
-    dailyLimitWorkbook: XLSX.read(requireZipEntry(files, 'dailylimit.xlsx'), { type: 'buffer' }),
+    dailyLimitWorkbook: XLSX.read(requireZipEntry(files, 'daily-limit.xlsx'), { type: 'buffer' }),
     weightWorkbook: XLSX.read(requireZipEntry(files, 'weight.xlsx'), { type: 'buffer' }),
   });
 }
