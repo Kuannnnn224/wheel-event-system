@@ -110,12 +110,16 @@ backend/config/probability.json
 ZIP 匯入目前需要：
 
 - `config.xlsx`：VIP 門檻、A-E 獎項名稱、點數。
+- `config.xlsx` 的 `門檻設置`：可加一列 `每日送出上限`，右側第一個數字會寫入每日預算；`0` 或負數代表停用。
 - `weight.xlsx`：每階段 low/high 分流權重。
 - `low.xlsx`：low 表 A-E 權重。
 - `high.xlsx`：high 表 A-E 權重。
 - `prize.xlsx`：指定派獎 prize 表 A-E 權重。
+- `dailyLimit.xlsx`：每日送出達上限後使用的 dailyLimit 表 A-E 權重。
 
 後控指定派獎的意思是：某玩家今天某 VIP 階段抽獎時，不走 low/high 分流，而是直接用 `prize` 表抽 A-E 獎。成功抽獎後該規則會被標成 consumed。
+
+每日預算控管的意思是：當今日 `spin_records.amount_points` 累計已達 `dailyPayoutLimitPoints`，之後沒有指定派獎的真實抽獎會直接使用 `dailyLimit` 表。指定派獎仍優先使用 `prize` 表。
 
 ## DB 設定
 

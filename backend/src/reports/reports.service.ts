@@ -5,6 +5,7 @@ import { SpinRecord } from '../spins/entities/spin-record.entity';
 import { PlayerDailyProgress } from '../players/entities/player-daily-progress.entity';
 import { PlayersService } from '../players/players.service';
 import { assertBusinessDate } from '../common/business-date';
+import { ProbabilityService } from '../probability/probability.service';
 
 interface SpinAggregate {
   totalSpins: number;
@@ -21,17 +22,21 @@ export class ReportsService {
     @InjectRepository(PlayerDailyProgress)
     private readonly progressRepository: Repository<PlayerDailyProgress>,
     private readonly playersService: PlayersService,
+    private readonly probabilityService: ProbabilityService,
   ) {}
 
   async getDailyReport(date: string) {
     const businessDate = this.assertReportDate(date, 'date');
     const report = await this.getRangeReport(businessDate, businessDate);
+    const dailyPayoutLimitPoints = await this.probabilityService.getDailyPayoutLimitPoints();
 
     return {
       businessDate,
       totalSpins: report.totalSpins,
       uniquePlayers: report.uniquePlayers,
       totalAmountPoints: report.totalAmountPoints,
+      dailyPayoutLimitPoints,
+      dailyLimitActive: dailyPayoutLimitPoints > 0 && report.totalAmountPoints >= dailyPayoutLimitPoints,
       byStage: report.byStage,
     };
   }

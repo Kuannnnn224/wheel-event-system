@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { AwardOverrideRule, Player, ProbabilityImportPreview, ProbabilityImportUpload, StageConfig } from './types';
+import type { AwardOverrideRule, Player, ProbabilityConfig, ProbabilityImportPreview, ProbabilityImportUpload, StageConfig } from './types';
 
 const TOKEN_KEY = 'wheel-admin-token';
 
@@ -71,6 +71,11 @@ export async function fetchStages() {
   return data;
 }
 
+export async function fetchProbabilityConfig() {
+  const { data } = await api.get<ProbabilityConfig>('/probability/config');
+  return data;
+}
+
 export async function previewProbabilityImport(file: File) {
   const formData = new FormData();
   formData.append('file', file);
@@ -79,7 +84,12 @@ export async function previewProbabilityImport(file: File) {
 }
 
 export async function applyProbabilityImport(uploadId: string) {
-  const { data } = await api.post<{ upload: ProbabilityImportUpload; diff: ProbabilityImportPreview['diff']; stages: StageConfig[] }>(
+  const { data } = await api.post<{
+    upload: ProbabilityImportUpload;
+    diff: ProbabilityImportPreview['diff'];
+    dailyPayoutLimitPoints: number;
+    stages: StageConfig[];
+  }>(
     '/probability/imports/apply',
     { uploadId },
   );

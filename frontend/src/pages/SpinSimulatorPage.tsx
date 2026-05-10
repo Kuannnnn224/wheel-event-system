@@ -2,12 +2,12 @@ import { Alert, Button, Space, Tag, Typography } from 'antd';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { api, fetchStages } from '../api/client';
-import type { StageConfig } from '../api/types';
+import type { ProbabilityTable, StageConfig } from '../api/types';
 import ProbabilityTableTag from '../components/ProbabilityTableTag';
 
 interface SimulateResult {
   stageNumber: number;
-  probabilityTable: 'low' | 'high' | 'prize';
+  probabilityTable: ProbabilityTable;
   prize: {
     id?: number;
     rewardCode: string;
@@ -51,6 +51,9 @@ export default function SpinSimulatorPage() {
   const highEnabledWeight = selectedPrizes
     .filter((prize) => prize.highWeight > 0)
     .reduce((sum, prize) => sum + prize.highWeight, 0);
+  const dailyLimitEnabledWeight = selectedPrizes
+    .filter((prize) => prize.dailyLimitWeight > 0)
+    .reduce((sum, prize) => sum + prize.dailyLimitWeight, 0);
   const tableSplitTotal = (selectedStageConfig?.lowTableWeight ?? 0) + (selectedStageConfig?.highTableWeight ?? 0);
   const lowSplitRate = tableSplitTotal > 0 ? (((selectedStageConfig?.lowTableWeight ?? 0) / tableSplitTotal) * 100).toFixed(2) : '0.00';
   const highSplitRate = tableSplitTotal > 0 ? (((selectedStageConfig?.highTableWeight ?? 0) / tableSplitTotal) * 100).toFixed(2) : '0.00';
@@ -91,6 +94,7 @@ export default function SpinSimulatorPage() {
             <Space wrap>
               <Tag color="blue">Low 表 {selectedStageConfig?.lowTableWeight ?? 0} / {lowSplitRate}%</Tag>
               <Tag color="cyan">High 表 {selectedStageConfig?.highTableWeight ?? 0} / {highSplitRate}%</Tag>
+              <Tag color="gold">DailyLimit 權重 {dailyLimitEnabledWeight.toLocaleString()}</Tag>
             </Space>
           </div>
           {stagesQuery.isLoading ? (
@@ -107,6 +111,8 @@ export default function SpinSimulatorPage() {
                     <th>Low 命中率</th>
                     <th>High 權重</th>
                     <th>High 命中率</th>
+                    <th>DailyLimit 權重</th>
+                    <th>DailyLimit 命中率</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -118,6 +124,10 @@ export default function SpinSimulatorPage() {
                     const highHitRate =
                       prize.highWeight > 0 && highEnabledWeight > 0
                         ? `${((prize.highWeight / highEnabledWeight) * 100).toFixed(2)}%`
+                        : '0.00%';
+                    const dailyLimitHitRate =
+                      prize.dailyLimitWeight > 0 && dailyLimitEnabledWeight > 0
+                        ? `${((prize.dailyLimitWeight / dailyLimitEnabledWeight) * 100).toFixed(2)}%`
                         : '0.00%';
 
                     return (
@@ -131,6 +141,8 @@ export default function SpinSimulatorPage() {
                         <td>{lowHitRate}</td>
                         <td>{prize.highWeight.toLocaleString()}</td>
                         <td>{highHitRate}</td>
+                        <td>{prize.dailyLimitWeight.toLocaleString()}</td>
+                        <td>{dailyLimitHitRate}</td>
                       </tr>
                     );
                   })}

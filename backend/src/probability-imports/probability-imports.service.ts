@@ -16,6 +16,7 @@ import {
 } from './probability-imports.types';
 
 const DIFF_FIELD_LABELS: Record<string, string> = {
+  dailyPayoutLimitPoints: '每日送出上限',
   turnoverThresholdPoints: '流水門檻',
   lowTableWeight: 'Low 表分流權重',
   highTableWeight: 'High 表分流權重',
@@ -24,6 +25,7 @@ const DIFF_FIELD_LABELS: Record<string, string> = {
   lowWeight: 'Low 權重',
   highWeight: 'High 權重',
   prizeWeight: '指定派獎權重',
+  dailyLimitWeight: 'DailyLimit 權重',
   sortOrder: '排序',
 };
 
@@ -68,10 +70,16 @@ export class ProbabilityImportsService {
     });
     const currentConfig = await this.probabilityService.getConfig();
     const stages = await this.probabilityService.replaceConfig(proposedConfig);
+    const appliedConfig = {
+      version: proposedConfig.version,
+      dailyPayoutLimitPoints: proposedConfig.dailyPayoutLimitPoints,
+      stages,
+    };
 
     return {
       upload: importFile.metadata,
-      diff: this.buildConfigDiff(currentConfig, { version: 1, stages }),
+      diff: this.buildConfigDiff(currentConfig, appliedConfig),
+      dailyPayoutLimitPoints: proposedConfig.dailyPayoutLimitPoints,
       stages,
     };
   }
@@ -163,6 +171,15 @@ export class ProbabilityImportsService {
     const diff: ProbabilityImportDiffItem[] = [];
     const currentStages = new Map(current.stages.map((stage) => [stage.stageNumber, stage]));
 
+    this.pushDiff(
+      diff,
+      0,
+      undefined,
+      'dailyPayoutLimitPoints',
+      current.dailyPayoutLimitPoints ?? 0,
+      proposed.dailyPayoutLimitPoints ?? 0,
+    );
+
     for (const proposedStage of proposed.stages) {
       const currentStage = currentStages.get(proposedStage.stageNumber);
       if (!currentStage) {
@@ -202,6 +219,7 @@ export class ProbabilityImportsService {
         this.pushDiff(diff, proposedStage.stageNumber, proposedPrize.rewardCode, 'lowWeight', currentPrize.lowWeight, proposedPrize.lowWeight);
         this.pushDiff(diff, proposedStage.stageNumber, proposedPrize.rewardCode, 'highWeight', currentPrize.highWeight, proposedPrize.highWeight);
         this.pushDiff(diff, proposedStage.stageNumber, proposedPrize.rewardCode, 'prizeWeight', currentPrize.prizeWeight, proposedPrize.prizeWeight);
+        this.pushDiff(diff, proposedStage.stageNumber, proposedPrize.rewardCode, 'dailyLimitWeight', currentPrize.dailyLimitWeight, proposedPrize.dailyLimitWeight);
         this.pushDiff(diff, proposedStage.stageNumber, proposedPrize.rewardCode, 'sortOrder', currentPrize.sortOrder, proposedPrize.sortOrder);
       }
     }
@@ -226,7 +244,9 @@ export class ProbabilityImportsService {
       stageNumber,
       rewardCode,
       field,
-      label: rewardCode
+      label: stageNumber === 0
+        ? (DIFF_FIELD_LABELS[field] ?? field)
+        : rewardCode
         ? `Stage ${stageNumber} / ${rewardCode} 獎 / ${DIFF_FIELD_LABELS[field] ?? field}`
         : `Stage ${stageNumber} / ${DIFF_FIELD_LABELS[field] ?? field}`,
       before,

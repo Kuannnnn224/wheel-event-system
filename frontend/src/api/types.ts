@@ -5,6 +5,8 @@ export interface Player {
   updatedAt: number;
 }
 
+export type ProbabilityTable = 'low' | 'high' | 'prize' | 'dailyLimit';
+
 export interface PrizeConfig {
   id?: number;
   rewardCode: string;
@@ -12,6 +14,7 @@ export interface PrizeConfig {
   lowWeight: number;
   highWeight: number;
   prizeWeight: number;
+  dailyLimitWeight: number;
   amountPoints: number;
   sortOrder: number;
 }
@@ -47,10 +50,13 @@ export interface ProbabilityImportPreview {
   filename: string;
   upload: ProbabilityImportUpload;
   diff: ProbabilityImportDiffItem[];
-  proposedConfig: {
-    version: number;
-    stages: StageConfig[];
-  };
+  proposedConfig: ProbabilityConfig;
+}
+
+export interface ProbabilityConfig {
+  version: number;
+  dailyPayoutLimitPoints: number;
+  stages: StageConfig[];
 }
 
 export interface SpinRecord {
@@ -58,7 +64,7 @@ export interface SpinRecord {
   playerId: string;
   businessDate: string;
   stageNumber: number;
-  probabilityTable: 'low' | 'high' | 'prize';
+  probabilityTable: ProbabilityTable;
   prizeName: string;
   amountPoints: number;
   createdAt: number;
@@ -100,6 +106,8 @@ export interface DailyReport {
   totalSpins: number;
   uniquePlayers: number;
   totalAmountPoints: number;
+  dailyPayoutLimitPoints: number;
+  dailyLimitActive: boolean;
   byStage: Array<{ stageNumber: number; spinCount: number; totalAmountPoints: number }>;
 }
 
@@ -122,11 +130,11 @@ export interface SimulationJob {
   totalAmountPoints: number;
   averageAmountPoints: number;
   tableResults: Array<{
-    probabilityTable: 'low' | 'high' | 'prize';
+    probabilityTable: ProbabilityTable;
     count: number;
   }>;
   prizeResults: Array<{
-    probabilityTable?: 'low' | 'high' | 'prize';
+    probabilityTable?: ProbabilityTable;
     rewardCode: string;
     name: string;
     amountPoints: number;

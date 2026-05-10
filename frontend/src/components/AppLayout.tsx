@@ -66,6 +66,11 @@ export default function AppLayout({ children, onLogout }: AppLayoutProps) {
   const [currentDateTime, setCurrentDateTime] = useState(() => formatLocalDateTime());
   const [dailyReport, setDailyReport] = useState<DailyReport>();
   const [dailyReportError, setDailyReportError] = useState(false);
+  const dailyLimitSummary = dailyReport?.dailyLimitActive
+    ? 'DailyLimit 已啟用 · 每分鐘刷新'
+    : dailyReport && dailyReport.dailyPayoutLimitPoints > 0
+      ? `上限 ${dailyReport.dailyPayoutLimitPoints.toLocaleString()} 點 · 每分鐘刷新`
+      : `${dailyReport?.totalSpins ?? 0} 次抽獎 · 每分鐘刷新`;
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -125,7 +130,7 @@ export default function AppLayout({ children, onLogout }: AppLayoutProps) {
           <div className="sidebar-daily-card">
             <span className="sidebar-daily-label">今日送出</span>
             <strong>{dailyReportError ? '-' : `${(dailyReport?.totalAmountPoints ?? 0).toLocaleString()} 點`}</strong>
-            <span>{dailyReportError ? '讀取失敗' : `${dailyReport?.totalSpins ?? 0} 次抽獎 · 每分鐘刷新`}</span>
+            <span>{dailyReportError ? '讀取失敗' : dailyLimitSummary}</span>
           </div>
         </div>
       </Sider>

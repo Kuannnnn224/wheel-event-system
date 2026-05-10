@@ -7,6 +7,7 @@ export interface ProbabilityPrizeConfig {
   lowWeight: number;
   highWeight: number;
   prizeWeight: number;
+  dailyLimitWeight: number;
   sortOrder: number;
 }
 
@@ -20,6 +21,7 @@ export interface ProbabilityStageConfig {
 
 export interface ProbabilityConfigFile {
   version: number;
+  dailyPayoutLimitPoints: number;
   stages: ProbabilityStageConfig[];
 }
 

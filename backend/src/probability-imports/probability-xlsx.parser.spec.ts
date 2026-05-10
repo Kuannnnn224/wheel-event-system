@@ -37,6 +37,7 @@ describe('parseProbabilityXlsxDirectory', () => {
         [null, null, null, '第三階', 20000],
         [null, null, null, '第四階', 50000],
         [null, null, null, '第五階', 100000],
+        ['每日送出上限', 123456],
       ],
       PrizeLV1: rewardRows,
       PrizeLV2: rewardRows,
@@ -69,6 +70,14 @@ describe('parseProbabilityXlsxDirectory', () => {
       LV5: [[null, null, null, 'A', 15], [null, null, null, 'B', 22], [null, null, null, 'C', 33], [null, null, null, 'D', 44], [null, null, null, 'E', 55]],
     });
 
+    writeWorkbook(join(dir, 'dailyLimit.xlsx'), {
+      LV1: [[null, null, null, 'A', 91], [null, null, null, 'B', 9], [null, null, null, 'C', 0], [null, null, null, 'D', 0], [null, null, null, 'E', 0]],
+      LV2: [[null, null, null, 'A', 92], [null, null, null, 'B', 8], [null, null, null, 'C', 0], [null, null, null, 'D', 0], [null, null, null, 'E', 0]],
+      LV3: [[null, null, null, 'A', 93], [null, null, null, 'B', 7], [null, null, null, 'C', 0], [null, null, null, 'D', 0], [null, null, null, 'E', 0]],
+      LV4: [[null, null, null, 'A', 94], [null, null, null, 'B', 6], [null, null, null, 'C', 0], [null, null, null, 'D', 0], [null, null, null, 'E', 0]],
+      LV5: [[null, null, null, 'A', 95], [null, null, null, 'B', 5], [null, null, null, 'C', 0], [null, null, null, 'D', 0], [null, null, null, 'E', 0]],
+    });
+
     writeWorkbook(join(dir, 'weight.xlsx'), {
       Weight: [
         [null, null, null, null, null, '第一組轉盤'],
@@ -92,6 +101,7 @@ describe('parseProbabilityXlsxDirectory', () => {
     const config = parseProbabilityXlsxDirectory(dir);
 
     expect(config.stages).toHaveLength(5);
+    expect(config.dailyPayoutLimitPoints).toBe(123456);
     expect(config.stages[0].turnoverThresholdPoints).toBe(500);
     expect(config.stages[0].lowTableWeight).toBe(960);
     expect(config.stages[0].highTableWeight).toBe(40);
@@ -102,6 +112,7 @@ describe('parseProbabilityXlsxDirectory', () => {
       lowWeight: 64,
       highWeight: 41,
       prizeWeight: 11,
+      dailyLimitWeight: 91,
       sortOrder: 1,
     });
     expect(config.stages[0]).not.toHaveProperty('enabled');

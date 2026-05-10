@@ -27,7 +27,7 @@ describe('ReportsService', () => {
         spin({ playerId: 'player-1', stageNumber: 2, amountPoints: 30 }),
       ]),
     };
-    const service = new ReportsService(spinRecordRepository as never, {} as never, {} as never);
+    const service = new ReportsService(spinRecordRepository as never, {} as never, {} as never, {} as never);
 
     const report = await service.getRangeReport('2026-05-01', '2026-05-09');
 
@@ -45,8 +45,26 @@ describe('ReportsService', () => {
   });
 
   it('rejects inverted report ranges', async () => {
-    const service = new ReportsService({ find: jest.fn() } as never, {} as never, {} as never);
+    const service = new ReportsService({ find: jest.fn() } as never, {} as never, {} as never, {} as never);
 
     await expect(service.getRangeReport('2026-05-09', '2026-05-01')).rejects.toThrow(BadRequestException);
+  });
+
+  it('adds dailyLimit metadata to the daily report', async () => {
+    const spinRecordRepository = {
+      find: jest.fn().mockResolvedValue([
+        spin({ playerId: 'player-1', stageNumber: 1, amountPoints: 40 }),
+        spin({ playerId: 'player-2', stageNumber: 2, amountPoints: 60 }),
+      ]),
+    };
+    const probabilityService = {
+      getDailyPayoutLimitPoints: jest.fn().mockResolvedValue(100),
+    };
+    const service = new ReportsService(spinRecordRepository as never, {} as never, {} as never, probabilityService as never);
+
+    const report = await service.getDailyReport('2026-05-09');
+
+    expect(report.dailyPayoutLimitPoints).toBe(100);
+    expect(report.dailyLimitActive).toBe(true);
   });
 });

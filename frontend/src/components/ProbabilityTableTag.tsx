@@ -1,7 +1,7 @@
 import { Tag } from 'antd';
 
 interface ProbabilityTableTagProps {
-  value?: 'low' | 'high' | 'prize' | string | null;
+  value?: 'low' | 'high' | 'prize' | 'dailyLimit' | string | null;
   suffix?: string;
 }
 
@@ -10,6 +10,10 @@ export default function ProbabilityTableTag({ value, suffix }: ProbabilityTableT
 
   if (normalized === 'prize') {
     return <Tag color="magenta">PRIZE{suffix}</Tag>;
+  }
+
+  if (normalized === 'dailylimit') {
+    return <Tag color="gold">DAILY LIMIT{suffix}</Tag>;
   }
 
   if (normalized === 'high') {

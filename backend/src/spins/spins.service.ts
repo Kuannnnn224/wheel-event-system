@@ -62,7 +62,9 @@ export class SpinsService {
       const overrideRule = await this.awardOverridesService.findPendingForSpin(player.id, businessDate, dto.stageNumber, manager);
       const draw = overrideRule
         ? await this.probabilityService.drawPrizeForTable(dto.stageNumber, 'prize')
-        : await this.probabilityService.drawPrize(dto.stageNumber);
+        : await this.shouldUseDailyLimitTable(spinRecordRepository, businessDate)
+          ? await this.probabilityService.drawPrizeForTable(dto.stageNumber, 'dailyLimit')
+          : await this.probabilityService.drawPrize(dto.stageNumber);
       const spin = await spinRecordRepository.save(
         spinRecordRepository.create({
           playerId: player.id,
@@ -91,5 +93,16 @@ export class SpinsService {
         },
       };
     });
+  }
+
+  private async shouldUseDailyLimitTable(spinRecordRepository: Repository<SpinRecord>, businessDate: string) {
+    const dailyPayoutLimitPoints = await this.probabilityService.getDailyPayoutLimitPoints();
+
+    if (dailyPayoutLimitPoints <= 0) {
+      return false;
+    }
+
+    const totalAmountPoints = await spinRecordRepository.sum('amountPoints', { businessDate });
+    return (totalAmountPoints ?? 0) >= dailyPayoutLimitPoints;
   }
 }

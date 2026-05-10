@@ -5,6 +5,11 @@ import { ProbabilityService } from './probability.service';
 export class ProbabilityController {
   constructor(private readonly probabilityService: ProbabilityService) {}
 
+  @Get('config')
+  getConfig() {
+    return this.probabilityService.getConfig();
+  }
+
   @Get('stages')
   getStages() {
     return this.probabilityService.getStages();

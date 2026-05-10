@@ -12,16 +12,18 @@ const prize = {
   lowWeight: 0,
   highWeight: 0,
   prizeWeight: 100,
+  dailyLimitWeight: 100,
   sortOrder: 1,
 };
 
-function createService(options?: { overrideRule?: unknown }) {
+function createService(options?: { overrideRule?: unknown; dailyPayoutLimitPoints?: number; dailyTotalAmountPoints?: number }) {
   const spinRecordRepository = {
     create: jest.fn((input) => input),
     save: jest.fn(),
   };
   const transactionSpinRecordRepository = {
     find: jest.fn().mockResolvedValue([]),
+    sum: jest.fn().mockResolvedValue(options?.dailyTotalAmountPoints ?? 0),
     create: jest.fn((input) => input),
     save: jest.fn(async (input) => ({ ...input, id: 'spin-id' })),
   };
@@ -36,7 +38,8 @@ function createService(options?: { overrideRule?: unknown }) {
   };
   const probabilityService = {
     drawPrize: jest.fn().mockResolvedValue({ table: 'low', prize }),
-    drawPrizeForTable: jest.fn().mockResolvedValue({ table: 'prize', prize }),
+    drawPrizeForTable: jest.fn().mockImplementation(async (_stageNumber: number, table: string) => ({ table, prize })),
+    getDailyPayoutLimitPoints: jest.fn().mockResolvedValue(options?.dailyPayoutLimitPoints ?? 0),
   };
   const demoTokenService = {
     validateToken: jest.fn().mockResolvedValue(player),
@@ -57,18 +60,24 @@ function createService(options?: { overrideRule?: unknown }) {
     ),
     probabilityService,
     awardOverridesService,
+    transactionSpinRecordRepository,
   };
 }
 
 describe('SpinsService realSpin award override integration', () => {
   it('uses the prize table and consumes a pending award override', async () => {
     const overrideRule = { id: 'rule-id' };
-    const { service, probabilityService, awardOverridesService } = createService({ overrideRule });
+    const { service, probabilityService, awardOverridesService, transactionSpinRecordRepository } = createService({
+      overrideRule,
+      dailyPayoutLimitPoints: 100,
+      dailyTotalAmountPoints: 100,
+    });
 
     const result = await service.realSpin({ token: 'token', stageNumber: 1 });
 
     expect(probabilityService.drawPrizeForTable).toHaveBeenCalledWith(1, 'prize');
     expect(probabilityService.drawPrize).not.toHaveBeenCalled();
+    expect(transactionSpinRecordRepository.sum).not.toHaveBeenCalled();
     expect(awardOverridesService.consume).toHaveBeenCalledWith(overrideRule, 'spin-id', expect.anything());
     expect(result.probabilityTable).toBe('prize');
     expect(result.spin.probabilityTable).toBe('prize');
@@ -83,5 +92,33 @@ describe('SpinsService realSpin award override integration', () => {
     expect(probabilityService.drawPrizeForTable).not.toHaveBeenCalled();
     expect(awardOverridesService.consume).not.toHaveBeenCalled();
     expect(result.probabilityTable).toBe('low');
+  });
+
+  it('keeps the normal low high draw when the daily payout total is below the limit', async () => {
+    const { service, probabilityService } = createService({
+      dailyPayoutLimitPoints: 101,
+      dailyTotalAmountPoints: 100,
+    });
+
+    const result = await service.realSpin({ token: 'token', stageNumber: 1 });
+
+    expect(probabilityService.drawPrize).toHaveBeenCalledWith(1);
+    expect(probabilityService.drawPrizeForTable).not.toHaveBeenCalled();
+    expect(result.probabilityTable).toBe('low');
+  });
+
+  it('uses the dailyLimit table once the daily payout total reaches the limit', async () => {
+    const { service, probabilityService, awardOverridesService } = createService({
+      dailyPayoutLimitPoints: 100,
+      dailyTotalAmountPoints: 100,
+    });
+
+    const result = await service.realSpin({ token: 'token', stageNumber: 1 });
+
+    expect(probabilityService.drawPrizeForTable).toHaveBeenCalledWith(1, 'dailyLimit');
+    expect(probabilityService.drawPrize).not.toHaveBeenCalled();
+    expect(awardOverridesService.consume).not.toHaveBeenCalled();
+    expect(result.probabilityTable).toBe('dailyLimit');
+    expect(result.spin.probabilityTable).toBe('dailyLimit');
   });
 });

@@ -99,7 +99,9 @@ export class SimulationsService {
 
         for (let index = 0; index < limit; index += 1) {
           const draw = this.probabilityService.drawPrizeFromConfig(drawConfig);
-          tableCounts[draw.table] += 1;
+          if (draw.table === 'low' || draw.table === 'high') {
+            tableCounts[draw.table] += 1;
+          }
 
           const key = `${draw.prize.rewardCode}:${draw.prize.name}:${draw.prize.amountPoints}`;
           const current = resultMap.get(key) ?? {

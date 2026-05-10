@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   applyProbabilityImport,
   downloadProbabilityImport,
+  fetchProbabilityConfig,
   fetchProbabilityImports,
-  fetchStages,
   previewProbabilityImport,
 } from '../api/client';
 import type { PrizeConfig, ProbabilityImportDiffItem, ProbabilityImportPreview, ProbabilityImportUpload, StageConfig } from '../api/types';
@@ -16,6 +16,7 @@ function formatWeightRate(weight: number, total: number) {
 
 export default function ProbabilitySettingsPage() {
   const [stages, setStages] = useState<StageConfig[]>([]);
+  const [dailyPayoutLimitPoints, setDailyPayoutLimitPoints] = useState(0);
   const [imports, setImports] = useState<ProbabilityImportUpload[]>([]);
   const [importPreview, setImportPreview] = useState<ProbabilityImportPreview>();
   const [selectedStage, setSelectedStage] = useState<number>(1);
@@ -37,6 +38,7 @@ export default function ProbabilitySettingsPage() {
   const highSplitRate = formatWeightRate(currentStage?.highTableWeight ?? 0, currentSplitTotal);
   const lowPrizeWeightTotal = currentPrizes.reduce((sum, prize) => sum + prize.lowWeight, 0);
   const highPrizeWeightTotal = currentPrizes.reduce((sum, prize) => sum + prize.highWeight, 0);
+  const dailyLimitPrizeWeightTotal = currentPrizes.reduce((sum, prize) => sum + prize.dailyLimitWeight, 0);
 
   useEffect(() => {
     void load();
@@ -47,7 +49,9 @@ export default function ProbabilitySettingsPage() {
     setLoading(true);
     setError(undefined);
     try {
-      setStages(await fetchStages());
+      const config = await fetchProbabilityConfig();
+      setStages(config.stages);
+      setDailyPayoutLimitPoints(config.dailyPayoutLimitPoints);
     } catch (err) {
       setError(err instanceof Error ? err.message : '載入機率設定失敗');
     } finally {
@@ -88,6 +92,7 @@ export default function ProbabilitySettingsPage() {
     try {
       const result = await applyProbabilityImport(importPreview.upload.id);
       setStages(result.stages);
+      setDailyPayoutLimitPoints(result.dailyPayoutLimitPoints);
       setSelectedStage(1);
       setImportPreview(undefined);
       await loadImports();
@@ -137,6 +142,9 @@ export default function ProbabilitySettingsPage() {
             <Typography.Title level={4}>Stage {selectedStage}</Typography.Title>
           </div>
           <Space wrap>
+            <Tag color={dailyPayoutLimitPoints > 0 ? 'gold' : 'default'}>
+              每日上限 {dailyPayoutLimitPoints > 0 ? `${dailyPayoutLimitPoints.toLocaleString()} 點` : '停用'}
+            </Tag>
             <Button icon={<ReloadOutlined />} onClick={load} loading={loading}>
               重新載入
             </Button>
@@ -335,6 +343,7 @@ export default function ProbabilitySettingsPage() {
             <Space wrap>
               <Tag>Low 權重合計 {lowPrizeWeightTotal.toLocaleString()}</Tag>
               <Tag>High 權重合計 {highPrizeWeightTotal.toLocaleString()}</Tag>
+              <Tag color="gold">DailyLimit 權重合計 {dailyLimitPrizeWeightTotal.toLocaleString()}</Tag>
             </Space>
           </div>
           <Table<PrizeConfig>
@@ -374,6 +383,19 @@ export default function ProbabilitySettingsPage() {
                 title: '指定派獎權重',
                 dataIndex: 'prizeWeight',
                 width: 132,
+                render: (value: number | undefined, row) => (
+                  <InputNumber
+                    min={0}
+                    precision={0}
+                    value={value ?? 0}
+                    readOnly
+                  />
+                ),
+              },
+              {
+                title: 'DailyLimit 權重',
+                dataIndex: 'dailyLimitWeight',
+                width: 150,
                 render: (value: number | undefined, row) => (
                   <InputNumber
                     min={0}

@@ -21,6 +21,7 @@ interface ProbabilitySourceWorkbooks {
   lowWorkbook: XLSX.WorkBook;
   highWorkbook: XLSX.WorkBook;
   prizeWorkbook: XLSX.WorkBook;
+  dailyLimitWorkbook: XLSX.WorkBook;
   weightWorkbook: XLSX.WorkBook;
 }
 
@@ -31,6 +32,7 @@ export function parseProbabilityXlsxDirectory(sourceDir: string): ProbabilityCon
     lowWorkbook: XLSX.readFile(requireSourceFile(resolvedSourceDir, 'low.xlsx')),
     highWorkbook: XLSX.readFile(requireSourceFile(resolvedSourceDir, 'high.xlsx')),
     prizeWorkbook: XLSX.readFile(requireSourceFile(resolvedSourceDir, 'prize.xlsx')),
+    dailyLimitWorkbook: XLSX.readFile(requireSourceFile(resolvedSourceDir, 'dailyLimit.xlsx')),
     weightWorkbook: XLSX.readFile(requireSourceFile(resolvedSourceDir, 'weight.xlsx')),
   });
 }
@@ -55,22 +57,25 @@ export function parseProbabilityXlsxZip(zipBuffer: Buffer): ProbabilityConfigFil
     lowWorkbook: XLSX.read(requireZipEntry(files, 'low.xlsx'), { type: 'buffer' }),
     highWorkbook: XLSX.read(requireZipEntry(files, 'high.xlsx'), { type: 'buffer' }),
     prizeWorkbook: XLSX.read(requireZipEntry(files, 'prize.xlsx'), { type: 'buffer' }),
+    dailyLimitWorkbook: XLSX.read(requireZipEntry(files, 'dailylimit.xlsx'), { type: 'buffer' }),
     weightWorkbook: XLSX.read(requireZipEntry(files, 'weight.xlsx'), { type: 'buffer' }),
   });
 }
 
 function parseProbabilityWorkbooks(workbooks: ProbabilitySourceWorkbooks): ProbabilityConfigFile {
-  const thresholds = parseThresholds(workbooks.configWorkbook);
+  const { thresholds, dailyPayoutLimitPoints } = parseThresholds(workbooks.configWorkbook);
   const tableWeights = parseTableWeights(workbooks.weightWorkbook);
 
   return {
     version: 1,
+    dailyPayoutLimitPoints,
     stages: [1, 2, 3, 4, 5].map((stageNumber) => {
       const prizes = parseStagePrizes(
         workbooks.configWorkbook,
         workbooks.lowWorkbook,
         workbooks.highWorkbook,
         workbooks.prizeWorkbook,
+        workbooks.dailyLimitWorkbook,
         stageNumber,
       );
       const split = tableWeights.get(stageNumber);
@@ -123,7 +128,14 @@ function resolveSourceDirectory(sourceDir: string) {
 
 function parseThresholds(workbook: XLSX.WorkBook) {
   const thresholds = new Map<number, number>();
+  let dailyPayoutLimitPoints = 0;
   for (const row of getSheetRows(workbook, '門檻設置')) {
+    const dailyLimitIndex = row.findIndex((cell) => normalizeText(cell) === '每日送出上限');
+    if (dailyLimitIndex >= 0) {
+      dailyPayoutLimitPoints = readNextNumber(row, dailyLimitIndex + 1, 'daily payout limit');
+      continue;
+    }
+
     for (let index = 0; index < row.length; index++) {
       const stageNumber = parseStageNumber(row[index]);
       if (!stageNumber) {
@@ -135,7 +147,7 @@ function parseThresholds(workbook: XLSX.WorkBook) {
   }
 
   assertCompleteStages(thresholds, 'threshold');
-  return thresholds;
+  return { thresholds, dailyPayoutLimitPoints };
 }
 
 function parseStagePrizes(
@@ -143,22 +155,25 @@ function parseStagePrizes(
   lowWorkbook: XLSX.WorkBook,
   highWorkbook: XLSX.WorkBook,
   prizeWorkbook: XLSX.WorkBook,
+  dailyLimitWorkbook: XLSX.WorkBook,
   stageNumber: number,
 ): ProbabilityPrizeConfig[] {
   const lowWeights = parsePrizeWeights(lowWorkbook, stageNumber, 'low');
   const highWeights = parsePrizeWeights(highWorkbook, stageNumber, 'high');
   const prizeWeights = parsePrizeWeights(prizeWorkbook, stageNumber, 'prize');
+  const dailyLimitWeights = parsePrizeWeights(dailyLimitWorkbook, stageNumber, 'dailyLimit');
 
   return parsePrizeAmounts(configWorkbook, stageNumber).map((prize) => ({
     ...prize,
     lowWeight: requireNumber(lowWeights.get(prize.rewardCode), `stage ${stageNumber} ${prize.rewardCode} low weight`),
     highWeight: requireNumber(highWeights.get(prize.rewardCode), `stage ${stageNumber} ${prize.rewardCode} high weight`),
     prizeWeight: requireNumber(prizeWeights.get(prize.rewardCode), `stage ${stageNumber} ${prize.rewardCode} prize weight`),
+    dailyLimitWeight: requireNumber(dailyLimitWeights.get(prize.rewardCode), `stage ${stageNumber} ${prize.rewardCode} dailyLimit weight`),
   }));
 }
 
 function parsePrizeAmounts(workbook: XLSX.WorkBook, stageNumber: number) {
-  const prizes: Array<Omit<ProbabilityPrizeConfig, 'lowWeight' | 'highWeight' | 'prizeWeight'>> = [];
+  const prizes: Array<Omit<ProbabilityPrizeConfig, 'lowWeight' | 'highWeight' | 'prizeWeight' | 'dailyLimitWeight'>> = [];
   for (const row of getSheetRows(workbook, `PrizeLV${stageNumber}`)) {
     const rewardIndex = row.findIndex((cell) => REWARD_CODES.includes(normalizeText(cell)));
     if (rewardIndex < 0) {

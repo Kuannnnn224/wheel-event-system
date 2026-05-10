@@ -15,6 +15,7 @@ import {
 const REWARD_CODES = ['A', 'B', 'C', 'D', 'E'];
 const DEFAULT_CONFIG: ProbabilityConfigFile = {
   version: 1,
+  dailyPayoutLimitPoints: 0,
   stages: [1, 2, 3, 4, 5].map((stageNumber) => ({
     stageNumber,
     turnoverThresholdPoints: [1000, 3000, 6000, 10000, 15000][stageNumber - 1],
@@ -28,6 +29,7 @@ const DEFAULT_CONFIG: ProbabilityConfigFile = {
         lowWeight: 500,
         highWeight: 120,
         prizeWeight: 120,
+        dailyLimitWeight: 500,
         sortOrder: 1,
       },
       {
@@ -37,6 +39,7 @@ const DEFAULT_CONFIG: ProbabilityConfigFile = {
         lowWeight: 280,
         highWeight: 220,
         prizeWeight: 220,
+        dailyLimitWeight: 280,
         sortOrder: 2,
       },
       {
@@ -46,6 +49,7 @@ const DEFAULT_CONFIG: ProbabilityConfigFile = {
         lowWeight: 150,
         highWeight: 280,
         prizeWeight: 280,
+        dailyLimitWeight: 150,
         sortOrder: 3,
       },
       {
@@ -55,6 +59,7 @@ const DEFAULT_CONFIG: ProbabilityConfigFile = {
         lowWeight: 60,
         highWeight: 250,
         prizeWeight: 250,
+        dailyLimitWeight: 60,
         sortOrder: 4,
       },
       {
@@ -64,6 +69,7 @@ const DEFAULT_CONFIG: ProbabilityConfigFile = {
         lowWeight: 10,
         highWeight: 130,
         prizeWeight: 130,
+        dailyLimitWeight: 10,
         sortOrder: 5,
       },
     ],
@@ -99,6 +105,10 @@ export class ProbabilityService implements OnModuleInit {
       stageNumber: stage.stageNumber,
       turnoverThresholdPoints: stage.turnoverThresholdPoints,
     }));
+  }
+
+  async getDailyPayoutLimitPoints(): Promise<number> {
+    return (await this.getConfig()).dailyPayoutLimitPoints;
   }
 
   async getPrizesForStage(stageNumber: number): Promise<ProbabilityPrizeConfig[]> {
@@ -150,7 +160,7 @@ export class ProbabilityService implements OnModuleInit {
   }
 
   normalizeConfig(config: ProbabilityConfigFile): ProbabilityConfigFile {
-    const normalizedConfig = this.withLegacyPrizeWeights(config);
+    const normalizedConfig = this.withLegacyDefaults(config);
     this.assertValidConfig(normalizedConfig);
     return this.sortConfig(normalizedConfig);
   }
@@ -180,14 +190,16 @@ export class ProbabilityService implements OnModuleInit {
     };
   }
 
-  private withLegacyPrizeWeights(config: ProbabilityConfigFile): ProbabilityConfigFile {
+  private withLegacyDefaults(config: ProbabilityConfigFile): ProbabilityConfigFile {
     return {
       ...config,
+      dailyPayoutLimitPoints: config.dailyPayoutLimitPoints ?? 0,
       stages: config.stages?.map((stage) => ({
         ...stage,
         prizes: stage.prizes?.map((prize) => ({
           ...prize,
           prizeWeight: prize.prizeWeight ?? prize.highWeight,
+          dailyLimitWeight: prize.dailyLimitWeight ?? prize.lowWeight,
         })),
       })),
     };
@@ -202,6 +214,10 @@ export class ProbabilityService implements OnModuleInit {
       return prize.highWeight;
     }
 
+    if (table === 'dailyLimit') {
+      return prize.dailyLimitWeight;
+    }
+
     return prize.prizeWeight;
   }
 
@@ -214,6 +230,10 @@ export class ProbabilityService implements OnModuleInit {
 
     if (new Set(stageNumbers).size !== 5 || ![1, 2, 3, 4, 5].every((stageNumber) => stageNumbers.includes(stageNumber))) {
       throw new BadRequestException('Probability config stages must be numbered 1 through 5.');
+    }
+
+    if (!Number.isInteger(config.dailyPayoutLimitPoints)) {
+      throw new BadRequestException('Probability config daily payout limit must be an integer.');
     }
 
     for (const stage of config.stages) {
@@ -248,8 +268,12 @@ export class ProbabilityService implements OnModuleInit {
       throw new BadRequestException(`Stage ${stage.stageNumber} prize table needs at least one weighted prize.`);
     }
 
+    if (!stage.prizes.some((prize) => prize.dailyLimitWeight > 0)) {
+      throw new BadRequestException(`Stage ${stage.stageNumber} dailyLimit table needs at least one weighted prize.`);
+    }
+
     for (const prize of stage.prizes) {
-      if (prize.amountPoints < 0 || prize.lowWeight < 0 || prize.highWeight < 0 || prize.prizeWeight < 0) {
+      if (prize.amountPoints < 0 || prize.lowWeight < 0 || prize.highWeight < 0 || prize.prizeWeight < 0 || prize.dailyLimitWeight < 0) {
         throw new BadRequestException(`Stage ${stage.stageNumber} reward ${prize.rewardCode} contains negative numeric values.`);
       }
     }
