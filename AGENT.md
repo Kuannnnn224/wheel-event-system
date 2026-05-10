@@ -19,7 +19,7 @@
 - 活動是每日制，日期欄位統一使用 `businessDate`，格式 `YYYY-MM-DD`。
 - `BUSINESS_TIME_ZONE` 可設定部署地區時區；未設定時使用執行環境本地時區。
 - 目前沒有每日 12:00 清除資料排程；每日重置是靠 `businessDate` 隔離資料。
-- 玩家流水不跨日，`player_daily_progress` 每位玩家每天一筆。
+- 玩家流水不跨日，`player_daily_progress` 每位玩家每天一筆；正式流程由平台後端建立 webview token 時帶入當日累積流水快照。
 - 玩家每日最多可抽 LV1 到 LV5 各一次。
 - 即使玩家一次補滿最高流水，也必須照 LV1、LV2、LV3、LV4、LV5 順序抽。
 - 抽獎金額與流水都用整數點數，不使用浮點數。
@@ -36,7 +36,6 @@ NestJS module 應依業務切開：
 
 - `auth`：後控登入、JWT。
 - `players`：玩家查詢、每日進度 read model。
-- `turnover`：後控或平台加流水，並更新每日解鎖階段。
 - `probability`：讀取 JSON 機率設定、權重抽獎、stage 門檻。
 - `probability-imports`：ZIP 上傳、XLSX parser、diff preview、套用 JSON、保存原始 ZIP。
 - `award-overrides`：後控指定派獎規則，pending/cancel/consume lifecycle。
@@ -53,12 +52,12 @@ NestJS module 應依業務切開：
 後控頁面目前包含：
 
 - `/spin-simulator`：單次抽獎模擬，不寫 DB。
-- `/players`：查詢玩家當日狀態、後控加流水、玩家指定派獎。
+- `/players`：查詢玩家當日狀態、玩家指定派獎。
 - `/award-overrides`：全站指定派獎管理。
 - `/reports`：區間報表與玩家報表。
 - `/bulk-simulation`：大量模擬任務與輪詢結果。
 - `/probability`：機率設定唯讀檢視、ZIP 上傳、diff、下載歷史 ZIP。
-- `/demo`：建立或查詢 demo 玩家，取得 webview URL + token。
+- `/demo`：輸入玩家 ID 與當日流水，建立測試用 webview URL + token；正式平台整合使用 server-to-server API key 建 token。
 
 共用 API helper 放在 `frontend/src/api`。共用 UI component 放在 `frontend/src/components`。單頁私有邏輯可以留在 `frontend/src/pages`。
 

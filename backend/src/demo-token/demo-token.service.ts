@@ -2,13 +2,16 @@ import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/co
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomBytes } from 'crypto';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { resolveCurrentBusinessDate } from '../common/business-date';
 import { unixTimestampSeconds } from '../common/unix-timestamp';
+import { calculateUnlockedStage } from '../domain/stage-progress';
+import { PlayerDailyProgress } from '../players/entities/player-daily-progress.entity';
 import { Player } from '../players/entities/player.entity';
 import { PlayersService } from '../players/players.service';
 import type { ProbabilityStageConfig } from '../probability/probability-config.types';
 import { ProbabilityService } from '../probability/probability.service';
+import { CreateDemoSessionDto } from './dto/create-demo-session.dto';
 import { DemoSession } from './entities/demo-session.entity';
 
 interface WebviewUrlContext {
@@ -21,25 +24,55 @@ export class DemoTokenService {
   constructor(
     @InjectRepository(DemoSession)
     private readonly demoSessionRepository: Repository<DemoSession>,
+    private readonly dataSource: DataSource,
     private readonly configService: ConfigService,
     private readonly playersService: PlayersService,
     private readonly probabilityService: ProbabilityService,
   ) {}
 
-  async createSession(externalId: string, context: WebviewUrlContext = {}) {
-    const player = await this.playersService.getOrCreateByExternalId(externalId);
+  async createSession(dto: CreateDemoSessionDto, context: WebviewUrlContext = {}) {
+    const player = await this.playersService.getOrCreateByExternalId(dto.externalId);
+    const businessDate = resolveCurrentBusinessDate();
+    const stageThresholds = await this.probabilityService.getStageThresholds();
     const token = randomBytes(32).toString('hex');
     const ttlMinutes = Number(this.configService.get<string>('DEMO_TOKEN_TTL_MINUTES', '30'));
     const expiresAt = unixTimestampSeconds() + ttlMinutes * 60;
 
-    const session = await this.demoSessionRepository.save(
-      this.demoSessionRepository.create({
-        playerId: player.id,
-        player,
-        token,
-        expiresAt,
-      }),
-    );
+    const session = await this.dataSource.transaction(async (manager) => {
+      const progressRepository = manager.getRepository(PlayerDailyProgress);
+      const demoSessionRepository = manager.getRepository(DemoSession);
+      let progress = await progressRepository.findOne({
+        where: { playerId: player.id, businessDate },
+      });
+      const turnoverPoints = Math.max(progress?.turnoverPoints ?? 0, dto.turnoverPoints);
+      const unlockedStage = Math.max(
+        progress?.unlockedStage ?? 0,
+        calculateUnlockedStage(turnoverPoints, stageThresholds),
+      );
+
+      if (progress) {
+        progress.turnoverPoints = turnoverPoints;
+        progress.unlockedStage = unlockedStage;
+      } else {
+        progress = progressRepository.create({
+          playerId: player.id,
+          player,
+          businessDate,
+          turnoverPoints,
+          unlockedStage,
+        });
+      }
+      await progressRepository.save(progress);
+
+      return demoSessionRepository.save(
+        demoSessionRepository.create({
+          playerId: player.id,
+          player,
+          token,
+          expiresAt,
+        }),
+      );
+    });
     const baseUrl = this.resolveWebviewBaseUrl(context);
     const url = new URL(baseUrl);
     url.searchParams.set('token', token);
@@ -62,9 +95,9 @@ export class DemoTokenService {
     };
   }
 
-  async getSessionState(token: string, date?: string) {
+  async getSessionState(token: string) {
     const session = await this.findValidSession(token);
-    const businessDate = resolveCurrentBusinessDate(date);
+    const businessDate = resolveCurrentBusinessDate();
     const [progress, stages] = await Promise.all([
       this.playersService.getDailyProgress(session.playerId, businessDate),
       this.probabilityService.getStages(),

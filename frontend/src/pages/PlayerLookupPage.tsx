@@ -1,4 +1,4 @@
-import { Alert, Button, Form, Input, InputNumber, Table, Tag, Typography } from 'antd';
+import { Alert, Button, Form, Input, Table, Tag, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -9,11 +9,6 @@ import ProbabilityTableTag from '../components/ProbabilityTableTag';
 
 interface SearchValues {
   externalId: string;
-}
-
-interface TurnoverValues {
-  amountPoints: number;
-  reason?: string;
 }
 
 type StageState = 'done' | 'active' | 'waiting' | 'locked';
@@ -101,7 +96,6 @@ function getStageTagColor(state: StageState) {
 
 export default function PlayerLookupPage() {
   const [searchForm] = Form.useForm<SearchValues>();
-  const [adjustmentForm] = Form.useForm<TurnoverValues>();
   const [searchParams] = useSearchParams();
   const [player, setPlayer] = useState<Player | null>(null);
   const [progress, setProgress] = useState<PlayerDailyProgress>();
@@ -152,28 +146,6 @@ export default function PlayerLookupPage() {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : '查詢失敗');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function addTurnover(values: TurnoverValues) {
-    if (!player) {
-      return;
-    }
-
-    setLoading(true);
-    setError(undefined);
-
-    try {
-      const { data } = await api.post<PlayerDailyProgress>(`/players/${player.id}/turnover-adjustments`, {
-        amountPoints: values.amountPoints,
-        reason: values.reason,
-      });
-      setProgress(data);
-      adjustmentForm.resetFields();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '加流水失敗');
     } finally {
       setLoading(false);
     }
@@ -290,24 +262,6 @@ export default function PlayerLookupPage() {
 
             <div className="player-stage-grid">{STAGE_NUMBERS.map(renderStageCard)}</div>
           </section>
-
-          <Form form={adjustmentForm} className="lookup-adjustment-panel toolbar" layout="vertical" onFinish={addTurnover}>
-            <div className="lookup-panel-heading">
-              <span className="section-kicker">PM Control</span>
-              <Typography.Title level={4}>後控加流水</Typography.Title>
-            </div>
-            <Form.Item label="新增流水" name="amountPoints" rules={[{ required: true }]}>
-              <InputNumber min={1} precision={0} />
-            </Form.Item>
-            <Form.Item label="備註" name="reason">
-              <Input placeholder="manual adjustment" />
-            </Form.Item>
-            <Form.Item>
-              <Button htmlType="submit" loading={loading}>
-                加流水
-              </Button>
-            </Form.Item>
-          </Form>
 
           <section className="lookup-history-panel">
             <div className="lookup-panel-heading">

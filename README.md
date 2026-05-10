@@ -56,6 +56,7 @@ npm run dev
 - password：`admin123`
 
 真實資料環境請務必改掉 `backend/.env` 的預設帳密與 JWT secret。
+平台後端建立 webview token 需設定 `PLATFORM_API_KEY`，此 key 不可放到瀏覽器或 webview。
 
 ## 常用指令
 
@@ -84,23 +85,39 @@ dev log 預期放在 `logs/`，產生的 `.log` 檔不進 Git。
 後控目前有這些頁面：
 
 - 抽獎模擬：選 LV1-LV5 做單次 spin，不寫入 DB。
-- 查詢玩家：查玩家當日輪盤狀態、流水、已抽階段、中獎紀錄、後控加流水、指定派獎。
+- 查詢玩家：查玩家當日輪盤狀態、流水、已抽階段、中獎紀錄、指定派獎。
 - 指定派獎：指定玩家當日某些 LV 階段走 `prize` 機率表，並查看 pending/consumed/cancelled 紀錄。
 - 報表統計：用日期區間查總 spin、玩家數、送出點數、階段統計，也可查指定玩家。
 - 多次模擬：建立大量模擬 job，前端輪詢結果。
 - 機率設定：唯讀檢視目前 JSON 機率，支援 ZIP 上傳、diff、套用、下載歷史 ZIP。
-- Demo 網站：輸入玩家 ID，建立或查詢玩家，產生 webview URL + token。
+- Demo 網站：輸入玩家 ID 與當日流水，建立或查詢玩家，產生 webview URL + token。
 
 ## 每日活動規則
 
 - 日期用 `businessDate` 表示，格式 `YYYY-MM-DD`。
 - `BUSINESS_TIME_ZONE` 可設定部署地區時區；未設定時使用伺服器本地時區。
 - 玩家每日流水不跨日。
+- 流水由平台後端建立 webview token 時帶入；webview URL/query 不接受流水值。
 - 玩家每天最多抽 LV1-LV5 各一次。
 - 解鎖 LV 階段靠當日累積流水門檻。
 - 玩家即使一次達成最高門檻，也必須依序從 LV1 抽到 LV5。
 - 目前沒有每日 12:00 清除資料排程；系統靠 `businessDate` 分日隔離資料。
 - 舊日期 pending 指定派獎不會影響今日抽獎。
+
+平台後端建立玩家 webview token：
+
+```http
+POST /demo/session
+X-Platform-Api-Key: <PLATFORM_API_KEY>
+Content-Type: application/json
+
+{
+  "externalId": "player-001",
+  "turnoverPoints": 5000
+}
+```
+
+`turnoverPoints` 是當日累積流水快照；同玩家同日若已存在更高流水，系統只增不降。
 
 ## 機率與派獎
 
@@ -137,7 +154,7 @@ ZIP 匯入目前需要：
 - `admin_users`：後控帳號。
 - `players`：玩家外部 ID。
 - `player_daily_progress`：玩家每日流水與解鎖階段。
-- `turnover_adjustments`：後控加流水紀錄。
+- `turnover_adjustments`：舊版流水異動紀錄表，目前不提供後控加流水入口。
 - `spin_records`：真實抽獎紀錄。
 - `award_override_rules`：後控指定派獎規則。
 - `demo_sessions`：webview token session。

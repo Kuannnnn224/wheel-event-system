@@ -322,7 +322,7 @@ const progress = await progressRepository.findOne({
   where: { playerId, businessDate },
 });
 
-progress.turnoverPoints += dto.amountPoints;
+progress.turnoverPoints = Math.max(progress.turnoverPoints, incomingTurnoverPoints);
 await progressRepository.save(progress);
 ```
 
@@ -330,7 +330,7 @@ await progressRepository.save(progress);
 
 ```text
 查今日玩家進度
-  -> 修改流水
+  -> 更新平台當日累積流水快照
   -> save 回 DB
 ```
 
@@ -681,16 +681,16 @@ PlayerLookupPage.tsx
   -> MySQL
 ```
 
-### 後控加流水
+### Demo 建立 Webview Token
 
 ```text
-PlayerLookupPage.tsx
-  -> POST /players/:playerId/turnover-adjustments
-  -> TurnoverController
-  -> TurnoverService
+DemoSitePage.tsx
+  -> POST /demo/admin-session
+  -> DemoTokenController
+  -> DemoTokenService
   -> calculateUnlockedStage()
   -> player_daily_progress
-  -> turnover_adjustments
+  -> demo_sessions
 ```
 
 ### 真實抽獎
@@ -740,7 +740,6 @@ SpinsService.realSpin()
 │     ├─ main.ts              後端啟動、CORS、ValidationPipe
 │     ├─ auth/                後控登入與 JWT
 │     ├─ players/             玩家資料與每日進度
-│     ├─ turnover/            後控加流水
 │     ├─ spins/               真實抽獎與單次模擬
 │     ├─ probability/         JSON 機率設定與抽獎
 │     ├─ probability-imports/ ZIP 上傳、XLSX parser、diff、套用
@@ -842,7 +841,7 @@ player_daily_progress
   每位玩家每日流水與解鎖階段，unique(player_id, business_date)。
 
 turnover_adjustments
-  後控加流水紀錄。
+  舊版流水異動紀錄表，目前不提供後控加流水入口。
 
 spin_records
   真實抽獎紀錄，unique(player_id, business_date, stage_number)。
@@ -872,7 +871,7 @@ backend/src/common/business-date.ts
 目前行為：
 
 - 查玩家每日進度：只查今天。
-- 後控加流水：只允許今天。
+- 建立 webview token 時寫入平台流水快照：只使用今天。
 - 真實抽獎：只允許今天。
 - 指定派獎：只建立、查詢、取消今天規則。
 
@@ -888,7 +887,6 @@ backend/src/common/business-date.ts
 POST /auth/login
 GET  /players?externalId=...
 GET  /players/:id/daily-progress
-POST /players/:playerId/turnover-adjustments
 
 GET  /probability/stages
 PUT  /probability/stages
@@ -913,6 +911,7 @@ POST /simulations
 GET  /simulations/:id
 
 POST /demo/session
+POST /demo/admin-session
 GET  /demo/session
 ```
 
@@ -928,16 +927,15 @@ GET  /demo/session
 4. 前端把 JWT 存到 localStorage。
 5. `api/client.ts` 之後每個 request 自動帶 Bearer token。
 
-### 後控加流水
+### 建立 Webview Token
 
-1. 前端 `/players` 查玩家。
-2. 按加流水後呼叫 `POST /players/:playerId/turnover-adjustments`。
-3. `TurnoverService` 找今日 `player_daily_progress`，沒有就建一筆。
-4. 增加 `turnoverPoints`。
+1. 正式平台後端呼叫 `POST /demo/session`，帶 `X-Platform-Api-Key`、`externalId`、`turnoverPoints`。
+2. 後控 Demo 頁呼叫 `POST /demo/admin-session`，用 admin JWT 建測試 URL。
+3. `DemoTokenService` 找今日 `player_daily_progress`，沒有就建一筆。
+4. `turnoverPoints` 當作平台當日累積流水快照，寫入時只增不降。
 5. 用 `ProbabilityService.getStageThresholds()` 取得 LV 門檻。
 6. 用 `domain/stage-progress.ts` 算出 `unlockedStage`。
-7. 寫 `turnover_adjustments` audit。
-8. 回傳最新每日進度。
+7. 建立 `demo_sessions` token，webview URL 只帶 token，不帶流水。
 
 ### 真實抽獎
 

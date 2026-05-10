@@ -12,7 +12,6 @@ import { ProbabilityModule } from './probability/probability.module';
 import { ReportsModule } from './reports/reports.module';
 import { SimulationsModule } from './simulations/simulations.module';
 import { SpinsModule } from './spins/spins.module';
-import { TurnoverModule } from './turnover/turnover.module';
 
 @Module({
   imports: [
@@ -36,7 +35,6 @@ import { TurnoverModule } from './turnover/turnover.module';
     ProbabilityModule,
     ProbabilityImportsModule,
     AwardOverridesModule,
-    TurnoverModule,
     SpinsModule,
     ReportsModule,
     SimulationsModule,

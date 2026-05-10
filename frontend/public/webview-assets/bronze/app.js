@@ -147,9 +147,7 @@ async function fetchSessionState() {
   if (!SESSION_TOKEN) {
     throw new Error('缺少 token，請從 Demo 網站建立連結');
   }
-  const date = params.get('date');
   const query = new URLSearchParams({ token: SESSION_TOKEN });
-  if (date) query.set('date', date);
   return apiJson(`/demo/session?${query.toString()}`);
 }
 

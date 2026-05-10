@@ -39,7 +39,7 @@ export class SpinsService {
 
   async realSpin(dto: RealSpinDto) {
     const player = await this.demoTokenService.validateToken(dto.token);
-    const businessDate = resolveCurrentBusinessDate(dto.date);
+    const businessDate = resolveCurrentBusinessDate();
 
     return this.dataSource.transaction(async (manager) => {
       const progressRepository = manager.getRepository(PlayerDailyProgress);

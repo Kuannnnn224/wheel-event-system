@@ -1,4 +1,4 @@
-import { Alert, Button, Form, Input, Space, Typography } from 'antd';
+import { Alert, Button, Form, Input, InputNumber, Space, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { api } from '../api/client';
@@ -16,12 +16,12 @@ export default function DemoSitePage() {
   const [error, setError] = useState<string>();
   const [loading, setLoading] = useState(false);
 
-  async function createSession(values: { externalId: string }) {
+  async function createSession(values: { externalId: string; turnoverPoints: number }) {
     setLoading(true);
     setError(undefined);
 
     try {
-      const { data } = await api.post<DemoSession>('/demo/session', values);
+      const { data } = await api.post<DemoSession>('/demo/admin-session', values);
       setSession(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : '建立 demo session 失敗');
@@ -36,6 +36,14 @@ export default function DemoSitePage() {
       <Form className="toolbar" layout="vertical" onFinish={createSession}>
         <Form.Item label="玩家 ID" name="externalId" rules={[{ required: true }]}>
           <Input placeholder="demo-player-001" />
+        </Form.Item>
+        <Form.Item
+          label="當日流水"
+          name="turnoverPoints"
+          initialValue={0}
+          rules={[{ required: true, type: 'number', min: 0 }]}
+        >
+          <InputNumber min={0} precision={0} />
         </Form.Item>
         <Form.Item>
           <Button type="primary" htmlType="submit" loading={loading}>
