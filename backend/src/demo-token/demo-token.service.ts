@@ -10,6 +10,11 @@ import { PlayersService } from '../players/players.service';
 import { ProbabilityService } from '../probability/probability.service';
 import { DemoSession } from './entities/demo-session.entity';
 
+interface WebviewUrlContext {
+  origin?: string;
+  referer?: string;
+}
+
 @Injectable()
 export class DemoTokenService {
   constructor(
@@ -20,7 +25,7 @@ export class DemoTokenService {
     private readonly probabilityService: ProbabilityService,
   ) {}
 
-  async createSession(externalId: string) {
+  async createSession(externalId: string, context: WebviewUrlContext = {}) {
     const player = await this.playersService.getOrCreateByExternalId(externalId);
     const token = randomBytes(32).toString('hex');
     const ttlMinutes = Number(this.configService.get<string>('DEMO_TOKEN_TTL_MINUTES', '30'));
@@ -34,7 +39,7 @@ export class DemoTokenService {
         expiresAt,
       }),
     );
-    const baseUrl = this.configService.get<string>('WEBVIEW_BASE_URL', 'http://localhost:5173/webview.html');
+    const baseUrl = this.resolveWebviewBaseUrl(context);
     const url = new URL(baseUrl);
     url.searchParams.set('token', token);
 
@@ -48,6 +53,12 @@ export class DemoTokenService {
 
   async validateToken(token: string): Promise<Player> {
     return (await this.findValidSession(token)).player;
+  }
+
+  getClientConfig() {
+    return {
+      apiBaseUrl: this.resolveWebviewApiBaseUrl(),
+    };
   }
 
   async getSessionState(token: string, date?: string) {
@@ -65,6 +76,53 @@ export class DemoTokenService {
       progress,
       stages,
     };
+  }
+
+  private resolveWebviewBaseUrl(context: WebviewUrlContext) {
+    const configuredBaseUrl = this.configService.get<string>('WEBVIEW_BASE_URL')?.trim();
+    if (configuredBaseUrl) {
+      return configuredBaseUrl;
+    }
+
+    const requestOrigin = this.resolveRequestOrigin(context);
+    if (requestOrigin) {
+      return new URL('/webview.html', requestOrigin).toString();
+    }
+
+    return 'http://localhost:5173/webview.html';
+  }
+
+  private resolveWebviewApiBaseUrl() {
+    return this.configService.get<string>('WEBVIEW_API_BASE_URL')?.trim() || '/api';
+  }
+
+  private resolveRequestOrigin(context: WebviewUrlContext) {
+    const origin = this.normalizeOrigin(context.origin);
+    if (origin) {
+      return origin;
+    }
+
+    if (!context.referer) {
+      return undefined;
+    }
+
+    try {
+      return new URL(context.referer).origin;
+    } catch {
+      return undefined;
+    }
+  }
+
+  private normalizeOrigin(origin?: string) {
+    if (!origin) {
+      return undefined;
+    }
+
+    try {
+      return new URL(origin).origin;
+    } catch {
+      return undefined;
+    }
   }
 
   private async findValidSession(token: string) {

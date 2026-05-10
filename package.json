@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "db": "docker compose -p wheel-event up -d",
-    "dev": "concurrently -n backend,frontend -c blue,green \"npm --prefix backend run start:dev\" \"npm --prefix frontend run dev -- --host 127.0.0.1\"",
+    "dev": "concurrently -n backend,frontend -c blue,green \"npm --prefix backend run start:dev\" \"npm --prefix frontend run dev -- --host 0.0.0.0\"",
     "dev:backend": "npm --prefix backend run start:dev",
-    "dev:frontend": "npm --prefix frontend run dev -- --host 127.0.0.1",
+    "dev:frontend": "npm --prefix frontend run dev -- --host 0.0.0.0",
     "dev:all": "npm run db && npm run dev",
     "probability:import": "npm --prefix backend run probability:import --",
     "build": "npm --prefix backend run build && npm --prefix frontend run build",

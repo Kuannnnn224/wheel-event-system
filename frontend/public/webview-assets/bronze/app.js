@@ -2,7 +2,9 @@ const FRAME_WIDTH = 1170;
 const FRAME_HEIGHT = 720;
 const params = new URLSearchParams(window.location.search);
 const SESSION_TOKEN = params.get('token');
-const API_BASE = params.get('apiBase') || `${window.location.protocol}//${window.location.hostname || 'localhost'}:3001`;
+let apiBase = normalizeApiBase(params.get('apiBase') || '/api');
+let clientConfigPromise = null;
+let clientConfigLoaded = false;
 
 const SPIN_STATES = {
   NEED_DEPOSIT: 'need_deposit',
@@ -73,6 +75,44 @@ function formatPrizeLabel(prize) {
   return `₱${formatPoints(prize.amountPoints)}`;
 }
 
+function normalizeApiBase(value) {
+  return String(value || '').trim().replace(/\/+$/, '');
+}
+
+function apiUrl(path) {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${apiBase}${normalizedPath}`;
+}
+
+async function loadClientConfig() {
+  if (clientConfigLoaded) return;
+
+  if (!clientConfigPromise) {
+    clientConfigPromise = (async () => {
+      if (params.get('apiBase') && !params.get('configUrl')) return;
+
+      const configUrl = params.get('configUrl') || apiUrl('/demo/client-config');
+      const response = await fetch(configUrl, {
+        headers: { Accept: 'application/json' },
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.message || `HTTP ${response.status}`);
+      }
+
+      if (typeof data.apiBaseUrl === 'string' && data.apiBaseUrl.trim()) {
+        apiBase = normalizeApiBase(data.apiBaseUrl);
+      }
+    })().catch((error) => {
+      console.warn('[webview] client config failed:', error);
+    });
+  }
+
+  await clientConfigPromise;
+  clientConfigLoaded = true;
+}
+
 function showAuthError(message) {
   document.body.insertAdjacentHTML(
     'beforeend',
@@ -90,7 +130,9 @@ function showAuthError(message) {
 }
 
 async function apiJson(path, options = {}) {
-  const response = await fetch(`${API_BASE}${path}`, {
+  await loadClientConfig();
+
+  const response = await fetch(apiUrl(path), {
     headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
     ...options,
   });

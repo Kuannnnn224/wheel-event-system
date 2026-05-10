@@ -2,6 +2,8 @@ import axios from 'axios';
 import type { AwardOverrideRule, Player, ProbabilityConfig, ProbabilityImportPreview, ProbabilityImportUpload, StageConfig } from './types';
 
 const TOKEN_KEY = 'wheel-admin-token';
+const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
+const API_BASE_URL = configuredApiBaseUrl || '/api';
 
 interface ApiErrorPayload {
   message?: string | string[];
@@ -9,7 +11,7 @@ interface ApiErrorPayload {
 }
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001',
+  baseURL: API_BASE_URL,
 });
 
 api.interceptors.request.use((config) => {
@@ -60,6 +62,16 @@ export function getApiErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
 }
 
+function resolveApiResourceUrl(pathOrUrl: string) {
+  try {
+    return new URL(pathOrUrl).toString();
+  } catch {
+    const baseUrl = String(api.defaults.baseURL || API_BASE_URL).replace(/\/+$/, '');
+    const path = pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`;
+    return new URL(`${baseUrl}${path}`, window.location.origin).toString();
+  }
+}
+
 export async function login(username: string, password: string) {
   const { data } = await api.post('/auth/login', { username, password });
   setStoredToken(data.accessToken);
@@ -103,7 +115,7 @@ export async function fetchProbabilityImports() {
 
 export async function downloadProbabilityImport(upload: ProbabilityImportUpload) {
   const { data } = await api.post<{ downloadUrl: string }>(`/probability/imports/${upload.id}/download-token`);
-  const url = new URL(data.downloadUrl, api.defaults.baseURL).toString();
+  const url = resolveApiResourceUrl(data.downloadUrl);
   const link = document.createElement('a');
   link.href = url;
   link.download = upload.originalFilename;

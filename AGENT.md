@@ -9,6 +9,7 @@
 - `backend/`：NestJS API，TypeORM，MySQL。
 - `frontend/`：React，Vite，TypeScript，Ant Design 後控。
 - `frontend/public/webview.html`：玩家端 webview HTML，目前使用既有 bronze 版素材與後端 API 對接。
+- 本機開發的前端預設用 `/api` proxy 到後端；webview 透過後端 `/demo/client-config` 取得 API base，不要在玩家端 JS 寫死 localhost 或 IP。
 - 根目錄：只放跨專案腳本、Docker、文件、環境範例。
 
 核心原則：同一個業務邏輯放在同一個 module，不同業務禁止塞進同一個 service。
