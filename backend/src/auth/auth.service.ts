@@ -26,11 +26,13 @@ export class AuthService implements OnModuleInit {
     const existing = await this.adminUserRepository.findOne({ where: { username } });
 
     if (!existing) {
-      await this.adminUserRepository.save({
+      const admin = this.adminUserRepository.create({
         username,
         passwordHash: await bcrypt.hash(password, 10),
         isActive: true,
       });
+
+      await this.adminUserRepository.save(admin);
     }
   }
 
