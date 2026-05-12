@@ -28,8 +28,8 @@ const ROUTES = [
   { method: 'get', path: '/players', name: 'players.search', handlerName: 'playersSearch' },
   { method: 'get', path: '/players/:id/daily-progress', name: 'players.dailyProgress', handlerName: 'playersDailyProgress' },
 
-  { method: 'get', path: '/probability/config', name: 'probability.config' },
-  { method: 'get', path: '/probability/stages', name: 'probability.stages' },
+  { method: 'get', path: '/probability/config', name: 'probability.config', handlerName: 'probabilityConfig' },
+  { method: 'get', path: '/probability/stages', name: 'probability.stages', handlerName: 'probabilityStages' },
   { method: 'put', path: '/probability/stages', name: 'probability.stages.update', handler: probabilityStagesForbidden },
 
   { method: 'post', path: '/probability/imports/preview', name: 'probabilityImports.preview' },
@@ -120,6 +120,14 @@ class ApiStubRoutes {
       return AsyncHandler.wrap(this.container.playersController.getDailyProgress);
     }
 
+    if (route.handlerName === 'probabilityConfig') {
+      return AsyncHandler.wrap(this.container.probabilityController.getConfig);
+    }
+
+    if (route.handlerName === 'probabilityStages') {
+      return AsyncHandler.wrap(this.container.probabilityController.getStages);
+    }
+
     if (route.handlerName === 'spinsSimulate') {
       return AsyncHandler.wrap(this.container.spinsController.simulate);
     }
@@ -166,7 +174,7 @@ function demoClientConfig(config) {
  */
 function probabilityStagesForbidden() {
   return function (_req, res) {
-    res.status(403).json({ message: 'Probability settings are managed by XLSX import.' });
+    res.status(403).json({ message: '機率設定只能透過機率表 ZIP 匯入，不允許手動更新。' });
   };
 }
 
