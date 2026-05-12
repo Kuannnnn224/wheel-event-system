@@ -43,7 +43,7 @@ const ROUTES = [
   { method: 'post', path: '/award-overrides', name: 'awardOverrides.create' },
   { method: 'patch', path: '/award-overrides/:id/cancel', name: 'awardOverrides.cancel' },
 
-  { method: 'post', path: '/spins/simulate', name: 'spins.simulate' },
+  { method: 'post', path: '/spins/simulate', name: 'spins.simulate', handlerName: 'spinsSimulate' },
   { method: 'post', path: '/spins/real', name: 'spins.real', public: true },
 
   { method: 'post', path: '/demo/session', name: 'demo.session.create', public: true, platformApiKey: true },
@@ -118,6 +118,10 @@ class ApiStubRoutes {
 
     if (route.handlerName === 'playersDailyProgress') {
       return AsyncHandler.wrap(this.container.playersController.getDailyProgress);
+    }
+
+    if (route.handlerName === 'spinsSimulate') {
+      return AsyncHandler.wrap(this.container.spinsController.simulate);
     }
 
     if (route.handler) {

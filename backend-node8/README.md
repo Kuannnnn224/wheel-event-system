@@ -12,6 +12,7 @@ Current skeleton status:
 - Startup admin seed from `ADMIN_USERNAME` / `ADMIN_PASSWORD`.
 - Implemented `POST /auth/login`, returning the same `{ accessToken, admin }` shape as the NestJS backend.
 - Implemented protected `GET /players` and `GET /players/:id/daily-progress`.
+- Implemented protected `POST /spins/simulate` with the file-backed probability config parser.
 - JWT admin middleware and platform API key middleware.
 - Full current API route manifest, with unfinished endpoints returning `501 Not Implemented`.
 - Static serving hooks for prebuilt `frontend/dist` and `frontend/public`.
