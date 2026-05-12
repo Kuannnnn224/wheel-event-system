@@ -7,7 +7,7 @@ Current skeleton status:
 - Express app bootstrapping.
 - `/health` and `/api/health`.
 - Node 8-safe config loader.
-- Class-based container, repository, service, controller, and route registry wiring.
+- Class-based container, repository, service, controller, and module route wiring.
 - Async/await MySQL pool, query helper, and transaction helper.
 - Startup admin seed from `ADMIN_USERNAME` / `ADMIN_PASSWORD`.
 - Implemented `POST /auth/login`, returning the same `{ accessToken, admin }` shape as the NestJS backend.
@@ -16,7 +16,7 @@ Current skeleton status:
 - Implemented protected `POST /spins/simulate` with the file-backed probability config parser.
 - Implemented demo token, real spin, award overrides, reports, simulations, and probability import endpoints.
 - JWT admin middleware and platform API key middleware.
-- Full current API route manifest.
+- Full current API surface registered through per-module route files.
 - Static serving hooks for prebuilt `frontend/dist` and `frontend/public`.
 - Schema reference SQL for the existing tables.
 
