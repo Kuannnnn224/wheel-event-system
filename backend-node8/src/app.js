@@ -10,6 +10,7 @@ const notFound = require('./middleware/not-found');
 
 function createApp(options) {
   const config = options.config;
+  const container = options.container;
   const app = express();
 
   app.disable('x-powered-by');
@@ -23,7 +24,10 @@ function createApp(options) {
 
   app.get('/health', health(config));
 
-  const apiRouter = createApiRouter({ config: config });
+  const apiRouter = createApiRouter({
+    config: config,
+    container: container
+  });
   app.use('/api', apiRouter);
 
   // Keep Vite dev proxy compatibility: existing frontend dev rewrites /api away.

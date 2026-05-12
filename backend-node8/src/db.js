@@ -1,58 +1,117 @@
 'use strict';
 
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise');
 const config = require('./config');
 
-const pool = mysql.createPool({
-  host: config.db.host,
-  port: config.db.port,
-  user: config.db.user,
-  password: config.db.password,
-  database: config.db.database,
-  connectionLimit: config.db.connectionLimit,
-  timezone: 'Z'
-});
+/**
+ * @typedef {Object} DbConfig
+ * @property {string} host
+ * @property {number} port
+ * @property {string} user
+ * @property {string} password
+ * @property {string} database
+ * @property {number} connectionLimit
+ */
 
-function query(sql, params, callback) {
-  return pool.query(sql, params || [], callback);
+/**
+ * Promise-based query wrapper shared by the pool and transaction connections.
+ */
+class DatabaseConnection {
+  /**
+   * @param {{ query: Function, execute: Function }} connection
+   */
+  constructor(connection) {
+    this.connection = connection;
+  }
+
+  /**
+   * @param {string} sql
+   * @param {Array<*>} [params]
+   * @returns {Promise<Array<Object>>}
+   */
+  async query(sql, params) {
+    const result = await this.connection.query(sql, params || []);
+    return result[0];
+  }
+
+  /**
+   * @param {string} sql
+   * @param {Array<*>} [params]
+   * @returns {Promise<*>}
+   */
+  async execute(sql, params) {
+    const result = await this.connection.execute(sql, params || []);
+    return result[0];
+  }
+
+  /**
+   * @param {string} sql
+   * @param {Array<*>} [params]
+   * @returns {Promise<Object|null>}
+   */
+  async maybeOne(sql, params) {
+    const rows = await this.query(sql, params);
+    return rows.length ? rows[0] : null;
+  }
 }
 
-function getConnection(callback) {
-  return pool.getConnection(callback);
-}
+/**
+ * Root database pool with transaction support.
+ */
+class Database extends DatabaseConnection {
+  /**
+   * @param {DbConfig} dbConfig
+   */
+  constructor(dbConfig) {
+    const pool = mysql.createPool({
+      host: dbConfig.host,
+      port: dbConfig.port,
+      user: dbConfig.user,
+      password: dbConfig.password,
+      database: dbConfig.database,
+      connectionLimit: dbConfig.connectionLimit,
+      timezone: 'Z'
+    });
 
-function withTransaction(work, callback) {
-  getConnection(function (connectionError, connection) {
-    if (connectionError) {
-      return callback(connectionError);
-    }
+    super(pool);
+    this.pool = pool;
+  }
 
-    connection.beginTransaction(function (beginError) {
-      if (beginError) {
-        connection.release();
-        return callback(beginError);
+  /**
+   * @template T
+   * @param {(tx: DatabaseConnection) => Promise<T>} work
+   * @returns {Promise<T>}
+   */
+  async withTransaction(work) {
+    const connection = await this.pool.getConnection();
+    const tx = new DatabaseConnection(connection);
+
+    try {
+      await connection.beginTransaction();
+      const result = await work(tx);
+      await connection.commit();
+      return result;
+    } catch (err) {
+      try {
+        await connection.rollback();
+      } catch (rollbackErr) {
+        err.rollbackError = rollbackErr;
       }
 
-      work(connection, function (workError, result) {
-        if (workError) {
-          return connection.rollback(function () {
-            connection.release();
-            callback(workError);
-          });
-        }
+      throw err;
+    } finally {
+      connection.release();
+    }
+  }
 
-        connection.commit(function (commitError) {
-          connection.release();
-          callback(commitError, result);
-        });
-      });
-    });
-  });
+  /**
+   * @returns {Promise<void>}
+   */
+  async close() {
+    await this.pool.end();
+  }
 }
 
-module.exports = {
-  pool: pool,
-  query: query,
-  getConnection: getConnection,
-  withTransaction: withTransaction
-};
+module.exports = new Database(config.db);
+module.exports.Database = Database;
+module.exports.DatabaseConnection = DatabaseConnection;
