@@ -72,6 +72,18 @@ npm run test
 npm run build
 ```
 
+Node 8 相容後端骨架：
+
+```bash
+npm run node8:check
+npm run node8:smoke:offline
+npm run node8:check-db
+npm run node8:smoke:http
+npm run node8:start
+```
+
+詳細設定與部署注意事項在 `backend-node8/README.md`。
+
 匯入 XLSX 機率來源：
 
 ```bash

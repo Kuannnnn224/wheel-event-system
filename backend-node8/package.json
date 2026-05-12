@@ -6,7 +6,10 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "check": "node scripts/check-syntax.js"
+    "check": "node scripts/check-syntax.js",
+    "check:db": "node scripts/check-db-schema.js",
+    "smoke:offline": "node scripts/smoke-offline.js",
+    "smoke:http": "node scripts/smoke-http.js"
   },
   "dependencies": {
     "adm-zip": "0.5.16",

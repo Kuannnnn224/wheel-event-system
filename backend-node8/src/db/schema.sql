@@ -19,12 +19,13 @@ CREATE TABLE IF NOT EXISTS players (
   created_at int unsigned NOT NULL,
   updated_at int unsigned NOT NULL,
   PRIMARY KEY (id),
-  UNIQUE KEY uq_players_external_id (external_id)
+  UNIQUE KEY uq_players_external_id (external_id),
+  KEY idx_players_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS player_daily_progress (
   id varchar(36) NOT NULL,
-  player_id varchar(36) NOT NULL,
+  player_id varchar(255) NOT NULL,
   business_date varchar(10) NOT NULL,
   turnover_points int unsigned NOT NULL DEFAULT 0,
   unlocked_stage tinyint unsigned NOT NULL DEFAULT 0,
@@ -36,7 +37,7 @@ CREATE TABLE IF NOT EXISTS player_daily_progress (
 
 CREATE TABLE IF NOT EXISTS spin_records (
   id varchar(36) NOT NULL,
-  player_id varchar(36) NOT NULL,
+  player_id varchar(255) NOT NULL,
   business_date varchar(10) NOT NULL,
   stage_number tinyint unsigned NOT NULL,
   prize_config_id int NULL,
@@ -52,7 +53,7 @@ CREATE TABLE IF NOT EXISTS spin_records (
 
 CREATE TABLE IF NOT EXISTS award_override_rules (
   id varchar(36) NOT NULL,
-  player_id varchar(36) NOT NULL,
+  player_id varchar(255) NOT NULL,
   business_date varchar(10) NOT NULL,
   stage_number tinyint unsigned NOT NULL,
   status varchar(20) NOT NULL DEFAULT 'pending',
@@ -67,6 +68,7 @@ CREATE TABLE IF NOT EXISTS award_override_rules (
   cancelled_at int unsigned NULL,
   PRIMARY KEY (id),
   UNIQUE KEY uq_award_override_rules_pending_key (pending_key),
+  KEY idx_award_override_rules_business_date (business_date),
   KEY idx_award_override_rules_player_date (player_id, business_date),
   KEY idx_award_override_rules_status (status),
   CONSTRAINT fk_award_override_rules_player FOREIGN KEY (player_id) REFERENCES players (id) ON DELETE CASCADE,
@@ -75,7 +77,7 @@ CREATE TABLE IF NOT EXISTS award_override_rules (
 
 CREATE TABLE IF NOT EXISTS demo_sessions (
   id varchar(36) NOT NULL,
-  player_id varchar(36) NOT NULL,
+  player_id varchar(255) NOT NULL,
   token varchar(128) NOT NULL,
   expires_at int unsigned NOT NULL,
   created_at int unsigned NOT NULL,
@@ -87,7 +89,7 @@ CREATE TABLE IF NOT EXISTS demo_sessions (
 
 CREATE TABLE IF NOT EXISTS turnover_adjustments (
   id varchar(36) NOT NULL,
-  player_id varchar(36) NOT NULL,
+  player_id varchar(255) NOT NULL,
   business_date varchar(10) NOT NULL,
   amount_points int unsigned NOT NULL,
   source varchar(40) NOT NULL DEFAULT 'admin',
