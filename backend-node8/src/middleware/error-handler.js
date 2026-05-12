@@ -1,7 +1,7 @@
 'use strict';
 
 function errorHandler(err, _req, res, _next) {
-  const statusCode = err.statusCode || err.status || 500;
+  const statusCode = err.statusCode || err.status || (err.name === 'MulterError' ? 400 : 500);
   const message = err.message || 'Internal server error.';
   const payload = {
     message: err.messages || message

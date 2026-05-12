@@ -1,5 +1,7 @@
 'use strict';
 
+const ids = require('../utils/ids');
+
 /**
  * @typedef {Object} PlayerDailyProgress
  * @property {string} id
@@ -34,8 +36,8 @@ class PlayerDailyProgressRepository {
    * @param {string} businessDate
    * @returns {Promise<PlayerDailyProgress|null>}
    */
-  async findByPlayerAndDate(playerId, businessDate) {
-    const row = await this.db.maybeOne(
+  async findByPlayerAndDate(playerId, businessDate, tx) {
+    const row = await this.getDb(tx).maybeOne(
       [
         'SELECT id, player_id, business_date, turnover_points, unlocked_stage',
         'FROM player_daily_progress',
@@ -46,6 +48,32 @@ class PlayerDailyProgressRepository {
     );
 
     return this.mapRow(row);
+  }
+
+  /**
+   * Inserts or raises current progress values without lowering existing values.
+   *
+   * @param {string} playerId
+   * @param {string} businessDate
+   * @param {number} turnoverPoints
+   * @param {number} unlockedStage
+   * @param {import('../db').DatabaseConnection} [tx]
+   * @returns {Promise<PlayerDailyProgress|null>}
+   */
+  async upsertMaxProgress(playerId, businessDate, turnoverPoints, unlockedStage, tx) {
+    await this.getDb(tx).execute(
+      [
+        'INSERT INTO player_daily_progress',
+        '(id, player_id, business_date, turnover_points, unlocked_stage)',
+        'VALUES (?, ?, ?, ?, ?)',
+        'ON DUPLICATE KEY UPDATE',
+        'turnover_points = GREATEST(turnover_points, VALUES(turnover_points)),',
+        'unlocked_stage = GREATEST(unlocked_stage, VALUES(unlocked_stage))'
+      ].join(' '),
+      [ids.pseudoUuid(), playerId, businessDate, turnoverPoints, unlockedStage]
+    );
+
+    return this.findByPlayerAndDate(playerId, businessDate, tx);
   }
 
   /**
@@ -64,6 +92,14 @@ class PlayerDailyProgressRepository {
       turnoverPoints: row.turnover_points,
       unlockedStage: row.unlocked_stage
     };
+  }
+
+  /**
+   * @param {import('../db').DatabaseConnection} [tx]
+   * @returns {import('../db').DatabaseConnection}
+   */
+  getDb(tx) {
+    return tx || this.db;
   }
 }
 

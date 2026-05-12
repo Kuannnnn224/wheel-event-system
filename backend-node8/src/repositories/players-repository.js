@@ -1,5 +1,8 @@
 'use strict';
 
+const ids = require('../utils/ids');
+const time = require('../utils/time');
+
 /**
  * @typedef {Object} Player
  * @property {string} id
@@ -31,8 +34,8 @@ class PlayersRepository {
    * @param {number} limit
    * @returns {Promise<Player[]>}
    */
-  async listPlayers(limit) {
-    const rows = await this.db.query(
+  async listPlayers(limit, tx) {
+    const rows = await this.getDb(tx).query(
       [
         'SELECT id, external_id, created_at, updated_at',
         'FROM players',
@@ -49,8 +52,8 @@ class PlayersRepository {
    * @param {string} id
    * @returns {Promise<Player|null>}
    */
-  async findById(id) {
-    const row = await this.db.maybeOne(
+  async findById(id, tx) {
+    const row = await this.getDb(tx).maybeOne(
       [
         'SELECT id, external_id, created_at, updated_at',
         'FROM players',
@@ -67,8 +70,8 @@ class PlayersRepository {
    * @param {string} externalId
    * @returns {Promise<Player|null>}
    */
-  async findByExternalId(externalId) {
-    const row = await this.db.maybeOne(
+  async findByExternalId(externalId, tx) {
+    const row = await this.getDb(tx).maybeOne(
       [
         'SELECT id, external_id, created_at, updated_at',
         'FROM players',
@@ -79,6 +82,54 @@ class PlayersRepository {
     );
 
     return this.mapRow(row);
+  }
+
+  /**
+   * @param {string} externalId
+   * @param {import('../db').DatabaseConnection} [tx]
+   * @returns {Promise<Player>}
+   */
+  async create(externalId, tx) {
+    const now = time.unixTimestampSeconds();
+    const player = {
+      id: ids.pseudoUuid(),
+      externalId: externalId,
+      createdAt: now,
+      updatedAt: now
+    };
+
+    await this.getDb(tx).execute(
+      [
+        'INSERT INTO players',
+        '(id, external_id, created_at, updated_at)',
+        'VALUES (?, ?, ?, ?)'
+      ].join(' '),
+      [player.id, player.externalId, player.createdAt, player.updatedAt]
+    );
+
+    return player;
+  }
+
+  /**
+   * @param {string} externalId
+   * @param {import('../db').DatabaseConnection} [tx]
+   * @returns {Promise<Player>}
+   */
+  async getOrCreateByExternalId(externalId, tx) {
+    const existing = await this.findByExternalId(externalId, tx);
+    if (existing) {
+      return existing;
+    }
+
+    try {
+      return await this.create(externalId, tx);
+    } catch (err) {
+      if (err && err.code === 'ER_DUP_ENTRY') {
+        return this.findByExternalId(externalId, tx);
+      }
+
+      throw err;
+    }
   }
 
   /**
@@ -96,6 +147,14 @@ class PlayersRepository {
       createdAt: row.created_at,
       updatedAt: row.updated_at
     };
+  }
+
+  /**
+   * @param {import('../db').DatabaseConnection} [tx]
+   * @returns {import('../db').DatabaseConnection}
+   */
+  getDb(tx) {
+    return tx || this.db;
   }
 }
 

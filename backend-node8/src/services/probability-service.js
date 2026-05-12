@@ -120,6 +120,19 @@ class ProbabilityService {
   }
 
   /**
+   * @returns {Promise<Array<{ stageNumber: number, turnoverThresholdPoints: number }>>}
+   */
+  async getStageThresholds() {
+    const stages = await this.getStages();
+    return stages.map(function (stage) {
+      return {
+        stageNumber: stage.stageNumber,
+        turnoverThresholdPoints: stage.turnoverThresholdPoints
+      };
+    });
+  }
+
+  /**
    * @param {number} stageNumber
    * @returns {Promise<StageDrawConfig>}
    */
@@ -187,6 +200,16 @@ class ProbabilityService {
    */
   async drawPrizeForTable(stageNumber, table, rng) {
     return this.drawPrizeFromConfigForTable(await this.getDrawConfigForStage(stageNumber), table, rng);
+  }
+
+  /**
+   * @param {ProbabilityConfigFile} config
+   * @returns {Promise<ProbabilityStageConfig[]>}
+   */
+  async replaceConfig(config) {
+    const sortedConfig = this.normalizeConfig(config);
+    await this.writeConfig(sortedConfig);
+    return sortedConfig.stages;
   }
 
   /**

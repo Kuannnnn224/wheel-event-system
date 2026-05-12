@@ -1,5 +1,8 @@
 'use strict';
 
+const ids = require('../utils/ids');
+const time = require('../utils/time');
+
 /**
  * @typedef {Object} SpinRecord
  * @property {string} id
@@ -42,8 +45,8 @@ class SpinRecordsRepository {
    * @param {string} businessDate
    * @returns {Promise<SpinRecord[]>}
    */
-  async findByPlayerAndDate(playerId, businessDate) {
-    const rows = await this.db.query(
+  async findByPlayerAndDate(playerId, businessDate, tx) {
+    const rows = await this.getDb(tx).query(
       [
         'SELECT id, player_id, business_date, stage_number, prize_config_id,',
         'prize_name, amount_points, created_at, probability_table',
@@ -55,6 +58,100 @@ class SpinRecordsRepository {
     );
 
     return rows.map(this.mapRow);
+  }
+
+  /**
+   * @param {string} playerId
+   * @param {string} businessDate
+   * @param {number[]} stageNumbers
+   * @param {import('../db').DatabaseConnection} [tx]
+   * @returns {Promise<SpinRecord[]>}
+   */
+  async findByPlayerDateAndStages(playerId, businessDate, stageNumbers, tx) {
+    if (!stageNumbers.length) {
+      return [];
+    }
+
+    const placeholders = stageNumbers.map(function () {
+      return '?';
+    }).join(', ');
+    const rows = await this.getDb(tx).query(
+      [
+        'SELECT id, player_id, business_date, stage_number, prize_config_id,',
+        'prize_name, amount_points, created_at, probability_table',
+        'FROM spin_records',
+        'WHERE player_id = ? AND business_date = ? AND stage_number IN (' + placeholders + ')',
+        'ORDER BY stage_number ASC'
+      ].join(' '),
+      [playerId, businessDate].concat(stageNumbers)
+    );
+
+    return rows.map(this.mapRow);
+  }
+
+  /**
+   * @param {string} businessDate
+   * @param {import('../db').DatabaseConnection} [tx]
+   * @returns {Promise<number>}
+   */
+  async sumAmountPointsByDate(businessDate, tx) {
+    const row = await this.getDb(tx).maybeOne(
+      [
+        'SELECT COALESCE(SUM(amount_points), 0) AS total_amount_points',
+        'FROM spin_records',
+        'WHERE business_date = ?'
+      ].join(' '),
+      [businessDate]
+    );
+
+    return row ? Number(row.total_amount_points) : 0;
+  }
+
+  /**
+   * @param {Object} input
+   * @param {string} input.playerId
+   * @param {string} input.businessDate
+   * @param {number} input.stageNumber
+   * @param {string|null} [input.prizeConfigId]
+   * @param {string} input.prizeName
+   * @param {number} input.amountPoints
+   * @param {string} input.probabilityTable
+   * @param {import('../db').DatabaseConnection} [tx]
+   * @returns {Promise<SpinRecord>}
+   */
+  async create(input, tx) {
+    const spin = {
+      id: ids.pseudoUuid(),
+      playerId: input.playerId,
+      businessDate: input.businessDate,
+      stageNumber: input.stageNumber,
+      prizeConfigId: input.prizeConfigId || null,
+      prizeName: input.prizeName,
+      amountPoints: input.amountPoints,
+      createdAt: time.unixTimestampSeconds(),
+      probabilityTable: input.probabilityTable
+    };
+
+    await this.getDb(tx).execute(
+      [
+        'INSERT INTO spin_records',
+        '(id, player_id, business_date, stage_number, prize_config_id, prize_name, amount_points, created_at, probability_table)',
+        'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      ].join(' '),
+      [
+        spin.id,
+        spin.playerId,
+        spin.businessDate,
+        spin.stageNumber,
+        spin.prizeConfigId,
+        spin.prizeName,
+        spin.amountPoints,
+        spin.createdAt,
+        spin.probabilityTable
+      ]
+    );
+
+    return spin;
   }
 
   /**
@@ -73,6 +170,14 @@ class SpinRecordsRepository {
       createdAt: row.created_at,
       probabilityTable: row.probability_table
     };
+  }
+
+  /**
+   * @param {import('../db').DatabaseConnection} [tx]
+   * @returns {import('../db').DatabaseConnection}
+   */
+  getDb(tx) {
+    return tx || this.db;
   }
 }
 

@@ -10,6 +10,7 @@ class SpinsController {
   constructor(spinsService) {
     this.spinsService = spinsService;
     this.simulate = this.simulate.bind(this);
+    this.realSpin = this.realSpin.bind(this);
   }
 
   /**
@@ -19,6 +20,15 @@ class SpinsController {
    */
   async simulate(req, res) {
     res.json(await this.spinsService.simulate(req.body || {}));
+  }
+
+  /**
+   * @param {{ body?: Object }} req
+   * @param {{ json: Function }} res
+   * @returns {Promise<void>}
+   */
+  async realSpin(req, res) {
+    res.json(await this.spinsService.realSpin(req.body || {}));
   }
 }
 

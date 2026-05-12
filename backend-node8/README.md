@@ -14,8 +14,9 @@ Current skeleton status:
 - Implemented protected `GET /players` and `GET /players/:id/daily-progress`.
 - Implemented protected `GET /probability/config` and `GET /probability/stages`.
 - Implemented protected `POST /spins/simulate` with the file-backed probability config parser.
+- Implemented demo token, real spin, award overrides, reports, simulations, and probability import endpoints.
 - JWT admin middleware and platform API key middleware.
-- Full current API route manifest, with unfinished endpoints returning `501 Not Implemented`.
+- Full current API route manifest.
 - Static serving hooks for prebuilt `frontend/dist` and `frontend/public`.
 - Schema reference SQL for the existing tables.
 

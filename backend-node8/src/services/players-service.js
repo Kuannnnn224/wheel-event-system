@@ -54,6 +54,15 @@ class PlayersService {
   }
 
   /**
+   * @param {string} externalId
+   * @param {import('../db').DatabaseConnection} [tx]
+   * @returns {Promise<Object>}
+   */
+  async getOrCreateByExternalId(externalId, tx) {
+    return this.playersRepository.getOrCreateByExternalId(externalId, tx);
+  }
+
+  /**
    * @param {string} id
    * @returns {Promise<Object>}
    */
