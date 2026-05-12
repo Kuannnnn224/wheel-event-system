@@ -36,6 +36,14 @@ class HttpError extends Error {
   static unauthorized(message) {
     return new HttpError(401, message);
   }
+
+  /**
+   * @param {string} message
+   * @returns {HttpError}
+   */
+  static notFound(message) {
+    return new HttpError(404, message);
+  }
 }
 
 module.exports = HttpError;

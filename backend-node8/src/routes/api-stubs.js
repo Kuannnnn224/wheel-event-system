@@ -25,8 +25,8 @@ const AsyncHandler = require('../utils/async-handler');
 const ROUTES = [
   { method: 'post', path: '/auth/login', name: 'auth.login', public: true, handlerName: 'authLogin' },
 
-  { method: 'get', path: '/players', name: 'players.search' },
-  { method: 'get', path: '/players/:id/daily-progress', name: 'players.dailyProgress' },
+  { method: 'get', path: '/players', name: 'players.search', handlerName: 'playersSearch' },
+  { method: 'get', path: '/players/:id/daily-progress', name: 'players.dailyProgress', handlerName: 'playersDailyProgress' },
 
   { method: 'get', path: '/probability/config', name: 'probability.config' },
   { method: 'get', path: '/probability/stages', name: 'probability.stages' },
@@ -110,6 +110,14 @@ class ApiStubRoutes {
   resolveHandler(route) {
     if (route.handlerName === 'authLogin') {
       return AsyncHandler.wrap(this.container.authController.login);
+    }
+
+    if (route.handlerName === 'playersSearch') {
+      return AsyncHandler.wrap(this.container.playersController.search);
+    }
+
+    if (route.handlerName === 'playersDailyProgress') {
+      return AsyncHandler.wrap(this.container.playersController.getDailyProgress);
     }
 
     if (route.handler) {
