@@ -9,7 +9,6 @@ class AuthController {
    */
   constructor(authService) {
     this.authService = authService;
-    this.login = this.login.bind(this);
   }
 
   /**

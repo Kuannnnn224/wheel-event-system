@@ -9,8 +9,6 @@ class SpinsController {
    */
   constructor(spinsService) {
     this.spinsService = spinsService;
-    this.simulate = this.simulate.bind(this);
-    this.realSpin = this.realSpin.bind(this);
   }
 
   /**

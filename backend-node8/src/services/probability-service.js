@@ -171,9 +171,7 @@ class ProbabilityService {
   drawPrizeFromConfigForTable(config, table, rng) {
     const prize = picker.pickWeightedItem(
       config.prizes,
-      function (item) {
-        return this.getPrizeWeightForTable(item, table);
-      }.bind(this),
+      (item) => this.getPrizeWeightForTable(item, table),
       rng
     );
 
@@ -345,9 +343,9 @@ class ProbabilityService {
       throw HttpError.badRequest('Probability config daily payout limit must be an integer.');
     }
 
-    config.stages.forEach(function (stage) {
+    config.stages.forEach((stage) => {
       this.assertValidStage(stage);
-    }, this);
+    });
   }
 
   /**

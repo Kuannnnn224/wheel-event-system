@@ -9,8 +9,6 @@ class SimulationsController {
    */
   constructor(simulationsService) {
     this.simulationsService = simulationsService;
-    this.create = this.create.bind(this);
-    this.get = this.get.bind(this);
   }
 
   /**

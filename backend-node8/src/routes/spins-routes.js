@@ -19,8 +19,8 @@ class SpinsRoutes {
    * @returns {void}
    */
   register(router) {
-    router.post('/spins/simulate', this.requireAdmin, AsyncHandler.wrap(this.spinsController.simulate));
-    router.post('/spins/real', AsyncHandler.wrap(this.spinsController.realSpin));
+    router.post('/spins/simulate', this.requireAdmin, AsyncHandler.wrap((req, res, next) => this.spinsController.simulate(req, res, next)));
+    router.post('/spins/real', AsyncHandler.wrap((req, res, next) => this.spinsController.realSpin(req, res, next)));
   }
 }
 

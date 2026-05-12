@@ -24,17 +24,32 @@ class ProbabilityImportsRoutes {
       '/probability/imports/preview',
       this.requireAdmin,
       this.upload.single('file'),
-      AsyncHandler.wrap(this.probabilityImportsController.previewImport)
+      AsyncHandler.wrap((req, res, next) => this.probabilityImportsController.previewImport(req, res, next))
     );
-    router.post('/probability/imports/apply', this.requireAdmin, AsyncHandler.wrap(this.probabilityImportsController.applyImport));
-    router.get('/probability/imports', this.requireAdmin, AsyncHandler.wrap(this.probabilityImportsController.getImports));
+    router.post(
+      '/probability/imports/apply',
+      this.requireAdmin,
+      AsyncHandler.wrap((req, res, next) => this.probabilityImportsController.applyImport(req, res, next))
+    );
+    router.get(
+      '/probability/imports',
+      this.requireAdmin,
+      AsyncHandler.wrap((req, res, next) => this.probabilityImportsController.getImports(req, res, next))
+    );
     router.post(
       '/probability/imports/:uploadId/download-token',
       this.requireAdmin,
-      AsyncHandler.wrap(this.probabilityImportsController.createDownloadToken)
+      AsyncHandler.wrap((req, res, next) => this.probabilityImportsController.createDownloadToken(req, res, next))
     );
-    router.get('/probability/imports/download/:token', AsyncHandler.wrap(this.probabilityImportsController.downloadImportByToken));
-    router.get('/probability/imports/:uploadId/download', this.requireAdmin, AsyncHandler.wrap(this.probabilityImportsController.downloadImport));
+    router.get(
+      '/probability/imports/download/:token',
+      AsyncHandler.wrap((req, res, next) => this.probabilityImportsController.downloadImportByToken(req, res, next))
+    );
+    router.get(
+      '/probability/imports/:uploadId/download',
+      this.requireAdmin,
+      AsyncHandler.wrap((req, res, next) => this.probabilityImportsController.downloadImport(req, res, next))
+    );
   }
 }
 

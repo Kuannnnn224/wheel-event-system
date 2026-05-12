@@ -9,9 +9,6 @@ class AwardOverridesController {
    */
   constructor(awardOverridesService) {
     this.awardOverridesService = awardOverridesService;
-    this.list = this.list.bind(this);
-    this.create = this.create.bind(this);
-    this.cancel = this.cancel.bind(this);
   }
 
   /**

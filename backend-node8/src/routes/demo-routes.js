@@ -20,10 +20,10 @@ class DemoRoutes {
    * @returns {void}
    */
   register(router) {
-    router.post('/demo/session', this.requirePlatformApiKey, AsyncHandler.wrap(this.demoController.createSession));
-    router.post('/demo/admin-session', this.requireAdmin, AsyncHandler.wrap(this.demoController.createAdminSession));
-    router.get('/demo/client-config', AsyncHandler.wrap(this.demoController.getClientConfig));
-    router.get('/demo/session', AsyncHandler.wrap(this.demoController.getSession));
+    router.post('/demo/session', this.requirePlatformApiKey, AsyncHandler.wrap((req, res, next) => this.demoController.createSession(req, res, next)));
+    router.post('/demo/admin-session', this.requireAdmin, AsyncHandler.wrap((req, res, next) => this.demoController.createAdminSession(req, res, next)));
+    router.get('/demo/client-config', AsyncHandler.wrap((req, res, next) => this.demoController.getClientConfig(req, res, next)));
+    router.get('/demo/session', AsyncHandler.wrap((req, res, next) => this.demoController.getSession(req, res, next)));
   }
 }
 

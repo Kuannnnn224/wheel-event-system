@@ -9,8 +9,6 @@ class PlayersController {
    */
   constructor(playersService) {
     this.playersService = playersService;
-    this.search = this.search.bind(this);
-    this.getDailyProgress = this.getDailyProgress.bind(this);
   }
 
   /**

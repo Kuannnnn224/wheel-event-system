@@ -12,12 +12,6 @@ class ProbabilityImportsController {
    */
   constructor(probabilityImportsService) {
     this.probabilityImportsService = probabilityImportsService;
-    this.previewImport = this.previewImport.bind(this);
-    this.applyImport = this.applyImport.bind(this);
-    this.getImports = this.getImports.bind(this);
-    this.createDownloadToken = this.createDownloadToken.bind(this);
-    this.downloadImportByToken = this.downloadImportByToken.bind(this);
-    this.downloadImport = this.downloadImport.bind(this);
   }
 
   /**

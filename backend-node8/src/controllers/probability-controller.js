@@ -9,8 +9,6 @@ class ProbabilityController {
    */
   constructor(probabilityService) {
     this.probabilityService = probabilityService;
-    this.getConfig = this.getConfig.bind(this);
-    this.getStages = this.getStages.bind(this);
   }
 
   /**

@@ -18,7 +18,7 @@ class AuthRoutes {
    * @returns {void}
    */
   register(router) {
-    router.post('/auth/login', AsyncHandler.wrap(this.authController.login));
+    router.post('/auth/login', AsyncHandler.wrap((req, res, next) => this.authController.login(req, res, next)));
   }
 }
 

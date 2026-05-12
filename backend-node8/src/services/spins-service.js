@@ -61,15 +61,13 @@ class SpinsService {
     const player = await this.demoTokenService.validateToken(dto.token);
     const businessDate = time.resolveCurrentBusinessDate(undefined, this.config.businessTimeZone);
 
-    return this.db.withTransaction(async function (tx) {
+    return this.db.withTransaction(async (tx) => {
       const progress = await this.playerDailyProgressRepository.findByPlayerAndDate(player.id, businessDate, tx);
       const existingSpins = await this.spinRecordsRepository.findByPlayerAndDate(player.id, businessDate, tx);
       const rule = spinRules.validateRealSpinRule({
         requestedStage: dto.stageNumber,
         unlockedStage: progress ? progress.unlockedStage : 0,
-        playedStages: existingSpins.map(function (spin) {
-          return spin.stageNumber;
-        })
+        playedStages: existingSpins.map((spin) => spin.stageNumber)
       });
 
       if (!rule.allowed) {
@@ -101,7 +99,7 @@ class SpinsService {
           amountPoints: draw.prize.amountPoints
         }
       };
-    }.bind(this));
+    });
   }
 
   /**

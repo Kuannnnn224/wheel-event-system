@@ -57,7 +57,7 @@ class ProbabilityXlsxParser {
     return {
       version: 1,
       dailyPayoutLimitPoints: thresholdResult.dailyPayoutLimitPoints,
-      stages: [1, 2, 3, 4, 5].map(function (stageNumber) {
+      stages: [1, 2, 3, 4, 5].map((stageNumber) => {
         const split = tableWeights[stageNumber];
         if (!split) {
           throw new Error('Missing low/high split weights for stage ' + stageNumber + '.');
@@ -70,7 +70,7 @@ class ProbabilityXlsxParser {
           highTableWeight: split.high,
           prizes: this.parseStagePrizes(workbooks, stageNumber)
         };
-      }, this)
+      })
     };
   }
 
@@ -97,7 +97,7 @@ class ProbabilityXlsxParser {
     let dailyPayoutLimitPoints = 0;
     const rows = this.getSheetRows(workbook, '門檻設置');
 
-    rows.forEach(function (row) {
+    rows.forEach((row) => {
       const dailyLimitIndex = row.findIndex(function (cell) {
         return normalizeText(cell) === '每日送出上限';
       });
@@ -113,7 +113,7 @@ class ProbabilityXlsxParser {
           thresholds[stageNumber] = this.readNextNumber(row, index + 1, 'stage ' + stageNumber + ' threshold');
         }
       }
-    }, this);
+    });
 
     this.assertCompleteStages(thresholds, 'threshold');
     return {
@@ -133,7 +133,7 @@ class ProbabilityXlsxParser {
     const prizeWeights = this.parsePrizeWeights(workbooks.prizeWorkbook, stageNumber, 'prize');
     const dailyLimitWeights = this.parsePrizeWeights(workbooks.dailyLimitWorkbook, stageNumber, 'dailyLimit');
 
-    return this.parsePrizeAmounts(workbooks.configWorkbook, stageNumber).map(function (prize) {
+    return this.parsePrizeAmounts(workbooks.configWorkbook, stageNumber).map((prize) => {
       return {
         rewardCode: prize.rewardCode,
         name: prize.name,
@@ -144,7 +144,7 @@ class ProbabilityXlsxParser {
         dailyLimitWeight: this.requireNumber(dailyLimitWeights[prize.rewardCode], 'stage ' + stageNumber + ' ' + prize.rewardCode + ' dailyLimit weight'),
         sortOrder: prize.sortOrder
       };
-    }, this);
+    });
   }
 
   /**
@@ -156,7 +156,7 @@ class ProbabilityXlsxParser {
     const prizes = [];
     const rows = this.getSheetRows(workbook, 'PrizeLV' + stageNumber);
 
-    rows.forEach(function (row) {
+    rows.forEach((row) => {
       const rewardIndex = row.findIndex(function (cell) {
         return REWARD_CODES.indexOf(normalizeText(cell)) !== -1;
       });
@@ -172,7 +172,7 @@ class ProbabilityXlsxParser {
         amountPoints: this.readNextNumber(row, rewardIndex + 1, 'stage ' + stageNumber + ' ' + rewardCode + ' amount'),
         sortOrder: REWARD_CODES.indexOf(rewardCode) + 1
       });
-    }, this);
+    });
 
     const amounts = {};
     prizes.forEach(function (prize) {
@@ -195,7 +195,7 @@ class ProbabilityXlsxParser {
     const weights = {};
     const rows = this.getSheetRows(workbook, 'LV' + stageNumber);
 
-    rows.forEach(function (row) {
+    rows.forEach((row) => {
       const rewardIndex = row.findIndex(function (cell) {
         return REWARD_CODES.indexOf(normalizeText(cell)) !== -1;
       });
@@ -206,7 +206,7 @@ class ProbabilityXlsxParser {
 
       const rewardCode = normalizeText(row[rewardIndex]);
       weights[rewardCode] = this.readNextNumber(row, rewardIndex + 1, 'stage ' + stageNumber + ' ' + rewardCode + ' ' + tableName + ' weight');
-    }, this);
+    });
 
     this.assertCompleteRewards(weights, 'stage ' + stageNumber + ' ' + tableName + ' weights');
     return weights;
@@ -221,7 +221,7 @@ class ProbabilityXlsxParser {
     let currentStage = null;
     const rows = this.getSheetRows(workbook, 'Weight');
 
-    rows.forEach(function (row) {
+    rows.forEach((row) => {
       const stageNumber = row.map(parseStageNumber).find(Boolean);
       if (stageNumber) {
         currentStage = stageNumber;
@@ -246,7 +246,7 @@ class ProbabilityXlsxParser {
 
       const table = normalizeText(row[tableIndex]).toLowerCase();
       splits[currentStage][table] = this.readNextNumber(row, tableIndex + 1, 'stage ' + currentStage + ' ' + table + ' split weight');
-    }, this);
+    });
 
     [1, 2, 3, 4, 5].forEach(function (stageNumber) {
       const split = splits[stageNumber];

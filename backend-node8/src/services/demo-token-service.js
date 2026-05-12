@@ -57,7 +57,7 @@ class DemoTokenService {
     const ttlMinutes = Number(this.config.demoTokenTtlMinutes || 30);
     const expiresAt = time.unixTimestampSeconds() + ttlMinutes * 60;
 
-    const session = await this.db.withTransaction(async function (tx) {
+    const session = await this.db.withTransaction(async (tx) => {
       const progress = await this.findDailyProgress(tx, player.id, businessDate);
       const turnoverPoints = Math.max(progress ? progress.turnoverPoints : 0, dto.turnoverPoints);
       const unlockedStage = Math.max(
@@ -72,7 +72,7 @@ class DemoTokenService {
         token: token,
         expiresAt: expiresAt
       });
-    }.bind(this));
+    });
 
     return {
       player: player,

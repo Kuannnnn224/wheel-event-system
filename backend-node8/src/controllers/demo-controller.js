@@ -8,15 +8,9 @@ const HttpError = require('../utils/http-error');
 class DemoController {
   /**
    * @param {import('../services/demo-token-service')} demoTokenService
-   * @param {Object} config
    */
-  constructor(demoTokenService, config) {
+  constructor(demoTokenService) {
     this.demoTokenService = demoTokenService;
-    this.config = config;
-    this.createSession = this.createSession.bind(this);
-    this.createAdminSession = this.createAdminSession.bind(this);
-    this.getClientConfig = this.getClientConfig.bind(this);
-    this.getSession = this.getSession.bind(this);
   }
 
   /**
@@ -25,7 +19,6 @@ class DemoController {
    * @returns {Promise<void>}
    */
   async createSession(req, res) {
-    this.assertPlatformApiKey(req.headers['x-platform-api-key']);
     res.json(await this.demoTokenService.createSession(req.body, this.getRequestContext(req)));
   }
 
@@ -70,18 +63,6 @@ class DemoController {
       origin: req.headers.origin,
       referer: req.headers.referer
     };
-  }
-
-  /**
-   * @param {string|undefined} apiKey
-   * @returns {void}
-   */
-  assertPlatformApiKey(apiKey) {
-    const expectedApiKey = this.config && this.config.platformApiKey ? String(this.config.platformApiKey).trim() : '';
-
-    if (!expectedApiKey || apiKey !== expectedApiKey) {
-      throw HttpError.unauthorized('Invalid platform API key.');
-    }
   }
 }
 

@@ -217,7 +217,7 @@ class ProbabilityImportsService {
 
     this.pushDiff(diff, 0, undefined, 'dailyPayoutLimitPoints', current.dailyPayoutLimitPoints || 0, proposed.dailyPayoutLimitPoints || 0);
 
-    proposed.stages.forEach(function (proposedStage) {
+    proposed.stages.forEach((proposedStage) => {
       const currentStage = currentStages[proposedStage.stageNumber];
       if (!currentStage) {
         diff.push({
@@ -240,7 +240,7 @@ class ProbabilityImportsService {
         currentPrizes[prize.rewardCode] = prize;
       });
 
-      proposedStage.prizes.forEach(function (proposedPrize) {
+      proposedStage.prizes.forEach((proposedPrize) => {
         const currentPrize = currentPrizes[proposedPrize.rewardCode];
         if (!currentPrize) {
           diff.push({
@@ -262,8 +262,8 @@ class ProbabilityImportsService {
         this.pushDiff(diff, proposedStage.stageNumber, proposedPrize.rewardCode, 'prizeWeight', currentPrize.prizeWeight, proposedPrize.prizeWeight);
         this.pushDiff(diff, proposedStage.stageNumber, proposedPrize.rewardCode, 'dailyLimitWeight', currentPrize.dailyLimitWeight, proposedPrize.dailyLimitWeight);
         this.pushDiff(diff, proposedStage.stageNumber, proposedPrize.rewardCode, 'sortOrder', currentPrize.sortOrder, proposedPrize.sortOrder);
-      }, this);
-    }, this);
+      });
+    });
 
     return diff;
   }

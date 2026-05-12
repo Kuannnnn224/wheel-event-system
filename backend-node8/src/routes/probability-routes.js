@@ -19,8 +19,8 @@ class ProbabilityRoutes {
    * @returns {void}
    */
   register(router) {
-    router.get('/probability/config', this.requireAdmin, AsyncHandler.wrap(this.probabilityController.getConfig));
-    router.get('/probability/stages', this.requireAdmin, AsyncHandler.wrap(this.probabilityController.getStages));
+    router.get('/probability/config', this.requireAdmin, AsyncHandler.wrap((req, res, next) => this.probabilityController.getConfig(req, res, next)));
+    router.get('/probability/stages', this.requireAdmin, AsyncHandler.wrap((req, res, next) => this.probabilityController.getStages(req, res, next)));
     router.put('/probability/stages', this.requireAdmin, probabilityStagesForbidden());
   }
 }

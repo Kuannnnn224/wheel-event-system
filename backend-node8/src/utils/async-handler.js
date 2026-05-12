@@ -18,7 +18,11 @@ class AsyncHandler {
    */
   static wrap(handler) {
     return function (req, res, next) {
-      Promise.resolve(handler(req, res, next)).catch(next);
+      try {
+        Promise.resolve(handler(req, res, next)).catch(next);
+      } catch (err) {
+        next(err);
+      }
     };
   }
 }

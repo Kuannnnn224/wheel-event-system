@@ -19,9 +19,13 @@ class AwardOverridesRoutes {
    * @returns {void}
    */
   register(router) {
-    router.get('/award-overrides', this.requireAdmin, AsyncHandler.wrap(this.awardOverridesController.list));
-    router.post('/award-overrides', this.requireAdmin, AsyncHandler.wrap(this.awardOverridesController.create));
-    router.patch('/award-overrides/:id/cancel', this.requireAdmin, AsyncHandler.wrap(this.awardOverridesController.cancel));
+    router.get('/award-overrides', this.requireAdmin, AsyncHandler.wrap((req, res, next) => this.awardOverridesController.list(req, res, next)));
+    router.post('/award-overrides', this.requireAdmin, AsyncHandler.wrap((req, res, next) => this.awardOverridesController.create(req, res, next)));
+    router.patch(
+      '/award-overrides/:id/cancel',
+      this.requireAdmin,
+      AsyncHandler.wrap((req, res, next) => this.awardOverridesController.cancel(req, res, next))
+    );
   }
 }
 

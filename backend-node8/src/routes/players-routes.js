@@ -19,8 +19,12 @@ class PlayersRoutes {
    * @returns {void}
    */
   register(router) {
-    router.get('/players', this.requireAdmin, AsyncHandler.wrap(this.playersController.search));
-    router.get('/players/:id/daily-progress', this.requireAdmin, AsyncHandler.wrap(this.playersController.getDailyProgress));
+    router.get('/players', this.requireAdmin, AsyncHandler.wrap((req, res, next) => this.playersController.search(req, res, next)));
+    router.get(
+      '/players/:id/daily-progress',
+      this.requireAdmin,
+      AsyncHandler.wrap((req, res, next) => this.playersController.getDailyProgress(req, res, next))
+    );
   }
 }
 

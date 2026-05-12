@@ -19,9 +19,9 @@ class ReportsRoutes {
    * @returns {void}
    */
   register(router) {
-    router.get('/reports/daily', this.requireAdmin, AsyncHandler.wrap(this.reportsController.getDaily));
-    router.get('/reports/range', this.requireAdmin, AsyncHandler.wrap(this.reportsController.getRange));
-    router.get('/reports/player', this.requireAdmin, AsyncHandler.wrap(this.reportsController.getPlayer));
+    router.get('/reports/daily', this.requireAdmin, AsyncHandler.wrap((req, res, next) => this.reportsController.getDaily(req, res, next)));
+    router.get('/reports/range', this.requireAdmin, AsyncHandler.wrap((req, res, next) => this.reportsController.getRange(req, res, next)));
+    router.get('/reports/player', this.requireAdmin, AsyncHandler.wrap((req, res, next) => this.reportsController.getPlayer(req, res, next)));
   }
 }
 

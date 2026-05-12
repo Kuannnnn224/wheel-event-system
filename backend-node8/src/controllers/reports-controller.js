@@ -9,9 +9,6 @@ class ReportsController {
    */
   constructor(reportsService) {
     this.reportsService = reportsService;
-    this.getDaily = this.getDaily.bind(this);
-    this.getRange = this.getRange.bind(this);
-    this.getPlayer = this.getPlayer.bind(this);
   }
 
   /**

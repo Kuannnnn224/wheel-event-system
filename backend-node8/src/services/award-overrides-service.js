@@ -66,42 +66,34 @@ class AwardOverridesService {
 
     const businessDate = time.resolveCurrentBusinessDate(undefined, this.config.businessTimeZone);
 
-    return this.db.withTransaction(async function (tx) {
+    return this.db.withTransaction(async (tx) => {
       const existingSpins = await this.spinRecordsRepository.findByPlayerDateAndStages(player.id, businessDate, dto.stageNumbers, tx);
 
       if (existingSpins.length > 0) {
-        const playedStages = existingSpins.map(function (spin) {
-          return spin.stageNumber;
-        }).sort(sortNumbers);
+        const playedStages = existingSpins.map((spin) => spin.stageNumber).sort(sortNumbers);
         throw HttpError.badRequest('玩家 ' + player.externalId + ' 今天 ' + this.formatStages(playedStages) + ' 已經抽過，該階段轉盤次數已用盡，不能新增指定派獎。');
       }
 
-      const pendingKeys = dto.stageNumbers.map(function (stageNumber) {
-        return this.buildPendingKey(player.id, businessDate, stageNumber);
-      }, this);
+      const pendingKeys = dto.stageNumbers.map((stageNumber) => this.buildPendingKey(player.id, businessDate, stageNumber));
       const existingRules = await this.awardOverridesRepository.findByPendingKeys(pendingKeys, tx);
 
       if (existingRules.length > 0) {
-        const duplicatedStages = existingRules.map(function (rule) {
-          return rule.stageNumber;
-        }).sort(sortNumbers);
+        const duplicatedStages = existingRules.map((rule) => rule.stageNumber).sort(sortNumbers);
         throw HttpError.badRequest('玩家 ' + player.externalId + ' 今天 ' + this.formatStages(duplicatedStages) + ' 已有等待中的指定派獎，請先取消原規則。');
       }
 
-      const rules = dto.stageNumbers.map(function (stageNumber) {
-        return {
-          playerId: player.id,
-          player: player,
-          businessDate: businessDate,
-          stageNumber: stageNumber,
-          pendingKey: this.buildPendingKey(player.id, businessDate, stageNumber),
-          reason: dto.reason,
-          createdByAdminId: adminId
-        };
-      }, this);
+      const rules = dto.stageNumbers.map((stageNumber) => ({
+        playerId: player.id,
+        player: player,
+        businessDate: businessDate,
+        stageNumber: stageNumber,
+        pendingKey: this.buildPendingKey(player.id, businessDate, stageNumber),
+        reason: dto.reason,
+        createdByAdminId: adminId
+      }));
 
       return this.awardOverridesRepository.createMany(rules, tx);
-    }.bind(this));
+    });
   }
 
   /**

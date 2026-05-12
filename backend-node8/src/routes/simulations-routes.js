@@ -19,8 +19,8 @@ class SimulationsRoutes {
    * @returns {void}
    */
   register(router) {
-    router.post('/simulations', this.requireAdmin, AsyncHandler.wrap(this.simulationsController.create));
-    router.get('/simulations/:id', this.requireAdmin, AsyncHandler.wrap(this.simulationsController.get));
+    router.post('/simulations', this.requireAdmin, AsyncHandler.wrap((req, res, next) => this.simulationsController.create(req, res, next)));
+    router.get('/simulations/:id', this.requireAdmin, AsyncHandler.wrap((req, res, next) => this.simulationsController.get(req, res, next)));
   }
 }
 
