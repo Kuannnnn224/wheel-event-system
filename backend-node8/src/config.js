@@ -22,6 +22,11 @@ function readNumber(name, fallback) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function readPort(name, fallback) {
+  const parsed = readNumber(name, fallback);
+  return parsed > 0 ? parsed : fallback;
+}
+
 function readList(name) {
   const raw = readString(name, '');
   if (!raw) {
@@ -39,7 +44,7 @@ function resolvePath(value) {
 
 const config = {
   nodeEnv: readString('NODE_ENV', 'development'),
-  port: readNumber('PORT', 3001),
+  port: readPort('PORT', 3001),
   host: readString('HOST', '0.0.0.0'),
   corsOrigins: readList('CORS_ORIGIN'),
 
