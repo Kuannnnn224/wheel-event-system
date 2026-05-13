@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>100% Winning Bronze Spin</title>
+<base href="./webview-assets/bronze/">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!-- ══ 儲值提示彈窗 ══ -->
+<div class="deposit-overlay" id="depositOverlay" onclick="closeDepositPrompt()">
+  <div class="deposit-box" onclick="event.stopPropagation()">
+    <div class="deposit-title">Deposit Required</div>
+    <div class="deposit-msg">
+      Deposit now to unlock your <strong>FREE Spin</strong>!
+    </div>
+    <button class="deposit-btn" onclick="closeDepositPrompt(); goDeposit()">Deposit Now</button>
+    <button class="deposit-close-btn" onclick="closeDepositPrompt()">Cancel</button>
+  </div>
+</div>
+
+<!-- ══ 勝利彈窗 ══ -->
+<div class="result-overlay" id="resultOverlay" onclick="closeResult()">
+  <div class="result-box" onclick="event.stopPropagation()">
+    <div class="result-congrats">Congratulations</div>
+    <img id="resultIcon" class="result-icon-img" src="" alt="">
+    <div class="result-prize" id="resultPrize"></div>
+    <div class="result-sub">has been credited to your account</div>
+    <button class="result-close-btn" onclick="closeResult()">CLAIM</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     1170×720 全版面（對齊 Pencil 座標）
+     ══════════════════════════════════════ -->
+<div class="frame">
+
+  <!-- ── 背景主圖（拱門/舞台） ── -->
+  <!-- ylS27: abs(71,21) 1020×542 → images/32_sprite.png -->
+  <img style="left:71px;top:21px;width:1020px;height:542px" src="assets/images/32_sprite.png" alt="">
+
+  <!-- ── 舞台底部（燈條底板） ── -->
+  <!-- UgK4R: abs(0,475) 1170×253 → images/24_sprite.png -->
+  <img style="left:0;top:475px;width:1170px;height:253px" src="assets/images/24_sprite.png" alt="">
+
+  <!-- ── 電線燈串 ── -->
+  <!-- 電線: abs(154,554) 921×69 → images/19_sprite.png -->
+  <img style="left:154px;top:554px;width:921px;height:69px;z-index:2" src="assets/images/19_sprite.png" alt="">
+
+  <!-- ── 小彩燈 ── -->
+  <!-- 33(藍)、21(紫) z-index:1 → 在電線之下；03(黃) z-index:3 → 在電線之上 -->
+  <img style="left:193px;top:575px;width:53px;height:53px;z-index:1"   src="assets/images/33_sprite.png" alt=""><!-- 藍燈 -->
+  <img style="left:279px;top:582px;width:55px;height:56px;z-index:3"   src="assets/images/03_sprite.png" alt=""><!-- 黃燈 -->
+  <img style="left:356px;top:570px;width:46px;height:43px;z-index:1"   src="assets/images/21_sprite.png" alt=""><!-- 紫燈 -->
+
+  <!-- ── 舞台落地燈 ── -->
+  <!-- 左燈: abs(19,585) 107×131 → images/26_sprite.png（最高層）-->
+  <img style="left:19px;top:585px;width:107px;height:131px;z-index:15"   src="assets/images/26_sprite.png" alt="">
+  <!-- 右燈: abs(1000,609) 104×117 → images/22_sprite.png（最高層）-->
+  <img style="left:1000px;top:609px;width:104px;height:117px;z-index:15" src="assets/images/22_sprite.png" alt="">
+
+  <!-- ── 舞台聚光燈（TL 錨點旋轉）── -->
+  <!-- 左光 07_sprite: TL=(288,444) rot=-94° → 視覺範圍 x=270~518, y=164~444
+       光源尖端朝左，光束向右上方散射至舞台/轉盤 -->
+  <img class="spot-left"
+       style="left:278px;top:424px;width:265px;height:231px;transform:rotate(90deg);transform-origin:0 0;z-index:14"
+       src="assets/images/07_sprite.png" alt="">
+  <!-- 右光 06_sprite -->
+  <img class="spot-right"
+       style="left:1065px;top:470px;width:226px;height:199px;transform:rotate(90deg);transform-origin:0 0;z-index:14"
+       src="assets/images/06_sprite.png" alt="">
+
+  <!-- ── 右側裝飾（喇叭、燈箱） ── -->
+  <!-- Rectangle: abs(1053,461) 107×162 → images/04_sprite.png -->
+  <img style="left:1053px;top:461px;width:107px;height:162px" src="assets/images/04_sprite.png" alt="">
+  <!-- 喇叭: Pencil abs(1091,528) 96×134 rot=-96.32°（設計稿原始座標，.frame overflow:hidden 裁切超出部分）
+       z-index:3 確保不被 LV 面板(z:4)遮蓋 → 但 LV 面板 x≥916，喇叭視覺 x≈1075~1091，無重疊 ✓ -->
+  <img style="left:921px;top:498px;width:135px;height:96px;transform:rotate(0deg);transform-origin:0 0;z-index:3"
+       src="assets/images/30_sprite.png" alt="">
+
+  <!-- ── 標題區（左側）── -->
+  <!-- 100%: abs(76,35) 285×112 → images/14_sprite.png -->
+  <img style="left:76px;top:35px;width:285px;height:112px"   src="assets/images/14_sprite.png" alt="100%">
+  <!-- WINNING: abs(32,147) 374×91 → images/08_sprite.png -->
+  <img style="left:32px;top:147px;width:374px;height:91px"   src="assets/images/08_sprite.png" alt="WINNING">
+  <!-- BRONZE SPIN 文字: abs(54,235) 313×46 -->
+  <img style="left:54px;top:235px;width:313px;height:46px"   src="assets/bronze_text.png" alt="BRONZE SPIN">
+  <!-- 星星閃光裝飾 (09_sprite, rot≈-21°) -->
+  <img style="left:343px;top:4px;width:35px;height:36px;transform:rotate(-21deg);transform-origin:0 0" src="assets/images/09_sprite.png" alt="">
+  <img style="left:147px;top:104px;width:46px;height:59px;transform:rotate(-21deg);transform-origin:0 0" src="assets/images/09_sprite.png" alt="">
+  <img style="left:24px;top:65px;width:87px;height:85px;transform:rotate(-21deg);transform-origin:0 0"  src="assets/images/09_sprite.png" alt="">
+
+  <!-- ══════════════════════════════════════════════════════════════
+       中獎跑馬燈區塊（暫時關閉）
+       使用 <template> 包覆：內容會被解析但不渲染、不顯示。
+       要重新啟用：把外層 <template …> 與 </template> 兩行刪除即可。
+       ══════════════════════════════════════════════════════════════ -->
+  <template id="ticker-block-disabled">
+<!-- ── 中獎跑馬燈框（拼貼機制）── -->
+  <!-- 原始尺寸備註：width:246px; height:124px（v10 調整前） -->
+  <div style="position:absolute;left:133px;top:288px;width:246px;height:280px;z-index:3;
+              border-style:solid;border-color:transparent;border-width:17px 26px;
+              box-sizing:border-box;
+              border-image-source:url('assets/ticker_frame.png');
+              border-image-slice:30 30 30 30 fill;
+              border-image-repeat:stretch stretch;
+              pointer-events:none;"></div>
+  <!-- 跑馬燈內容（疊在框下方） -->
+  <div class="ticker-wrap" style="z-index:2">
+    <div class="ticker-inner" id="winnerList">
+      <div class="t-row"><span class="t-name">46***734</span><span class="t-amt">₱20</span><span class="t-time">10:06:41</span></div>
+      <div class="t-row"><span class="t-name">23***241</span><span class="t-amt">₱50</span><span class="t-time">10:06:40</span></div>
+      <div class="t-row"><span class="t-name">45***817</span><span class="t-amt">₱5</span><span class="t-time">10:06:39</span></div>
+      <div class="t-row"><span class="t-name">31***952</span><span class="t-amt">₱100</span><span class="t-time">10:06:30</span></div>
+      <div class="t-row"><span class="t-name">88***102</span><span class="t-amt">₱20</span><span class="t-time">10:06:28</span></div>
+      <div class="t-row"><span class="t-name">67***445</span><span class="t-amt">₱1</span><span class="t-time">10:06:25</span></div>
+      <div class="t-row"><span class="t-name">12***883</span><span class="t-amt">₱50</span><span class="t-time">10:06:22</span></div>
+      <div class="t-row"><span class="t-name">94***316</span><span class="t-amt">₱5</span><span class="t-time">10:06:18</span></div>
+      <div class="t-row"><span class="t-name">55***729</span><span class="t-amt">₱100</span><span class="t-time">10:06:15</span></div>
+      <div class="t-row"><span class="t-name">78***064</span><span class="t-amt">₱20</span><span class="t-time">10:06:10</span></div>
+      <div class="t-row"><span class="t-name">33***581</span><span class="t-amt">₱1</span><span class="t-time">10:06:07</span></div>
+      <div class="t-row"><span class="t-name">61***492</span><span class="t-amt">₱5</span><span class="t-time">10:06:03</span></div>
+      <div class="t-row"><span class="t-name">27***748</span><span class="t-amt">₱50</span><span class="t-time">10:05:58</span></div>
+      <div class="t-row"><span class="t-name">49***135</span><span class="t-amt">₱20</span><span class="t-time">10:05:52</span></div>
+      <div class="t-row"><span class="t-name">83***267</span><span class="t-amt">₱100</span><span class="t-time">10:05:47</span></div>
+    </div>
+  </div>
+  </template>
+
+  <!-- ── 貓看板（總獎池）── 暫時隱藏 -->
+  <!-- 貓看板: abs(47,406) 360×60 → images/13_sprite.png -->
+  <!-- <img style="left:47px;top:406px;width:360px;height:60px;z-index:2" src="assets/images/13_sprite.png" alt=""> -->
+  <!-- 數字顯示板: abs(51,483) 366×92 → images/10_sprite.png -->
+  <!-- <img style="left:51px;top:483px;width:366px;height:92px;z-index:3" src="assets/images/10_sprite.png" alt=""> -->
+  <!-- 小裝飾: abs(35,481) 40×30 → images/25_sprite.png -->
+  <!-- <img style="left:35px;top:481px;width:40px;height:30px;z-index:3" src="assets/images/25_sprite.png" alt=""> -->
+
+  <!-- ── 轉輪底座 ──
+       底座: abs(415,475) 510×153 → 轉輪底座.png -->
+  <img style="left:390px;top:475px;width:550px;height:153px;z-index:4" src="assets/wheel_stand.png" alt="">
+  <!-- 按鈕底板: abs(465,506) 417×124 → 按鈕底板.png
+       (Pencil src=20_sprite.png 為根目錄，對應 按鈕底板.png) -->
+  <img style="left:440px;top:506px;width:447px;height:124px;z-index:5" src="assets/btn_base.png" alt="">
+  <!-- 按鈕說明文字 -->
+  <div class="btn-subtitle">Unlock the Spin by making First Deposit</div>
+  <!-- 流水進度條（金按鈕可用狀態顯示）-->
+  <div class="progress-bar" id="progressBar">Next Spin <span id="progressCurrent">0</span>/<span id="progressTarget">1000</span></div>
+
+  <!-- ══════════════════════════════════
+       轉盤旋轉容器
+       Pencil 轉盤底: left=441 top=57 w=441 h=407
+       ════════════════════════════════== -->
+  <div id="wheelRotator" style="z-index:6">
+
+    <!-- 轉盤底圖 -->
+    <img class="wheel-bg" src="assets/wheel.png" alt="">
+
+    <!--
+      ██ 獎品 icon（r=163 放射狀中心定位）██
+      wheelRotator: 430×430, center=(215,215)
+      扇區中心角（從 12 點鐘順時鐘）：
+        位置[0] = 0°   紫色  → Level 5 保險箱（最大）
+        位置[1] = 76°  黃色  → Level 1 金幣（最小）
+        位置[2] = 140° 藍色  → Level 3 錢袋
+        位置[3] = 219° 紅色  → Level 4 寶箱（寶相.png）
+        位置[4] = 285° 綠色  → Level 2 金幣盤
+      位置公式：cx=215+163*sin(θ)  cy=215-163*cos(θ)
+      尺寸縮放：L1=80% L2=92% L3=100% L4=112% L5=124%（原 v10 尺寸為基準）
+    -->
+    <!-- L5 保險箱 @ 0°（Purple） center=(215, 52)  size 122×119 (×1.24) -->
+    <img class="prize-icon"
+         style="left:154px;top:-8px;width:122px;height:119px;
+                transform-origin:center center;transform:rotate(0deg)"
+         src="assets/prize_safe.png" alt="L5">
+    <!-- L1 金幣 @ 76°（Yellow） center=(373, 176)  size 98×70 (×0.80) -->
+    <img class="prize-icon"
+         style="left:324px;top:141px;width:98px;height:70px;
+                transform-origin:center center;transform:rotate(76deg)"
+         src="assets/prize_coin_pile.png" alt="L1">
+    <!-- L3 錢袋 @ 140°（Blue） center=(320, 340)  size 119×90 (×1.00) -->
+    <img class="prize-icon"
+         style="left:260px;top:295px;width:119px;height:90px;
+                transform-origin:center center;transform:rotate(140deg)"
+         src="assets/prize_money_bag.png" alt="L3">
+    <!-- L4 寶箱 @ 219°（Red） center=(112, 342)  size 99×102 (×1.12) -->
+    <img class="prize-icon"
+         style="left:62px;top:291px;width:99px;height:102px;
+                transform-origin:center center;transform:rotate(219deg)"
+         src="assets/prize_statue.png" alt="L4">
+    <!-- L2 盤子 @ 285°（Green） center=(58, 173)  size 105×86 (×0.92) -->
+    <img class="prize-icon"
+         style="left:5px;top:130px;width:105px;height:86px;
+                transform-origin:center center;transform:rotate(285deg)"
+         src="assets/prize_coin_plate.png" alt="L2">
+
+    <!--
+      獎品文字 SVG（同步旋轉）
+      viewBox = 0 0 441 407（配合轉盤底圖尺寸）
+      圓心 ≈ (220.5, 203.5)
+      文字位置從 Pencil JSON $1~$5 換算（相對 wheel TL）：
+        $1 → (199, 81)  P1  @  0°
+        $2 → ( 89,187)  P100@285°  (最靠近 P100 icon 方向)
+        $3 → (165,322)  P50 @219°
+        $4 → (317,283)  P20 @140°  (Pencil $4 在 P20 扇區)
+        $5 → (328,128)  P5  @ 76°
+    -->
+    <svg id="prizeLabels" viewBox="0 0 441 407" xmlns="http://www.w3.org/2000/svg"
+         style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2">
+      <defs>
+        <filter id="ts" x="-30%" y="-30%" width="160%" height="160%">
+          <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#000" flood-opacity=".9"/>
+        </filter>
+      </defs>
+      <!--
+        放射狀文字對齊：每個 text 元素以轉盤圓心 (220.5, 203.5) 為旋轉軸，
+        旋轉角度等於扇區中心角（從12點鐘順時針）。
+        文字基準位置在圓心上方 r≈140px 處，即 (220.5, 63.5)，
+        transform="rotate(θ, 220.5, 203.5)" 將其旋轉到對應扇區。
+      -->
+      <!-- L5 ₱100 @ 0°（Purple，最長金額 → 較小字級）-->
+      <text id="prize-label-0" x="220.5" y="101" text-anchor="middle" dominant-baseline="middle"
+            font-family="'Arial Black',Arial" font-size="25" font-weight="900"
+            fill="#fff013" stroke="#ff8713" stroke-width="4" paint-order="stroke fill"
+            transform="rotate(0, 220.5, 203.5)">₱100</text>
+      <!-- L1 ₱1 @ 76°（Yellow，最短金額 → 最大字級）-->
+      <text id="prize-label-1" x="220.5" y="101" text-anchor="middle" dominant-baseline="middle"
+            font-family="'Arial Black',Arial" font-size="25" font-weight="900"
+            fill="#fff" stroke="#000" stroke-width="4" paint-order="stroke fill"
+            transform="rotate(76, 220.5, 203.5)">₱1</text>
+      <!-- L3 ₱20 @ 140°（Blue）-->
+      <text id="prize-label-2" x="220.5" y="101" text-anchor="middle" dominant-baseline="middle"
+            font-family="'Arial Black',Arial" font-size="25" font-weight="900"
+            fill="#fff" stroke="#000" stroke-width="4" paint-order="stroke fill"
+            transform="rotate(140, 220.5, 203.5)">₱20</text>
+      <!-- L4 ₱50 @ 219°（Red）-->
+      <text id="prize-label-3" x="220.5" y="101" text-anchor="middle" dominant-baseline="middle"
+            font-family="'Arial Black',Arial" font-size="25" font-weight="900"
+            fill="#fff" stroke="#000" stroke-width="4" paint-order="stroke fill"
+            transform="rotate(219, 220.5, 203.5)">₱50</text>
+      <!-- L2 ₱5 @ 285°（Green）-->
+      <text id="prize-label-4" x="220.5" y="101" text-anchor="middle" dominant-baseline="middle"
+            font-family="'Arial Black',Arial" font-size="25" font-weight="900"
+            fill="#fff" stroke="#000" stroke-width="4" paint-order="stroke fill"
+            transform="rotate(285, 220.5, 203.5)">₱5</text>
+    </svg>
+  </div><!-- /wheelRotator -->
+
+  <!-- ── 轉盤框底（環框下段）──
+       Pencil 轉盤框底 abs(437,394) 457×114 (no rotation)
+       → 一般框底.png -->
+  <!-- 一般框底在一般框(z:8)之上，z-index:9 ✓ -->
+  <img style="left:437px;top:402px;width:457px;height:114px;z-index:9" src="assets/frame_bottom.png" alt="">
+
+  <!-- ── 圓環框（使用者調整後：no rotation，直接定位）──
+       left:410px top:13px width:500px height:500px -->
+  <img style="left:410px;top:13px;width:500px;height:500px;
+              transform:rotate(0deg);transform-origin:0 0;
+              z-index:8;pointer-events:none"
+       src="assets/frame_main.png" alt="">
+
+  <!-- ── 轉盤頂（圓環框頂冠）──
+       Pencil 轉盤頂 visual: left=531 top=3 w=269 h=67
+       → 一般框頂.png (111×412, portrait → display landscape 269×67) -->
+  <img style="left:531px;top:3px;width:269px;height:67px;z-index:11;pointer-events:none"
+       src="assets/frame_top.png" alt="">
+
+  <!-- ── 轉盤輪框燈（6 個燈，固定不旋轉）──
+       轉盤燈 group at abs (410,86)，children local:
+       (420,263) (453,131) (398,7) (82,0) (0,118) (35,258) → abs:
+       (830,349) (863,217) (808,93) (492,86) (410,204) (445,344) -->
+  <!-- 輪框燈底圖（暗）×6 -->
+  <img style="left:830px;top:349px;width:35px;height:41px;z-index:10" src="assets/images/11_sprite.png" alt="">
+  <img style="left:863px;top:217px;width:35px;height:41px;z-index:10" src="assets/images/11_sprite.png" alt="">
+  <img style="left:808px;top:93px; width:35px;height:41px;z-index:10" src="assets/images/11_sprite.png" alt="">
+  <img style="left:492px;top:86px; width:35px;height:41px;z-index:10" src="assets/images/11_sprite.png" alt="">
+  <img style="left:410px;top:204px;width:35px;height:41px;z-index:10" src="assets/images/11_sprite.png" alt="">
+  <img style="left:445px;top:344px;width:35px;height:41px;z-index:10" src="assets/images/11_sprite.png" alt="">
+  <!-- 輪框燈亮圖（跑馬燈疊加）×6，順時鐘：3→2→1→0→5→4 -->
+  <img id="wlb-0" class="wlb" src="assets/images/wheel_light.png" alt="">
+  <img id="wlb-1" class="wlb" src="assets/images/wheel_light.png" alt="">
+  <img id="wlb-2" class="wlb" src="assets/images/wheel_light.png" alt="">
+  <img id="wlb-3" class="wlb" src="assets/images/wheel_light.png" alt="">
+  <img id="wlb-4" class="wlb" src="assets/images/wheel_light.png" alt="">
+  <img id="wlb-5" class="wlb" src="assets/images/wheel_light.png" alt="">
+
+  <!-- ── 指針（固定，不旋轉）──
+       Pencil pre-rot: abs(708,10) 106×87 rot=-450°(-90° CCW)
+       視覺位置: left=621 top=10 w=87 h=106
+       CSS 做法：pre-rot pos + rotate(-90deg) at TL anchor
+       指針.png 143×110 (→方向), rotate(-90deg) → ↑ (朝上)
+       但設計上應朝下，需 rotate(90deg) → ↓
+       → 使用 pre-rot TL 重新計算 CW 旋轉：left=708 top=10 rotate(-90deg)
+         驗算: TR(106,0) → visual(708,116); BL(0,87) → visual(621,10)  ✓ -->
+  <img style="left:700px;top:18px;width:90px;height:70px;
+              transform:rotate(90deg);transform-origin:0 0;
+              z-index:12;pointer-events:none;
+              filter:drop-shadow(0 2px 10px rgba(255,150,0,.9))"
+       src="assets/pointer.png" alt="">
+
+  <!-- ── SPIN 按鈕 ──
+       視覺位置: left=579 top=182 w=163 h=166
+       (Pencil SPIN灰 pre-rot abs(578.5,348.5) 166×163 rot=-270°
+        → visual computed: l=579 t=182 w=163 h=166) -->
+  <div id="spinBtn" onclick="handleSpinClick()">
+    <img id="spinGray" src="assets/spin_grey.png" alt="SPIN">
+    <img id="spinGold" src="assets/btn_gold.png" alt="" style="display:none">
+  </div>
+
+  <!-- ── Deposit Now 按鈕 ──
+       Pencil pre-rot: abs(512.8,613.5) 61×322 rot=-270°(+90° CW)
+       視覺位置: l=513 t=552 w=322 h=61
+       CSS: left=513 top=614 w=61 h=322 rotate(90deg) @TL
+       驗算: TL→(513,614); TR(61,0)→(513,553); BL(0,322)→(835,614) ✓ -->
+  <div id="depositBtn" class="deposit-area" aria-label="Deposit Now" onclick="showDepositPrompt()"></div>
+  <!-- 文字背景（SPIN 可用狀態才顯示，9-slice 拼接 text_background.png）-->
+  <div id="textBg" class="text-bg" aria-hidden="true"></div>
+  <!-- text-bg 上的訊息文字（usable 狀態才顯示）-->
+  <div id="textBgMessage" class="text-bg-message">Spin and Win Amazing Prize!</div>
+  <!-- Go Bet 按鈕（usable 狀態才顯示，點擊串接 window.onGoBet）-->
+  <img id="goBetBtn" class="go-bet-btn" src="assets/go_bet.png" onclick="handleGoBet()" alt="Go Bet">
+
+  <!-- ── 標籤（按鈕旁標籤）──
+       Pencil pre-rot: abs(704.1,576.0) 33×133 rot=-270°(+90° CW)
+       視覺位置: l=704 t=543 w=133 h=33
+       CSS: left=704 top=576 w=33 h=133 rotate(90deg) @TL
+       驗算: TR(33,0)→(704,543); BL(0,133)→(837,576) ✓ -->
+  <img id="labelImg"
+       style="left:695px;top:580px;width:33px;height:133px;
+              transform:rotate(-90deg);transform-origin:0 0;z-index:13"
+       src="assets/btn_label.png" alt="">
+  <!-- 標籤文字 -->
+  <div id="labelText" class="btn-badge-text">+₱550</div>
+
+  <!-- ══════════════════════════════════
+       LV 面板（Pencil LV group at 672,9）
+       ════════════════════════════════== -->
+
+  <!-- LV 背景: abs(916,9) 185×522 → images/35_sprite.png -->
+  <img style="left:916px;top:9px;width:185px;height:522px;z-index:4;opacity:1"
+       src="assets/images/35_sprite.png" alt="">
+
+  <!-- ── LV rows（JS 動態控制 sprite + 箭頭）────────────────────────────
+       每列結構：
+         vip-row-bg-N   = 恆顯 inactive 底板（僅 BRONZE 使用）
+         vip-row-img-N  = 動態 sprite（unlocked=亮版 / locked=暗版）
+       JS setVipLevel(n) 會切換 sprite + opacity + 箭頭位置
+  ──────────────────────────────────────────────────────────────────── -->
+
+  <!-- SUPER (LV5): abs(932,25) 136×94 -->
+  <img id="vip-row-img-5"
+       style="left:932px;top:25px;width:136px;height:94px;z-index:5"
+       src="assets/images/18_sprite.png" alt="">
+  <div id="vip-text-5" class="vip-text" style="left:906px;top:40px;z-index:6">
+    <div class="vip-name">LV5</div>
+    <div class="vip-amount" id="lv-threshold-5">—</div>
+  </div>
+
+  <!-- DIAMOND (LV4): abs(932,109) 134×110 -->
+  <img id="vip-row-img-4"
+       style="left:932px;top:108px;width:134px;height:110px;z-index:5"
+       src="assets/images/27_sprite.png" alt="">
+  <div id="vip-text-4" class="vip-text" style="left:906px;top:135px;z-index:6">
+    <div class="vip-name">LV4</div>
+    <div class="vip-amount" id="lv-threshold-4">—</div>
+  </div>
+
+  <!-- GOLD (LV3): abs(931,210) 135×99 -->
+  <img id="vip-row-img-3"
+       style="left:931px;top:210px;width:135px;height:99px;z-index:5"
+       src="assets/images/29_sprite.png" alt="">
+  <div id="vip-text-3" class="vip-text" style="left:906px;top:230px;z-index:6">
+    <div class="vip-name">LV3</div>
+    <div class="vip-amount" id="lv-threshold-3">—</div>
+  </div>
+
+  <!-- SILVER (LV2): abs(935,301) 131×111 -->
+  <img id="vip-row-img-2"
+       style="left:935px;top:301px;width:131px;height:111px;z-index:5"
+       src="assets/images/16_sprite.png" alt="">
+  <div id="vip-text-2" class="vip-text" style="left:906px;top:329px;z-index:6">
+    <div class="vip-name">LV2</div>
+    <div class="vip-amount" id="lv-threshold-2">—</div>
+  </div>
+
+  <!-- BRONZE (LV1): abs(932,405) → inactive bg 恆顯；abs(935,399) → 動態亮燈 -->
+  <img id="vip-row-bg-1"
+       style="left:932px;top:405px;width:134px;height:109px;z-index:5"
+       src="assets/images/28_sprite.png" alt="">
+  <img id="vip-row-img-1"
+       style="left:935px;top:399px;width:131px;height:119px;z-index:6"
+       src="assets/images/20_sprite.png" alt="">
+  <div id="vip-text-1" class="vip-text active" style="left:906px;top:434px;z-index:7">
+    <div class="vip-name">LV1</div>
+    <div class="vip-amount" id="lv-threshold-1">—</div>
+  </div>
+
+  <!-- 箭頭：JS 動態移動 top 值（X 位置固定）-->
+  <img id="vip-arrow-left"  class="blink"
+       style="position:absolute;left:899px;top:438px;width:57px;height:60px;z-index:8"
+       src="assets/images/01_sprite.png" alt="">
+  <img id="vip-arrow-right" class="blink"
+       style="position:absolute;left:1042px;top:435px;width:59px;height:63px;z-index:8"
+       src="assets/images/02_sprite.png" alt="">
+
+</div><!-- /frame -->
+
+<script src="app.js"></script>
+</body>
+</html>
