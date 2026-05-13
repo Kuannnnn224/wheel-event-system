@@ -101,8 +101,7 @@ const config = {
   webviewSessionTtlMinutes: readNumber('WEBVIEW_SESSION_TTL_MINUTES', 30),
   probabilityConfigPath: resolvePath(readString('PROBABILITY_CONFIG_PATH', 'config/probability.json')),
   probabilityImportStoragePath: resolvePath(readString('PROBABILITY_IMPORT_STORAGE_PATH', 'storage/probability-imports')),
-  frontendDistPath: resolvePath(readString('FRONTEND_DIST_PATH', 'public')),
-  webviewPublicPath: resolvePath(readString('WEBVIEW_PUBLIC_PATH', 'public'))
+  publicPath: resolvePath(readString('PUBLIC_PATH', 'public'))
 };
 
 module.exports = config;

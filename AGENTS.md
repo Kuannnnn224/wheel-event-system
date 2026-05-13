@@ -7,7 +7,7 @@
 這是一個每日 5 階段轉盤活動系統。
 
 - `backend-node8/`：目前真正部署與啟動的 runtime，Express 4、CommonJS、raw SQL、Node 8.17 相容。
-- `backend-node8/public/`：已 build 好的後控與 webview 靜態檔，由 Express 直接服務。
+- `backend-node8/public/`：已 build 好的後控與 webview 靜態檔，由 Express 透過 `PUBLIC_PATH` 直接服務。
 - `frontend/`：編譯前的 React + Vite + TypeScript 專案。它需要較新 Node toolchain，build 產物會直接輸出到 `backend-node8/public/`。
 - `backend-node8/config/probability.json`：機率設定 JSON，由 parser 或 PM ZIP 匯入產生，不放 DB。
 - `backend-node8/src/db/schema.sql`：Node 8 runtime 期待的 DB baseline；runtime 不使用 TypeORM synchronize。

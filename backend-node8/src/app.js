@@ -39,8 +39,7 @@ function createApp(options) {
   // Keep compatibility for clients that call the API without the /api prefix.
   app.use(apiRouter);
 
-  attachWebviewStatic(app, config);
-  attachFrontendStatic(app, config);
+  attachPublicStatic(app, config);
 
   app.use(notFound);
   app.use(errorHandler);
@@ -66,39 +65,24 @@ function health(config) {
 }
 
 /**
- * 如果 webview 靜態目錄存在，就把它掛到 Express app。
+ * 如果 public 靜態目錄存在，就掛上後控與 webview 靜態檔，以及後控 SPA fallback。
  *
  * @param {import('express').Express} app
  * @param {Object} config
  * @returns {void}
  */
-function attachWebviewStatic(app, config) {
-  if (!directoryExists(config.webviewPublicPath)) {
+function attachPublicStatic(app, config) {
+  if (!directoryExists(config.publicPath)) {
     return;
   }
 
-  app.use(express.static(config.webviewPublicPath));
-}
-
-/**
- * 如果後控前端靜態目錄存在，就掛上 static 與 SPA fallback。
- *
- * @param {import('express').Express} app
- * @param {Object} config
- * @returns {void}
- */
-function attachFrontendStatic(app, config) {
-  if (!directoryExists(config.frontendDistPath)) {
-    return;
-  }
-
-  app.use(express.static(config.frontendDistPath));
+  app.use(express.static(config.publicPath));
   app.get('*', function (req, res, next) {
     if (req.path.indexOf('/api/') === 0) {
       return next();
     }
 
-    res.sendFile(path.join(config.frontendDistPath, 'index.html'));
+    res.sendFile(path.join(config.publicPath, 'index.html'));
   });
 }
 
