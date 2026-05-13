@@ -52,7 +52,7 @@ const REQUIRED_COLUMNS = {
     consumed_at: { type: 'int unsigned', nullable: true },
     cancelled_at: { type: 'int unsigned', nullable: true }
   },
-  demo_sessions: {
+  webview_sessions: {
     id: { type: 'varchar(36)', nullable: false },
     player_id: { type: /^varchar\(/, nullable: false },
     token: { type: 'varchar(128)', nullable: false },
@@ -79,7 +79,7 @@ const REQUIRED_UNIQUE_INDEXES = [
   { table: 'player_daily_progress', columns: ['player_id', 'business_date'] },
   { table: 'spin_records', columns: ['player_id', 'business_date', 'stage_number'] },
   { table: 'award_override_rules', columns: ['pending_key'] },
-  { table: 'demo_sessions', columns: ['token'] }
+  { table: 'webview_sessions', columns: ['token'] }
 ];
 
 const REQUIRED_INDEXES = [

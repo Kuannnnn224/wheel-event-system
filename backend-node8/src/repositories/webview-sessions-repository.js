@@ -4,7 +4,7 @@ const ids = require('../utils/ids');
 const time = require('../utils/time');
 
 /**
- * @typedef {Object} DemoSession
+ * @typedef {Object} WebviewSession
  * @property {string} id
  * @property {string} playerId
  * @property {string} token
@@ -14,7 +14,7 @@ const time = require('../utils/time');
  */
 
 /**
- * @typedef {Object} DemoSessionRow
+ * @typedef {Object} WebviewSessionRow
  * @property {string} id
  * @property {string} player_id
  * @property {string} token
@@ -26,9 +26,9 @@ const time = require('../utils/time');
  */
 
 /**
- * 短效 demo webview session 的 raw SQL repository。
+ * 短效 webview session 的 raw SQL repository。
  */
-class DemoSessionsRepository {
+class WebviewSessionsRepository {
   /**
    * 初始化 repository，保存 DB 連線。
    *
@@ -42,17 +42,17 @@ class DemoSessionsRepository {
    * 用 transaction connection 建立同型 repository。
    *
    * @param {import('../db').DatabaseConnection} db
-   * @returns {DemoSessionsRepository}
+   * @returns {WebviewSessionsRepository}
    */
   withConnection(db) {
-    return new DemoSessionsRepository(db);
+    return new WebviewSessionsRepository(db);
   }
 
   /**
    * 寫入資料庫並回傳建立後的資料物件。
    *
    * @param {{ playerId: string, token: string, expiresAt: number }} input
-   * @returns {Promise<DemoSession>}
+   * @returns {Promise<WebviewSession>}
    */
   async create(input) {
     const session = {
@@ -65,7 +65,7 @@ class DemoSessionsRepository {
 
     await this.db.execute(
       [
-        'INSERT INTO demo_sessions',
+        'INSERT INTO webview_sessions',
         '(id, player_id, token, expires_at, created_at)',
         'VALUES (?, ?, ?, ?, ?)'
       ].join(' '),
@@ -76,21 +76,21 @@ class DemoSessionsRepository {
   }
 
   /**
-   * 從資料庫查詢符合條件的資料。
+   * 從資料庫查詢符合 token 的 webview session。
    *
    * @param {string} token
-   * @returns {Promise<DemoSession|null>}
+   * @returns {Promise<WebviewSession|null>}
    */
   async findByToken(token) {
     const row = await this.db.maybeOne(
       [
-        'SELECT ds.id, ds.player_id, ds.token, ds.expires_at, ds.created_at,',
+        'SELECT ws.id, ws.player_id, ws.token, ws.expires_at, ws.created_at,',
         'p.external_id AS player_external_id,',
         'p.created_at AS player_created_at,',
         'p.updated_at AS player_updated_at',
-        'FROM demo_sessions ds',
-        'INNER JOIN players p ON p.id = ds.player_id',
-        'WHERE ds.token = ?',
+        'FROM webview_sessions ws',
+        'INNER JOIN players p ON p.id = ws.player_id',
+        'WHERE ws.token = ?',
         'LIMIT 1'
       ].join(' '),
       [token]
@@ -102,8 +102,8 @@ class DemoSessionsRepository {
   /**
    * 將資料庫 row 轉成程式內使用的 camelCase 物件。
    *
-   * @param {DemoSessionRow|null} row
-   * @returns {DemoSession|null}
+   * @param {WebviewSessionRow|null} row
+   * @returns {WebviewSession|null}
    */
   mapRow(row) {
     if (!row) {
@@ -126,4 +126,4 @@ class DemoSessionsRepository {
   }
 }
 
-module.exports = DemoSessionsRepository;
+module.exports = WebviewSessionsRepository;

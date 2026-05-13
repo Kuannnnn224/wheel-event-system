@@ -3,32 +3,11 @@
 const fs = require('fs');
 const path = require('path');
 const util = require('util');
+const probabilityModel = require('../domain/probability-model');
 const HttpError = require('../utils/http-error');
-const picker = require('../utils/probability-picker');
 
 const readFile = util.promisify(fs.readFile);
 const writeFile = util.promisify(fs.writeFile);
-const REWARD_CODES = ['A', 'B', 'C', 'D', 'E'];
-
-const DEFAULT_CONFIG = {
-  version: 1,
-  dailyPayoutLimitPoints: 0,
-  stages: [1, 2, 3, 4, 5].map(function (stageNumber) {
-    return {
-      stageNumber: stageNumber,
-      turnoverThresholdPoints: [1000, 3000, 6000, 10000, 15000][stageNumber - 1],
-      lowTableWeight: 80,
-      highTableWeight: 20,
-      prizes: [
-        createDefaultPrize('A', 'A Prize', 0, 500, 120, 120, 500, 1),
-        createDefaultPrize('B', 'B Prize', stageNumber * 100, 280, 220, 220, 280, 2),
-        createDefaultPrize('C', 'C Prize', stageNumber * 300, 150, 280, 280, 150, 3),
-        createDefaultPrize('D', 'D Prize', stageNumber * 700, 60, 250, 250, 60, 4),
-        createDefaultPrize('E', 'E Prize', stageNumber * 1500, 10, 130, 130, 10, 5)
-      ]
-    };
-  })
-};
 
 /**
  * @typedef {'low'|'high'|'prize'|'dailyLimit'} ProbabilityTable
@@ -76,6 +55,9 @@ const DEFAULT_CONFIG = {
 
 /**
  * 管理檔案型機率設定，供抽獎模擬與真實抽獎共用。
+ *
+ * 機率模型本身放在 domain/probability-model；這個 service 只負責檔案 IO
+ * 與把 domain validation error 轉成 API error。
  */
 class ProbabilityService {
   /**
@@ -172,8 +154,7 @@ class ProbabilityService {
    * @returns {DrawPrizeResult}
    */
   drawPrizeFromConfig(config, rng) {
-    const table = picker.pickProbabilityTable(config.stage.lowTableWeight, config.stage.highTableWeight, rng);
-    return this.drawPrizeFromConfigForTable(config, table, rng);
+    return probabilityModel.drawPrizeFromConfig(config, rng);
   }
 
   /**
@@ -185,16 +166,7 @@ class ProbabilityService {
    * @returns {DrawPrizeResult}
    */
   drawPrizeFromConfigForTable(config, table, rng) {
-    const prize = picker.pickWeightedItem(
-      config.prizes,
-      (item) => this.getPrizeWeightForTable(item, table),
-      rng
-    );
-
-    return {
-      table: table,
-      prize: prize
-    };
+    return probabilityModel.drawPrizeFromConfigForTable(config, table, rng);
   }
 
   /**
@@ -228,6 +200,7 @@ class ProbabilityService {
    */
   async replaceConfig(config) {
     const sortedConfig = this.normalizeConfig(config);
+
     await this.writeConfig(sortedConfig);
     return sortedConfig.stages;
   }
@@ -239,9 +212,9 @@ class ProbabilityService {
    * @returns {ProbabilityConfigFile}
    */
   normalizeConfig(config) {
-    const normalizedConfig = this.withLegacyDefaults(config);
-    this.assertValidConfig(normalizedConfig);
-    return this.sortConfig(normalizedConfig);
+    return this.runModel(function () {
+      return probabilityModel.normalizeConfig(config);
+    });
   }
 
   /**
@@ -257,7 +230,7 @@ class ProbabilityService {
         throw err;
       }
 
-      await this.writeConfig(DEFAULT_CONFIG);
+      await this.writeConfig(probabilityModel.createDefaultConfig());
     }
   }
 
@@ -279,19 +252,9 @@ class ProbabilityService {
    * @returns {ProbabilityConfigFile}
    */
   sortConfig(config) {
-    return {
-      version: config.version,
-      dailyPayoutLimitPoints: config.dailyPayoutLimitPoints,
-      stages: config.stages.slice().sort(sortStages).map(function (stage) {
-        return {
-          stageNumber: stage.stageNumber,
-          turnoverThresholdPoints: stage.turnoverThresholdPoints,
-          lowTableWeight: stage.lowTableWeight,
-          highTableWeight: stage.highTableWeight,
-          prizes: stage.prizes.slice().sort(sortPrizes).map(clonePrize)
-        };
-      })
-    };
+    return this.runModel(function () {
+      return probabilityModel.sortConfig(config);
+    });
   }
 
   /**
@@ -301,34 +264,9 @@ class ProbabilityService {
    * @returns {ProbabilityConfigFile}
    */
   withLegacyDefaults(config) {
-    const dailyPayoutLimitPoints = config.dailyPayoutLimitPoints === undefined || config.dailyPayoutLimitPoints === null
-      ? 0
-      : config.dailyPayoutLimitPoints;
-
-    return {
-      version: config.version,
-      dailyPayoutLimitPoints: dailyPayoutLimitPoints,
-      stages: Array.isArray(config.stages) ? config.stages.map(function (stage) {
-        return {
-          stageNumber: stage.stageNumber,
-          turnoverThresholdPoints: stage.turnoverThresholdPoints,
-          lowTableWeight: stage.lowTableWeight,
-          highTableWeight: stage.highTableWeight,
-          prizes: Array.isArray(stage.prizes) ? stage.prizes.map(function (prize) {
-            return {
-              rewardCode: prize.rewardCode,
-              name: prize.name,
-              amountPoints: prize.amountPoints,
-              lowWeight: prize.lowWeight,
-              highWeight: prize.highWeight,
-              prizeWeight: prize.prizeWeight === undefined || prize.prizeWeight === null ? prize.highWeight : prize.prizeWeight,
-              dailyLimitWeight: prize.dailyLimitWeight === undefined || prize.dailyLimitWeight === null ? prize.lowWeight : prize.dailyLimitWeight,
-              sortOrder: prize.sortOrder
-            };
-          }) : stage.prizes
-        };
-      }) : config.stages
-    };
+    return this.runModel(function () {
+      return probabilityModel.withLegacyDefaults(config);
+    });
   }
 
   /**
@@ -339,19 +277,7 @@ class ProbabilityService {
    * @returns {number}
    */
   getPrizeWeightForTable(prize, table) {
-    if (table === 'low') {
-      return prize.lowWeight;
-    }
-
-    if (table === 'high') {
-      return prize.highWeight;
-    }
-
-    if (table === 'dailyLimit') {
-      return prize.dailyLimitWeight;
-    }
-
-    return prize.prizeWeight;
+    return probabilityModel.getPrizeWeightForTable(prize, table);
   }
 
   /**
@@ -361,26 +287,8 @@ class ProbabilityService {
    * @returns {void}
    */
   assertValidConfig(config) {
-    if (!Array.isArray(config.stages) || config.stages.length !== 5) {
-      throw HttpError.badRequest('Probability config must define exactly five stages.');
-    }
-
-    const stageNumbers = config.stages.map(function (stage) {
-      return stage.stageNumber;
-    });
-
-    if (new Set(stageNumbers).size !== 5 || ![1, 2, 3, 4, 5].every(function (stageNumber) {
-      return stageNumbers.includes(stageNumber);
-    })) {
-      throw HttpError.badRequest('Probability config stages must be numbered 1 through 5.');
-    }
-
-    if (!Number.isInteger(config.dailyPayoutLimitPoints)) {
-      throw HttpError.badRequest('Probability config daily payout limit must be an integer.');
-    }
-
-    config.stages.forEach((stage) => {
-      this.assertValidStage(stage);
+    this.runModel(function () {
+      probabilityModel.assertValidConfig(config);
     });
   }
 
@@ -391,39 +299,8 @@ class ProbabilityService {
    * @returns {void}
    */
   assertValidStage(stage) {
-    if (stage.turnoverThresholdPoints < 0 || stage.lowTableWeight < 0 || stage.highTableWeight < 0) {
-      throw HttpError.badRequest('Stage ' + stage.stageNumber + ' contains negative numeric values.');
-    }
-
-    const rewardCodes = stage.prizes.map(function (prize) {
-      return prize.rewardCode;
-    });
-
-    if (rewardCodes.length !== 5 || new Set(rewardCodes).size !== 5 || !REWARD_CODES.every(function (code) {
-      return rewardCodes.includes(code);
-    })) {
-      throw HttpError.badRequest('Stage ' + stage.stageNumber + ' must define rewards A through E.');
-    }
-
-    if (stage.lowTableWeight + stage.highTableWeight <= 0) {
-      throw HttpError.badRequest('Stage ' + stage.stageNumber + ' needs low/high table split weight.');
-    }
-
-    this.assertStageHasWeightedPrize(stage, 'lowWeight', 'low table');
-    this.assertStageHasWeightedPrize(stage, 'highWeight', 'high table');
-    this.assertStageHasWeightedPrize(stage, 'prizeWeight', 'prize table');
-    this.assertStageHasWeightedPrize(stage, 'dailyLimitWeight', 'dailyLimit table');
-
-    stage.prizes.forEach(function (prize) {
-      if (
-        prize.amountPoints < 0 ||
-        prize.lowWeight < 0 ||
-        prize.highWeight < 0 ||
-        prize.prizeWeight < 0 ||
-        prize.dailyLimitWeight < 0
-      ) {
-        throw HttpError.badRequest('Stage ' + stage.stageNumber + ' reward ' + prize.rewardCode + ' contains negative numeric values.');
-      }
+    this.runModel(function () {
+      probabilityModel.assertValidStage(stage);
     });
   }
 
@@ -436,81 +313,28 @@ class ProbabilityService {
    * @returns {void}
    */
   assertStageHasWeightedPrize(stage, weightKey, label) {
-    const hasWeightedPrize = stage.prizes.some(function (prize) {
-      return prize[weightKey] > 0;
+    this.runModel(function () {
+      probabilityModel.assertStageHasWeightedPrize(stage, weightKey, label);
     });
+  }
 
-    if (!hasWeightedPrize) {
-      throw HttpError.badRequest('Stage ' + stage.stageNumber + ' ' + label + ' needs at least one weighted prize.');
+  /**
+   * 把純模型錯誤轉成既有 API 錯誤格式。
+   *
+   * @param {Function} callback
+   * @returns {*}
+   */
+  runModel(callback) {
+    try {
+      return callback();
+    } catch (err) {
+      if (probabilityModel.isProbabilityModelError(err)) {
+        throw HttpError.badRequest(err.message);
+      }
+
+      throw err;
     }
   }
-}
-
-/**
- * 建立預設機率設定中的單一獎項。
- *
- * @param {string} rewardCode
- * @param {string} name
- * @param {number} amountPoints
- * @param {number} lowWeight
- * @param {number} highWeight
- * @param {number} prizeWeight
- * @param {number} dailyLimitWeight
- * @param {number} sortOrder
- * @returns {ProbabilityPrizeConfig}
- */
-function createDefaultPrize(rewardCode, name, amountPoints, lowWeight, highWeight, prizeWeight, dailyLimitWeight, sortOrder) {
-  return {
-    rewardCode: rewardCode,
-    name: name,
-    amountPoints: amountPoints,
-    lowWeight: lowWeight,
-    highWeight: highWeight,
-    prizeWeight: prizeWeight,
-    dailyLimitWeight: dailyLimitWeight,
-    sortOrder: sortOrder
-  };
-}
-
-/**
- * 依 stageNumber 由小到大排序階段設定。
- *
- * @param {ProbabilityStageConfig} left
- * @param {ProbabilityStageConfig} right
- * @returns {number}
- */
-function sortStages(left, right) {
-  return left.stageNumber - right.stageNumber;
-}
-
-/**
- * 依 sortOrder 由小到大排序獎項設定。
- *
- * @param {ProbabilityPrizeConfig} left
- * @param {ProbabilityPrizeConfig} right
- * @returns {number}
- */
-function sortPrizes(left, right) {
-  return left.sortOrder - right.sortOrder || left.rewardCode.localeCompare(right.rewardCode);
-}
-
-/**
- * 複製獎項設定，避免外部修改原始 config。
- *
- * @param {ProbabilityPrizeConfig} prize
- * @returns {ProbabilityPrizeConfig}
- */
-function clonePrize(prize) {
-  return {
-    rewardCode: prize.rewardCode,
-    name: prize.name,
-    amountPoints: prize.amountPoints,
-    lowWeight: prize.lowWeight,
-    highWeight: prize.highWeight,
-    prizeWeight: prize.prizeWeight,
-    dailyLimitWeight: prize.dailyLimitWeight,
-    sortOrder: prize.sortOrder
-  };
 }
 
 /**

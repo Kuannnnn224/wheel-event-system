@@ -17,10 +17,10 @@ class SpinsService {
    * 初始化抽獎 service，保存抽獎流程需要的 service 與 repository。
    *
    * @param {Object} options
-   * @param {Object} options.config
-   * @param {import('../db').Database} options.db
-   * @param {import('./probability-service')} options.probabilityService
-   * @param {import('./demo-token-service')} options.demoTokenService
+ * @param {Object} options.config
+ * @param {import('../db').Database} options.db
+ * @param {import('./probability-service')} options.probabilityService
+ * @param {import('./webview-session-service')} options.webviewSessionService
    * @param {import('../repositories/player-daily-progress-repository')} options.playerDailyProgressRepository
    * @param {import('../repositories/spin-records-repository')} options.spinRecordsRepository
    * @param {import('./award-overrides-service')} options.awardOverridesService
@@ -29,7 +29,7 @@ class SpinsService {
     this.config = options.config;
     this.db = options.db;
     this.probabilityService = options.probabilityService;
-    this.demoTokenService = options.demoTokenService;
+    this.webviewSessionService = options.webviewSessionService;
     this.playerDailyProgressRepository = options.playerDailyProgressRepository;
     this.spinRecordsRepository = options.spinRecordsRepository;
     this.awardOverridesService = options.awardOverridesService;
@@ -64,7 +64,7 @@ class SpinsService {
    */
   async realSpin(input) {
     const dto = this.parseRealSpinInput(input);
-    const player = await this.demoTokenService.validateToken(dto.token);
+    const player = await this.webviewSessionService.validateToken(dto.token);
     const businessDate = time.resolveCurrentBusinessDate(undefined, this.config.businessTimeZone);
 
     return this.db.withTransaction(async (tx) => {

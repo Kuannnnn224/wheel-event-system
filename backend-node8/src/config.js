@@ -95,11 +95,10 @@ const config = {
   jwtExpiresIn: readString('JWT_EXPIRES_IN', '8h'),
   adminUsername: readString('ADMIN_USERNAME', 'admin'),
   adminPassword: readString('ADMIN_PASSWORD', 'admin123'),
-  platformApiKey: readString('PLATFORM_API_KEY', ''),
 
   webviewBaseUrl: readString('WEBVIEW_BASE_URL', ''),
   webviewApiBaseUrl: readString('WEBVIEW_API_BASE_URL', '/api'),
-  demoTokenTtlMinutes: readNumber('DEMO_TOKEN_TTL_MINUTES', 30),
+  webviewSessionTtlMinutes: readNumber('WEBVIEW_SESSION_TTL_MINUTES', 30),
   probabilityConfigPath: resolvePath(readString('PROBABILITY_CONFIG_PATH', 'config/probability.json')),
   probabilityImportStoragePath: resolvePath(readString('PROBABILITY_IMPORT_STORAGE_PATH', 'storage/probability-imports')),
   frontendDistPath: resolvePath(readString('FRONTEND_DIST_PATH', 'public')),

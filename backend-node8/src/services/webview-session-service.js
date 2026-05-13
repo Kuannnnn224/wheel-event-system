@@ -6,17 +6,17 @@ const ids = require('../utils/ids');
 const time = require('../utils/time');
 
 /**
- * @typedef {Object} DemoTokenServiceOptions
+ * @typedef {Object} WebviewSessionServiceOptions
  * @property {Object} config
  * @property {import('../db').Database} db
- * @property {import('../repositories/demo-sessions-repository')} demoSessionsRepository
+ * @property {import('../repositories/webview-sessions-repository')} webviewSessionsRepository
  * @property {import('../repositories/players-repository')} [playersRepository]
  * @property {import('./players-service')} [playersService]
  * @property {import('./probability-service')} probabilityService
  */
 
 /**
- * @typedef {Object} CreateDemoSessionInput
+ * @typedef {Object} CreateWebviewSessionInput
  * @property {string} externalId
  * @property {number} turnoverPoints
  */
@@ -28,27 +28,27 @@ const time = require('../utils/time');
  */
 
 /**
- * 處理 demo token 生命週期與公開 webview session 狀態。
+ * 處理正式 webview session 生命週期與公開 webview 狀態。
  */
-class DemoTokenService {
+class WebviewSessionService {
   /**
-   * 初始化 demo token service，保存設定、DB 與 session/player 相依。
+   * 初始化 webview session service，保存設定、DB 與 session/player 相依。
    *
-   * @param {DemoTokenServiceOptions} options
+   * @param {WebviewSessionServiceOptions} options
    */
   constructor(options) {
     this.config = options.config;
-    this.db = options.db || options.demoSessionsRepository.db;
-    this.demoSessionsRepository = options.demoSessionsRepository;
+    this.db = options.db || options.webviewSessionsRepository.db;
+    this.webviewSessionsRepository = options.webviewSessionsRepository;
     this.playersRepository = options.playersRepository;
     this.playersService = options.playersService;
     this.probabilityService = options.probabilityService;
   }
 
   /**
-   * 建立 webview session、更新玩家進度並回傳 webview URL。
+   * 建立正式 webview session、更新玩家進度並回傳 webview URL。
    *
-   * @param {CreateDemoSessionInput|Object|null|undefined} input
+   * @param {CreateWebviewSessionInput|Object|null|undefined} input
    * @param {WebviewUrlContext} [context]
    * @returns {Promise<{ player: Object, token: string, expiresAt: number, webviewUrl: string }>}
    */
@@ -58,7 +58,7 @@ class DemoTokenService {
     const businessDate = time.resolveCurrentBusinessDate(undefined, this.config.businessTimeZone);
     const stageThresholds = await this.getStageThresholds();
     const token = ids.randomToken();
-    const ttlMinutes = Number(this.config.demoTokenTtlMinutes || 30);
+    const ttlMinutes = Number(this.config.webviewSessionTtlMinutes || 30);
     const expiresAt = time.unixTimestampSeconds() + ttlMinutes * 60;
 
     const session = await this.db.withTransaction(async (tx) => {
@@ -71,7 +71,7 @@ class DemoTokenService {
 
       await this.saveDailyProgressSnapshot(tx, player.id, businessDate, turnoverPoints, unlockedStage);
 
-      return this.demoSessionsRepository.withConnection(tx).create({
+      return this.webviewSessionsRepository.withConnection(tx).create({
         playerId: player.id,
         token: token,
         expiresAt: expiresAt
@@ -87,7 +87,7 @@ class DemoTokenService {
   }
 
   /**
-   * 驗證 webview token 是否存在且未過期。
+   * 驗證 webview session token 是否存在且未過期。
    *
    * @param {string} token
    * @returns {Promise<Object>}
@@ -109,7 +109,7 @@ class DemoTokenService {
   }
 
   /**
-   * 回傳 webview token 對應的玩家與進度狀態。
+   * 回傳 webview session token 對應的玩家與進度狀態。
    *
    * @param {string} token
    * @returns {Promise<Object>}
@@ -132,10 +132,10 @@ class DemoTokenService {
   }
 
   /**
-   * 解析平台建立 session 的輸入資料。
+   * 解析 app 建立 webview session 的輸入資料。
    *
-   * @param {CreateDemoSessionInput|Object|null|undefined} input
-   * @returns {CreateDemoSessionInput}
+   * @param {CreateWebviewSessionInput|Object|null|undefined} input
+   * @returns {CreateWebviewSessionInput}
    */
   parseCreateSessionInput(input) {
     const errors = [];
@@ -178,7 +178,7 @@ class DemoTokenService {
       return this.playersRepository.getOrCreateByExternalId(externalId);
     }
 
-    throw new Error('DemoTokenService requires player get-or-create support.');
+    throw new Error('WebviewSessionService requires player get-or-create support.');
   }
 
   /**
@@ -262,7 +262,7 @@ class DemoTokenService {
    */
   async getDailyProgress(playerId, businessDate) {
     if (!this.playersService || typeof this.playersService.getDailyProgress !== 'function') {
-      throw new Error('DemoTokenService requires PlayersService.getDailyProgress.');
+      throw new Error('WebviewSessionService requires PlayersService.getDailyProgress.');
     }
 
     return this.playersService.getDailyProgress(playerId, businessDate);
@@ -390,13 +390,13 @@ class DemoTokenService {
    * @returns {Promise<Object>}
    */
   async findValidSession(token) {
-    const session = await this.demoSessionsRepository.findByToken(token);
+    const session = await this.webviewSessionsRepository.findByToken(token);
     if (!session) {
-      throw HttpError.notFound('Demo session not found.');
+      throw HttpError.notFound('Webview session not found.');
     }
 
     if (session.expiresAt <= time.unixTimestampSeconds()) {
-      throw HttpError.unauthorized('Demo session expired.');
+      throw HttpError.unauthorized('Webview session expired.');
     }
 
     return session;
@@ -446,4 +446,4 @@ function normalizeOrigin(origin) {
   }
 }
 
-module.exports = DemoTokenService;
+module.exports = WebviewSessionService;

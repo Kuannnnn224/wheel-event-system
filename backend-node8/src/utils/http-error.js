@@ -44,6 +44,16 @@ class HttpError extends Error {
   }
 
   /**
+   * 建立 403 Forbidden 錯誤，通常用於環境或權限限制。
+   *
+   * @param {string} message
+   * @returns {HttpError}
+   */
+  static forbidden(message) {
+    return new HttpError(403, message);
+  }
+
+  /**
    * 建立 404 Not Found 錯誤，通常用於查無資料。
    *
    * @param {string} message

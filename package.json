@@ -6,9 +6,14 @@
     "db": "docker compose -p wheel-event up -d",
     "start": "npm --prefix backend-node8 start",
     "check": "npm --prefix backend-node8 run check",
+    "test:probability-model": "npm --prefix backend-node8 run test:probability-model",
     "check-db": "npm --prefix backend-node8 run check:db",
     "smoke:offline": "npm --prefix backend-node8 run smoke:offline",
     "smoke:http": "npm --prefix backend-node8 run smoke:http",
-    "verify": "npm run check && npm run smoke:offline && npm run check-db && npm run smoke:http"
+    "frontend:dev": "npm --prefix frontend run dev -- --host 0.0.0.0",
+    "frontend:build": "npm --prefix frontend run build",
+    "frontend:lint": "npm --prefix frontend run lint",
+    "frontend:test": "npm --prefix frontend run test",
+    "verify": "npm run check && npm run test:probability-model && npm run smoke:offline && npm run check-db && npm run smoke:http"
   }
 }

@@ -7,6 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "check": "node scripts/check-syntax.js",
+    "test:probability-model": "node scripts/test-probability-model.js",
     "check:db": "node scripts/check-db-schema.js",
     "smoke:offline": "node scripts/smoke-offline.js",
     "smoke:http": "node scripts/smoke-http.js"

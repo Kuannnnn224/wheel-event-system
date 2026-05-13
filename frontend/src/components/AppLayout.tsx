@@ -1,0 +1,154 @@
+import {
+  BarChartOutlined,
+  ClockCircleOutlined,
+  ControlOutlined,
+  ExperimentOutlined,
+  GiftOutlined,
+  LogoutOutlined,
+  PlayCircleOutlined,
+  SettingOutlined,
+  TeamOutlined,
+} from '@ant-design/icons';
+import { Button, Layout, Menu, Space, Tag, Typography } from 'antd';
+import type { ReactNode } from 'react';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { api } from '../api/client';
+import type { DailyReport } from '../api/types';
+
+const { Header, Sider, Content } = Layout;
+const LOCAL_TIME_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+interface AppLayoutProps {
+  children: ReactNode;
+  onLogout: () => void;
+}
+
+const primaryMenuItems = [
+  { key: '/spin-simulator', icon: <PlayCircleOutlined />, label: '抽獎模擬' },
+  { key: '/players', icon: <TeamOutlined />, label: '查詢玩家' },
+  { key: '/award-overrides', icon: <GiftOutlined />, label: '指定派獎' },
+  { key: '/reports', icon: <BarChartOutlined />, label: '報表統計' },
+  { key: '/bulk-simulation', icon: <ExperimentOutlined />, label: '多次模擬' },
+  { key: '/probability', icon: <SettingOutlined />, label: '機率設定' },
+  { key: '/webview-tool', icon: <ControlOutlined />, label: 'Webview 工具' },
+];
+
+function getLocalTimeParts(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: LOCAL_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+    hourCycle: 'h23',
+  }).formatToParts(date);
+
+  return Object.fromEntries(parts.map((part) => [part.type, part.value]));
+}
+
+function formatLocalDateTime(date = new Date()) {
+  const parts = getLocalTimeParts(date);
+  return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}:${parts.second}`;
+}
+
+function formatLocalDate(date = new Date()) {
+  const parts = getLocalTimeParts(date);
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
+export default function AppLayout({ children, onLogout }: AppLayoutProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [currentDateTime, setCurrentDateTime] = useState(() => formatLocalDateTime());
+  const [dailyReport, setDailyReport] = useState<DailyReport>();
+  const [dailyReportError, setDailyReportError] = useState(false);
+  const dailyLimitSummary = dailyReport?.dailyLimitActive
+    ? 'DailyLimit 已啟用 · 每分鐘刷新'
+    : dailyReport && dailyReport.dailyPayoutLimitPoints > 0
+      ? `上限 ${dailyReport.dailyPayoutLimitPoints.toLocaleString()} 點 · 每分鐘刷新`
+      : `${dailyReport?.totalSpins ?? 0} 次抽獎 · 每分鐘刷新`;
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setCurrentDateTime(formatLocalDateTime());
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadDailyReport() {
+      try {
+        const { data } = await api.get<DailyReport>('/reports/daily', {
+          params: { date: formatLocalDate() },
+        });
+
+        if (active) {
+          setDailyReport(data);
+          setDailyReportError(false);
+        }
+      } catch {
+        if (active) {
+          setDailyReportError(true);
+        }
+      }
+    }
+
+    void loadDailyReport();
+    const timer = window.setInterval(loadDailyReport, 60_000);
+
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, []);
+
+  return (
+    <Layout className="app-shell">
+      <Sider width={232} className="app-sider">
+        <div className="brand-block">
+          <div className="brand-mark">W</div>
+          <div className="brand-copy">
+            <Typography.Title level={4}>轉盤後控</Typography.Title>
+            <Typography.Text type="secondary">Wheel Admin</Typography.Text>
+          </div>
+        </div>
+        <Menu
+          className="app-menu"
+          mode="inline"
+          selectedKeys={[location.pathname]}
+          items={primaryMenuItems}
+          onClick={(item) => navigate(item.key)}
+        />
+        <div className="sidebar-footer">
+          <div className="sidebar-daily-card">
+            <span className="sidebar-daily-label">今日送出</span>
+            <strong>{dailyReportError ? '-' : `${(dailyReport?.totalAmountPoints ?? 0).toLocaleString()} 點`}</strong>
+            <span>{dailyReportError ? '讀取失敗' : dailyLimitSummary}</span>
+          </div>
+        </div>
+      </Sider>
+      <Layout className="app-main">
+        <Header className="app-header">
+          <Space size={12}>
+            <span className="header-clock">
+              <ClockCircleOutlined />
+              {currentDateTime}
+            </span>
+            <Tag color="processing">{LOCAL_TIME_ZONE}</Tag>
+            <Button icon={<LogoutOutlined />} onClick={onLogout}>
+              登出
+            </Button>
+          </Space>
+        </Header>
+        <Content className="app-content">{children}</Content>
+      </Layout>
+    </Layout>
+  );
+}

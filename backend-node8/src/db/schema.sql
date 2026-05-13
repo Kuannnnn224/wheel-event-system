@@ -75,16 +75,16 @@ CREATE TABLE IF NOT EXISTS award_override_rules (
   CONSTRAINT fk_award_override_rules_spin FOREIGN KEY (consumed_spin_record_id) REFERENCES spin_records (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS demo_sessions (
+CREATE TABLE IF NOT EXISTS webview_sessions (
   id varchar(36) NOT NULL,
   player_id varchar(255) NOT NULL,
   token varchar(128) NOT NULL,
   expires_at int unsigned NOT NULL,
   created_at int unsigned NOT NULL,
   PRIMARY KEY (id),
-  UNIQUE KEY uq_demo_sessions_token (token),
-  KEY idx_demo_sessions_player_id (player_id),
-  CONSTRAINT fk_demo_sessions_player FOREIGN KEY (player_id) REFERENCES players (id) ON DELETE CASCADE
+  UNIQUE KEY uq_webview_sessions_token (token),
+  KEY idx_webview_sessions_player_id (player_id),
+  CONSTRAINT fk_webview_sessions_player FOREIGN KEY (player_id) REFERENCES players (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS turnover_adjustments (

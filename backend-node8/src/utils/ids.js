@@ -13,7 +13,7 @@ function randomHex(bytes) {
 }
 
 /**
- * 產生 demo session 或下載連結使用的隨機 token。
+ * 產生 webview session 或下載連結使用的隨機 token。
  *
  * @returns {string}
  */

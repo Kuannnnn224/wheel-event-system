@@ -3,16 +3,15 @@
 const express = require('express');
 const multer = require('multer');
 const auth = require('../middleware/auth');
-const requirePlatformApiKey = require('../middleware/platform-api-key');
 const AuthRoutes = require('./auth-routes');
 const AwardOverridesRoutes = require('./award-overrides-routes');
-const DemoRoutes = require('./demo-routes');
 const PlayersRoutes = require('./players-routes');
 const ProbabilityRoutes = require('./probability-routes');
 const ProbabilityImportsRoutes = require('./probability-imports-routes');
 const ReportsRoutes = require('./reports-routes');
 const SimulationsRoutes = require('./simulations-routes');
 const SpinsRoutes = require('./spins-routes');
+const WebviewSessionRoutes = require('./webview-session-routes');
 
 /**
  * 建立 /api router，集中註冊所有 route module。
@@ -38,7 +37,7 @@ function createApiRouter(options) {
     new ProbabilityImportsRoutes(routeContext),
     new AwardOverridesRoutes(routeContext),
     new SpinsRoutes(routeContext),
-    new DemoRoutes(routeContext),
+    new WebviewSessionRoutes(routeContext),
     new ReportsRoutes(routeContext),
     new SimulationsRoutes(routeContext)
   ].forEach(function (routes) {
@@ -59,7 +58,6 @@ function createRouteContext(options) {
     config: options.config,
     container: options.container,
     requireAdmin: auth.requireAdmin(options.config),
-    requirePlatformApiKey: requirePlatformApiKey(options.config),
     upload: multer({
       storage: multer.memoryStorage(),
       limits: {
