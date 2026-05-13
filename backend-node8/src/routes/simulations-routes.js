@@ -3,10 +3,12 @@
 const AsyncHandler = require('../utils/async-handler');
 
 /**
- * Routes for probability simulation jobs.
+ * 機率模擬任務相關 routes。
  */
 class SimulationsRoutes {
   /**
+   * 初始化模擬 routes，保存 route context。
+   *
    * @param {{ container: import('../container'), requireAdmin: Function }} context
    */
   constructor(context) {
@@ -15,6 +17,8 @@ class SimulationsRoutes {
   }
 
   /**
+   * 把本模組的 API endpoint 掛到 Express router。
+   *
    * @param {Object} router
    * @returns {void}
    */

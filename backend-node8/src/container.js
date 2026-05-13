@@ -28,10 +28,12 @@ const SimulationsService = require('./services/simulations-service');
 const SpinsService = require('./services/spins-service');
 
 /**
- * Builds the class graph used by the Express runtime.
+ * 建立 Express runtime 需要的 class 相依關係圖。
  */
 class Container {
   /**
+   * 初始化所有 repository、service 與 controller 的相依關係。
+   *
    * @param {Object} config
    */
   constructor(config) {

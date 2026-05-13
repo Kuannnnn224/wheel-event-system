@@ -26,10 +26,12 @@ const time = require('../utils/time');
  */
 
 /**
- * Raw SQL repository for short-lived demo webview sessions.
+ * 短效 demo webview session 的 raw SQL repository。
  */
 class DemoSessionsRepository {
   /**
+   * 初始化 repository，保存 DB 連線。
+   *
    * @param {import('../db').DatabaseConnection} db
    */
   constructor(db) {
@@ -37,7 +39,7 @@ class DemoSessionsRepository {
   }
 
   /**
-   * Creates the same repository type against a transaction connection.
+   * 用 transaction connection 建立同型 repository。
    *
    * @param {import('../db').DatabaseConnection} db
    * @returns {DemoSessionsRepository}
@@ -47,6 +49,8 @@ class DemoSessionsRepository {
   }
 
   /**
+   * 寫入資料庫並回傳建立後的資料物件。
+   *
    * @param {{ playerId: string, token: string, expiresAt: number }} input
    * @returns {Promise<DemoSession>}
    */
@@ -72,6 +76,8 @@ class DemoSessionsRepository {
   }
 
   /**
+   * 從資料庫查詢符合條件的資料。
+   *
    * @param {string} token
    * @returns {Promise<DemoSession|null>}
    */
@@ -94,6 +100,8 @@ class DemoSessionsRepository {
   }
 
   /**
+   * 將資料庫 row 轉成程式內使用的 camelCase 物件。
+   *
    * @param {DemoSessionRow|null} row
    * @returns {DemoSession|null}
    */

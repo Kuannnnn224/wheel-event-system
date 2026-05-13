@@ -3,10 +3,12 @@
 const AsyncHandler = require('../utils/async-handler');
 
 /**
- * Routes for admin reports.
+ * 後控報表相關 routes。
  */
 class ReportsRoutes {
   /**
+   * 初始化報表 routes，保存 route context。
+   *
    * @param {{ container: import('../container'), requireAdmin: Function }} context
    */
   constructor(context) {
@@ -15,6 +17,8 @@ class ReportsRoutes {
   }
 
   /**
+   * 把本模組的 API endpoint 掛到 Express router。
+   *
    * @param {Object} router
    * @returns {void}
    */

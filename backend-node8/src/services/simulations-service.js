@@ -4,10 +4,12 @@ const HttpError = require('../utils/http-error');
 const ids = require('../utils/ids');
 
 /**
- * In-memory simulation job runner.
+ * 管理記憶體內的模擬任務執行狀態。
  */
 class SimulationsService {
   /**
+   * 初始化模擬 service，保存機率 service 並建立任務暫存區。
+   *
    * @param {{ probabilityService: import('./probability-service') }} options
    */
   constructor(options) {
@@ -16,6 +18,8 @@ class SimulationsService {
   }
 
   /**
+   * 建立模擬工作並排入背景執行。
+   *
    * @param {{ stageNumber: number|string, count: number|string }} input
    * @returns {Object}
    */
@@ -44,6 +48,8 @@ class SimulationsService {
   }
 
   /**
+   * 依 job id 取得模擬工作狀態。
+   *
    * @param {string} id
    * @returns {Object}
    */
@@ -58,6 +64,8 @@ class SimulationsService {
   }
 
   /**
+   * 執行大量抽獎模擬並累計結果。
+   *
    * @param {string} id
    * @returns {Promise<void>}
    */
@@ -132,6 +140,8 @@ class SimulationsService {
   }
 
   /**
+   * 解析建立類 API 的輸入資料。
+   *
    * @param {Object|null|undefined} input
    * @returns {{ stageNumber: number, count: number }}
    */
@@ -160,6 +170,8 @@ class SimulationsService {
 }
 
 /**
+ * 讓大量模擬工作釋放事件迴圈，避免阻塞 server。
+ *
  * @returns {Promise<void>}
  */
 function nextTick() {

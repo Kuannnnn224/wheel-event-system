@@ -3,10 +3,12 @@
 const AsyncHandler = require('../utils/async-handler');
 
 /**
- * Routes for public/admin demo webview sessions.
+ * public/admin demo webview session 相關 routes。
  */
 class DemoRoutes {
   /**
+   * 初始化 demo routes，保存 route context。
+   *
    * @param {{ container: import('../container'), requireAdmin: Function, requirePlatformApiKey: Function }} context
    */
   constructor(context) {
@@ -16,6 +18,8 @@ class DemoRoutes {
   }
 
   /**
+   * 把本模組的 API endpoint 掛到 Express router。
+   *
    * @param {Object} router
    * @returns {void}
    */

@@ -13,10 +13,12 @@ const STAGE_TEXT_PAIRS = [
 ];
 
 /**
- * Parses PM probability XLSX zip files into the runtime probability JSON shape.
+ * 將 PM 提供的機率 XLSX zip 解析成 runtime 使用的機率 JSON 格式。
  */
 class ProbabilityXlsxParser {
   /**
+   * 讀取 zip 內必要 XLSX 檔案，並轉交 workbook parser。
+   *
    * @param {Buffer} zipBuffer
    * @returns {Object}
    */
@@ -47,6 +49,8 @@ class ProbabilityXlsxParser {
   }
 
   /**
+   * 將六個 workbook 合併成後端使用的完整機率 JSON。
+   *
    * @param {Object} workbooks
    * @returns {Object}
    */
@@ -75,6 +79,8 @@ class ProbabilityXlsxParser {
   }
 
   /**
+   * 從 ZIP 檔案索引中取得必要檔案，缺少時丟出 parser 錯誤。
+   *
    * @param {Object} files
    * @param {string} fileName
    * @returns {Buffer}
@@ -89,6 +95,8 @@ class ProbabilityXlsxParser {
   }
 
   /**
+   * 從 config.xlsx 讀取各階段流水門檻與每日送出上限。
+   *
    * @param {Object} workbook
    * @returns {{ thresholds: Object, dailyPayoutLimitPoints: number }}
    */
@@ -123,6 +131,8 @@ class ProbabilityXlsxParser {
   }
 
   /**
+   * 組合指定階段的獎項點數與四種機率表權重。
+   *
    * @param {Object} workbooks
    * @param {number} stageNumber
    * @returns {Object[]}
@@ -148,6 +158,8 @@ class ProbabilityXlsxParser {
   }
 
   /**
+   * 從 config.xlsx 的 PrizeLV 分頁讀取 A-E 獎項名稱與點數。
+   *
    * @param {Object} workbook
    * @param {number} stageNumber
    * @returns {Object[]}
@@ -186,6 +198,8 @@ class ProbabilityXlsxParser {
   }
 
   /**
+   * 從 low/high/prize/dailyLimit workbook 讀取指定階段 A-E 權重。
+   *
    * @param {Object} workbook
    * @param {number} stageNumber
    * @param {string} tableName
@@ -213,6 +227,8 @@ class ProbabilityXlsxParser {
   }
 
   /**
+   * 從 weight.xlsx 讀取每個階段 low/high 分流權重。
+   *
    * @param {Object} workbook
    * @returns {Object}
    */
@@ -259,6 +275,8 @@ class ProbabilityXlsxParser {
   }
 
   /**
+   * 取得指定 worksheet 的 row array，並檢查 sheet 是否存在。
+   *
    * @param {Object} workbook
    * @param {string} sheetName
    * @returns {Array<Array<*>>}
@@ -278,6 +296,8 @@ class ProbabilityXlsxParser {
   }
 
   /**
+   * 從指定欄位往右尋找第一個數字，支援表格中間有文字欄位。
+   *
    * @param {Array<*>} row
    * @param {number} fromIndex
    * @param {string} label
@@ -295,6 +315,8 @@ class ProbabilityXlsxParser {
   }
 
   /**
+   * 確認必要數字存在，缺少時用 label 提示是哪個欄位。
+   *
    * @param {number|undefined} value
    * @param {string} label
    * @returns {number}
@@ -308,6 +330,8 @@ class ProbabilityXlsxParser {
   }
 
   /**
+   * 檢查輸入或狀態是否符合規則，不符合時丟出錯誤。
+   *
    * @param {Object} values
    * @param {string} label
    * @returns {void}
@@ -321,6 +345,8 @@ class ProbabilityXlsxParser {
   }
 
   /**
+   * 檢查輸入或狀態是否符合規則，不符合時丟出錯誤。
+   *
    * @param {Object} values
    * @param {string} label
    * @returns {void}
@@ -335,6 +361,8 @@ class ProbabilityXlsxParser {
 }
 
 /**
+ * 把工作表文字解析成 1 到 5 的階段編號。
+ *
  * @param {*} value
  * @returns {number|undefined}
  */
@@ -360,6 +388,8 @@ function parseStageNumber(value) {
 }
 
 /**
+ * 把任意儲存格值轉成可比對的乾淨字串。
+ *
  * @param {*} value
  * @returns {string}
  */
@@ -368,6 +398,8 @@ function normalizeText(value) {
 }
 
 /**
+ * 把數字或數字字串轉成整數點數。
+ *
  * @param {*} value
  * @returns {number|undefined}
  */
@@ -387,6 +419,8 @@ function parseNumber(value) {
 }
 
 /**
+ * 確認數值是整數，避免小數點數進入設定。
+ *
  * @param {number} value
  * @returns {number}
  */

@@ -1,10 +1,12 @@
 'use strict';
 
 /**
- * Error type consumed by the shared Express error middleware.
+ * 共用 Express 錯誤中間件會辨識的 HTTP 錯誤型別。
  */
 class HttpError extends Error {
   /**
+   * 建立 HTTP 錯誤物件，整理單筆或多筆錯誤訊息。
+   *
    * @param {number} statusCode
    * @param {string|string[]} message
    */
@@ -22,6 +24,8 @@ class HttpError extends Error {
   }
 
   /**
+   * 建立 400 Bad Request 錯誤，通常用於輸入驗證失敗。
+   *
    * @param {string|string[]} message
    * @returns {HttpError}
    */
@@ -30,6 +34,8 @@ class HttpError extends Error {
   }
 
   /**
+   * 建立 401 Unauthorized 錯誤，通常用於登入或 token 驗證失敗。
+   *
    * @param {string} message
    * @returns {HttpError}
    */
@@ -38,6 +44,8 @@ class HttpError extends Error {
   }
 
   /**
+   * 建立 404 Not Found 錯誤，通常用於查無資料。
+   *
    * @param {string} message
    * @returns {HttpError}
    */

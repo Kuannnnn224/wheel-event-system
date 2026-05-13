@@ -9,10 +9,12 @@
  */
 
 /**
- * Converts async controller methods into Express 4 middleware.
+ * 將 async controller method 包成 Express 4 可接收的 middleware。
  */
 class AsyncHandler {
   /**
+   * 包裝 async handler，讓 throw/reject 交給 Express error middleware。
+   *
    * @param {AsyncExpressHandler} handler
    * @returns {Function}
    */

@@ -6,10 +6,12 @@ const time = require('../utils/time');
 const AWARD_OVERRIDE_STATUSES = ['pending', 'consumed', 'cancelled'];
 
 /**
- * Handles admin-created award override rules.
+ * 處理後控建立的指定派獎規則。
  */
 class AwardOverridesService {
   /**
+   * 初始化指定派獎 service，保存玩家、抽獎紀錄與指定派獎 repository。
+   *
    * @param {Object} options
    * @param {Object} options.config
    * @param {import('../db').Database} options.db
@@ -26,6 +28,8 @@ class AwardOverridesService {
   }
 
   /**
+   * 列出今日指定派獎規則，可用狀態與玩家外部 ID 篩選。
+   *
    * @param {string|undefined} status
    * @param {string|undefined} externalId
    * @returns {Promise<Object[]>}
@@ -52,6 +56,8 @@ class AwardOverridesService {
   }
 
   /**
+   * 建立今日指定派獎規則，並避免已抽過或已有 pending 規則的階段重複建立。
+   *
    * @param {Object} input
    * @param {string|undefined} adminId
    * @returns {Promise<Object[]>}
@@ -97,6 +103,8 @@ class AwardOverridesService {
   }
 
   /**
+   * 取消今日仍在 pending 的指定派獎規則。
+   *
    * @param {string} id
    * @param {string|undefined} adminId
    * @returns {Promise<Object>}
@@ -113,6 +121,8 @@ class AwardOverridesService {
   }
 
   /**
+   * 查詢玩家今日指定階段是否有等待中的指定派獎規則。
+   *
    * @param {string} playerId
    * @param {string} businessDate
    * @param {number} stageNumber
@@ -124,6 +134,8 @@ class AwardOverridesService {
   }
 
   /**
+   * 真實抽獎成功後，把指定派獎規則標記為 consumed。
+   *
    * @param {Object} rule
    * @param {string} spinRecordId
    * @param {import('../db').DatabaseConnection} [tx]
@@ -134,6 +146,8 @@ class AwardOverridesService {
   }
 
   /**
+   * 解析建立類 API 的輸入資料。
+   *
    * @param {Object|null|undefined} input
    * @returns {{ externalId: string, stageNumbers: number[], reason: string|undefined }}
    */
@@ -177,6 +191,8 @@ class AwardOverridesService {
   }
 
   /**
+   * 檢查指定派獎狀態是否為 pending、consumed 或 cancelled。
+   *
    * @param {string} status
    * @returns {string}
    */
@@ -189,6 +205,8 @@ class AwardOverridesService {
   }
 
   /**
+   * 組合 pending 唯一鍵，用來避免同玩家同日同階段重複指定派獎。
+   *
    * @param {string} playerId
    * @param {string} businessDate
    * @param {number} stageNumber
@@ -199,6 +217,8 @@ class AwardOverridesService {
   }
 
   /**
+   * 把階段編號陣列格式化成錯誤訊息可讀的 LV 字串。
+   *
    * @param {number[]} stageNumbers
    * @returns {string}
    */

@@ -75,10 +75,12 @@ const DEFAULT_CONFIG = {
  */
 
 /**
- * File-backed probability config service used by spin simulation and later real spins.
+ * 管理檔案型機率設定，供抽獎模擬與真實抽獎共用。
  */
 class ProbabilityService {
   /**
+   * 初始化機率設定 service，保存 config 與機率 JSON 路徑。
+   *
    * @param {{ config: Object }} options
    */
   constructor(options) {
@@ -87,6 +89,8 @@ class ProbabilityService {
   }
 
   /**
+   * 讀取並正規化目前機率設定檔。
+   *
    * @returns {Promise<ProbabilityConfigFile>}
    */
   async getConfig() {
@@ -104,6 +108,8 @@ class ProbabilityService {
   }
 
   /**
+   * 取得前端需要的階段設定。
+   *
    * @returns {Promise<ProbabilityStageConfig[]>}
    */
   async getStages() {
@@ -112,6 +118,8 @@ class ProbabilityService {
   }
 
   /**
+   * 取得每日派獎上限點數。
+   *
    * @returns {Promise<number>}
    */
   async getDailyPayoutLimitPoints() {
@@ -120,6 +128,8 @@ class ProbabilityService {
   }
 
   /**
+   * 取得各階段流水門檻，供 webview 顯示進度。
+   *
    * @returns {Promise<Array<{ stageNumber: number, turnoverThresholdPoints: number }>>}
    */
   async getStageThresholds() {
@@ -133,6 +143,8 @@ class ProbabilityService {
   }
 
   /**
+   * 取得指定階段可抽獎用的機率設定。
+   *
    * @param {number} stageNumber
    * @returns {Promise<StageDrawConfig>}
    */
@@ -153,6 +165,8 @@ class ProbabilityService {
   }
 
   /**
+   * 依階段設定先選 low/high 表再抽獎項。
+   *
    * @param {StageDrawConfig} config
    * @param {Function} [rng]
    * @returns {DrawPrizeResult}
@@ -163,6 +177,8 @@ class ProbabilityService {
   }
 
   /**
+   * 直接使用指定機率表抽獎項。
+   *
    * @param {StageDrawConfig} config
    * @param {ProbabilityTable} table
    * @param {Function} [rng]
@@ -182,6 +198,8 @@ class ProbabilityService {
   }
 
   /**
+   * 依 stageNumber 抽出一般流程獎項。
+   *
    * @param {number} stageNumber
    * @param {Function} [rng]
    * @returns {Promise<DrawPrizeResult>}
@@ -191,6 +209,8 @@ class ProbabilityService {
   }
 
   /**
+   * 依 stageNumber 與指定表抽出獎項。
+   *
    * @param {number} stageNumber
    * @param {ProbabilityTable} table
    * @param {Function} [rng]
@@ -201,6 +221,8 @@ class ProbabilityService {
   }
 
   /**
+   * 正規化並寫入新的機率設定。
+   *
    * @param {ProbabilityConfigFile} config
    * @returns {Promise<ProbabilityStageConfig[]>}
    */
@@ -211,6 +233,8 @@ class ProbabilityService {
   }
 
   /**
+   * 補齊 legacy 欄位並排序機率設定。
+   *
    * @param {ProbabilityConfigFile} config
    * @returns {ProbabilityConfigFile}
    */
@@ -221,6 +245,8 @@ class ProbabilityService {
   }
 
   /**
+   * 確認機率設定檔存在，缺少時寫入預設值。
+   *
    * @returns {Promise<void>}
    */
   async ensureConfigFile() {
@@ -236,6 +262,8 @@ class ProbabilityService {
   }
 
   /**
+   * 把機率設定寫回 JSON 檔案。
+   *
    * @param {ProbabilityConfigFile} config
    * @returns {Promise<void>}
    */
@@ -245,6 +273,8 @@ class ProbabilityService {
   }
 
   /**
+   * 依階段與獎項順序整理機率設定。
+   *
    * @param {ProbabilityConfigFile} config
    * @returns {ProbabilityConfigFile}
    */
@@ -265,6 +295,8 @@ class ProbabilityService {
   }
 
   /**
+   * 替舊格式機率設定補上新版欄位預設值。
+   *
    * @param {ProbabilityConfigFile} config
    * @returns {ProbabilityConfigFile}
    */
@@ -300,6 +332,8 @@ class ProbabilityService {
   }
 
   /**
+   * 依機率表名稱取得獎項對應權重。
+   *
    * @param {ProbabilityPrizeConfig} prize
    * @param {ProbabilityTable} table
    * @returns {number}
@@ -321,6 +355,8 @@ class ProbabilityService {
   }
 
   /**
+   * 檢查完整機率設定是否可被後端使用。
+   *
    * @param {ProbabilityConfigFile} config
    * @returns {void}
    */
@@ -349,6 +385,8 @@ class ProbabilityService {
   }
 
   /**
+   * 檢查單一階段設定是否完整有效。
+   *
    * @param {ProbabilityStageConfig} stage
    * @returns {void}
    */
@@ -390,6 +428,8 @@ class ProbabilityService {
   }
 
   /**
+   * 確認指定權重欄位至少有一個獎項可被抽中。
+   *
    * @param {ProbabilityStageConfig} stage
    * @param {string} weightKey
    * @param {string} label
@@ -407,6 +447,8 @@ class ProbabilityService {
 }
 
 /**
+ * 建立預設機率設定中的單一獎項。
+ *
  * @param {string} rewardCode
  * @param {string} name
  * @param {number} amountPoints
@@ -431,6 +473,8 @@ function createDefaultPrize(rewardCode, name, amountPoints, lowWeight, highWeigh
 }
 
 /**
+ * 依 stageNumber 由小到大排序階段設定。
+ *
  * @param {ProbabilityStageConfig} left
  * @param {ProbabilityStageConfig} right
  * @returns {number}
@@ -440,6 +484,8 @@ function sortStages(left, right) {
 }
 
 /**
+ * 依 sortOrder 由小到大排序獎項設定。
+ *
  * @param {ProbabilityPrizeConfig} left
  * @param {ProbabilityPrizeConfig} right
  * @returns {number}
@@ -449,6 +495,8 @@ function sortPrizes(left, right) {
 }
 
 /**
+ * 複製獎項設定，避免外部修改原始 config。
+ *
  * @param {ProbabilityPrizeConfig} prize
  * @returns {ProbabilityPrizeConfig}
  */
@@ -466,6 +514,8 @@ function clonePrize(prize) {
 }
 
 /**
+ * 遞迴建立目標資料夾，確保後續寫檔可成功。
+ *
  * @param {string} dir
  * @returns {void}
  */

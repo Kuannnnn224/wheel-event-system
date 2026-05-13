@@ -8,6 +8,11 @@ let container = null;
 let server = null;
 let shuttingDown = false;
 
+/**
+ * 初始化 DI container、建立預設管理員，並啟動 HTTP server。
+ *
+ * @returns {Promise<void>}
+ */
 async function main() {
   container = new Container(config);
   await container.authService.ensureInitialAdmin();
@@ -24,6 +29,12 @@ async function main() {
   });
 }
 
+/**
+ * 收到系統訊號時優雅關閉 HTTP server。
+ *
+ * @param {string} signal
+ * @returns {void}
+ */
 function shutdown(signal) {
   if (shuttingDown) {
     return;
@@ -45,6 +56,12 @@ function shutdown(signal) {
   });
 }
 
+/**
+ * 關閉資料庫連線後結束 process。
+ *
+ * @param {number} exitCode
+ * @returns {void}
+ */
 function closeDatabaseAndExit(exitCode) {
   if (!container || !container.db) {
     process.exit(exitCode);

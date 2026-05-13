@@ -2,6 +2,12 @@
 
 const jwt = require('jsonwebtoken');
 
+/**
+ * 建立後控 JWT 驗證 middleware，通過後把 admin payload 放到 req.admin。
+ *
+ * @param {Object} config
+ * @returns {Function}
+ */
 function requireAdmin(config) {
   return function (req, res, next) {
     const token = extractBearerToken(req);
@@ -20,6 +26,12 @@ function requireAdmin(config) {
   };
 }
 
+/**
+ * 從 Authorization header 取出 Bearer token。
+ *
+ * @param {{ headers: Object }} req
+ * @returns {string}
+ */
 function extractBearerToken(req) {
   const authorization = req.headers.authorization || '';
   const parts = authorization.split(' ');

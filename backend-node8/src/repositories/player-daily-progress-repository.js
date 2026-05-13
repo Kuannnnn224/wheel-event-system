@@ -21,10 +21,12 @@ const ids = require('../utils/ids');
  */
 
 /**
- * Raw SQL repository for `player_daily_progress`.
+ * `player_daily_progress` 的 raw SQL repository。
  */
 class PlayerDailyProgressRepository {
   /**
+   * 初始化 repository，保存 DB 連線。
+   *
    * @param {import('../db').DatabaseConnection} db
    */
   constructor(db) {
@@ -32,6 +34,8 @@ class PlayerDailyProgressRepository {
   }
 
   /**
+   * 從資料庫查詢符合條件的資料。
+   *
    * @param {string} playerId
    * @param {string} businessDate
    * @returns {Promise<PlayerDailyProgress|null>}
@@ -51,7 +55,7 @@ class PlayerDailyProgressRepository {
   }
 
   /**
-   * Inserts or raises current progress values without lowering existing values.
+   * 寫入或提高目前進度，不會把既有進度往下調。
    *
    * @param {string} playerId
    * @param {string} businessDate
@@ -77,6 +81,8 @@ class PlayerDailyProgressRepository {
   }
 
   /**
+   * 將資料庫 row 轉成程式內使用的 camelCase 物件。
+   *
    * @param {PlayerDailyProgressRow|null} row
    * @returns {PlayerDailyProgress|null}
    */
@@ -95,6 +101,8 @@ class PlayerDailyProgressRepository {
   }
 
   /**
+   * 依是否傳入 transaction connection 決定要用哪個 DB 連線。
+   *
    * @param {import('../db').DatabaseConnection} [tx]
    * @returns {import('../db').DatabaseConnection}
    */

@@ -21,10 +21,12 @@
  */
 
 /**
- * Raw SQL repository for `admin_users`.
+ * `admin_users` 的 raw SQL repository。
  */
 class AdminUsersRepository {
   /**
+   * 初始化 repository，保存 DB 連線。
+   *
    * @param {import('../db').DatabaseConnection} db
    */
   constructor(db) {
@@ -32,6 +34,8 @@ class AdminUsersRepository {
   }
 
   /**
+   * 從資料庫查詢符合條件的資料。
+   *
    * @param {string} username
    * @returns {Promise<AdminUser|null>}
    */
@@ -50,6 +54,8 @@ class AdminUsersRepository {
   }
 
   /**
+   * 從資料庫查詢符合條件的資料。
+   *
    * @param {string} username
    * @returns {Promise<AdminUser|null>}
    */
@@ -68,6 +74,8 @@ class AdminUsersRepository {
   }
 
   /**
+   * 寫入資料庫並回傳建立後的資料物件。
+   *
    * @param {AdminUser} admin
    * @returns {Promise<AdminUser>}
    */
@@ -92,6 +100,8 @@ class AdminUsersRepository {
   }
 
   /**
+   * 將資料庫 row 轉成程式內使用的 camelCase 物件。
+   *
    * @param {AdminUserRow|null} row
    * @returns {AdminUser|null}
    */

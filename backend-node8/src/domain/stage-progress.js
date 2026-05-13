@@ -7,6 +7,8 @@
  */
 
 /**
+ * 依照玩家流水與各階段門檻，計算目前已解鎖的最高階段。
+ *
  * @param {number} turnoverPoints
  * @param {StageThreshold[]} stages
  * @returns {number}

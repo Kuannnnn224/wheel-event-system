@@ -3,10 +3,12 @@
 const AsyncHandler = require('../utils/async-handler');
 
 /**
- * Routes for spin simulation and public real spins.
+ * 抽獎模擬與 public 真實抽獎相關 routes。
  */
 class SpinsRoutes {
   /**
+   * 初始化抽獎 routes，保存 route context。
+   *
    * @param {{ container: import('../container'), requireAdmin: Function }} context
    */
   constructor(context) {
@@ -15,6 +17,8 @@ class SpinsRoutes {
   }
 
   /**
+   * 把本模組的 API endpoint 掛到 Express router。
+   *
    * @param {Object} router
    * @returns {void}
    */

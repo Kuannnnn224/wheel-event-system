@@ -3,10 +3,12 @@
 const AsyncHandler = require('../utils/async-handler');
 
 /**
- * Routes for admin authentication.
+ * 後控登入驗證相關 routes。
  */
 class AuthRoutes {
   /**
+   * 初始化登入驗證 routes，保存 route context。
+   *
    * @param {{ container: import('../container') }} context
    */
   constructor(context) {
@@ -14,6 +16,8 @@ class AuthRoutes {
   }
 
   /**
+   * 把本模組的 API endpoint 掛到 Express router。
+   *
    * @param {Object} router
    * @returns {void}
    */

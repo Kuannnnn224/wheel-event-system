@@ -1,5 +1,11 @@
 'use strict';
 
+/**
+ * 建立平台端 API key 驗證 middleware。
+ *
+ * @param {Object} config
+ * @returns {Function}
+ */
 function requirePlatformApiKey(config) {
   return function (req, res, next) {
     const expected = config.platformApiKey;

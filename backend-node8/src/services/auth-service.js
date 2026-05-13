@@ -34,10 +34,12 @@ const signJwt = util.promisify(jwt.sign);
  */
 
 /**
- * Handles admin identity flows and mirrors the previous auth behavior.
+ * 處理管理員身分流程，包含預設帳號建立、登入驗證與 JWT 簽發。
  */
 class AuthService {
   /**
+   * 初始化驗證 service，保存設定與管理員 repository。
+   *
    * @param {AuthServiceOptions} options
    */
   constructor(options) {
@@ -46,7 +48,7 @@ class AuthService {
   }
 
   /**
-   * Ensures the default admin account exists before the HTTP server starts.
+   * 在 HTTP server 啟動前確認預設管理員帳號存在。
    *
    * @returns {Promise<import('../repositories/admin-users-repository').AdminUser|null>}
    */
@@ -80,6 +82,8 @@ class AuthService {
   }
 
   /**
+   * 驗證管理員帳密並簽發 JWT token。
+   *
    * @param {LoginInput} input
    * @returns {Promise<LoginResult>}
    */
@@ -117,6 +121,8 @@ class AuthService {
   }
 
   /**
+   * 檢查登入輸入欄位是否符合 API 要求。
+   *
    * @param {LoginInput|Object|null|undefined} input
    * @returns {void}
    */

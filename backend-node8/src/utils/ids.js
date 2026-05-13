@@ -2,14 +2,30 @@
 
 const crypto = require('crypto');
 
+/**
+ * 產生指定 byte 數的隨機 hex 字串。
+ *
+ * @param {number} bytes
+ * @returns {string}
+ */
 function randomHex(bytes) {
   return crypto.randomBytes(bytes).toString('hex');
 }
 
+/**
+ * 產生 demo session 或下載連結使用的隨機 token。
+ *
+ * @returns {string}
+ */
 function randomToken() {
   return randomHex(32);
 }
 
+/**
+ * 產生近似 UUID 格式的隨機 ID。
+ *
+ * @returns {string}
+ */
 function pseudoUuid() {
   const hex = randomHex(16);
   return [

@@ -26,10 +26,12 @@ const DIFF_FIELD_LABELS = {
 };
 
 /**
- * Handles probability import upload preview, apply, and download links.
+ * 處理機率檔匯入的上傳、預覽、套用與下載連結。
  */
 class ProbabilityImportsService {
   /**
+   * 初始化機率匯入 service，保存檔案路徑、parser 與機率設定 service。
+   *
    * @param {{ config: Object, probabilityService: import('./probability-service') }} options
    */
   constructor(options) {
@@ -41,6 +43,8 @@ class ProbabilityImportsService {
   }
 
   /**
+   * 解析上傳 ZIP 並和目前機率設定產生差異預覽。
+   *
    * @param {{ buffer: Buffer, originalname: string, size: number }} file
    * @returns {Promise<Object>}
    */
@@ -58,6 +62,8 @@ class ProbabilityImportsService {
   }
 
   /**
+   * 套用先前上傳的機率 ZIP，覆寫目前機率設定。
+   *
    * @param {string} uploadId
    * @returns {Promise<Object>}
    */
@@ -86,6 +92,8 @@ class ProbabilityImportsService {
   }
 
   /**
+   * 列出已暫存的機率匯入紀錄。
+   *
    * @returns {Promise<Object[]>}
    */
   async listImportUploads() {
@@ -107,6 +115,8 @@ class ProbabilityImportsService {
   }
 
   /**
+   * 依匯入 id 取得暫存 ZIP 檔與 metadata。
+   *
    * @param {string} uploadId
    * @returns {Promise<Object>}
    */
@@ -125,6 +135,8 @@ class ProbabilityImportsService {
   }
 
   /**
+   * 產生短效下載 token，避免直接暴露檔案路徑。
+   *
    * @param {string} uploadId
    * @returns {Promise<Object>}
    */
@@ -145,6 +157,8 @@ class ProbabilityImportsService {
   }
 
   /**
+   * 依短效 token 找回可下載的機率 ZIP 檔。
+   *
    * @param {string} token
    * @returns {Promise<Object>}
    */
@@ -160,6 +174,8 @@ class ProbabilityImportsService {
   }
 
   /**
+   * 驗證並解析上傳的機率 ZIP buffer。
+   *
    * @param {{ buffer: Buffer, originalname: string }} file
    * @returns {Object}
    */
@@ -181,6 +197,8 @@ class ProbabilityImportsService {
   }
 
   /**
+   * 把上傳 ZIP 與 metadata 寫入暫存目錄。
+   *
    * @param {{ buffer: Buffer, originalname: string, size: number }} file
    * @returns {Promise<Object>}
    */
@@ -203,6 +221,8 @@ class ProbabilityImportsService {
   }
 
   /**
+   * 比較目前與新機率設定，產生前端可顯示的 diff。
+   *
    * @param {Object} current
    * @param {Object} proposed
    * @returns {Object[]}
@@ -269,6 +289,8 @@ class ProbabilityImportsService {
   }
 
   /**
+   * 在欄位值變更時新增一筆 diff item。
+   *
    * @param {Object[]} diff
    * @param {number} stageNumber
    * @param {string|undefined} rewardCode
@@ -294,6 +316,8 @@ class ProbabilityImportsService {
   }
 
   /**
+   * 產生 diff 欄位在前端顯示用的中文標籤。
+   *
    * @param {number} stageNumber
    * @param {string|undefined} rewardCode
    * @param {string} field
@@ -315,6 +339,8 @@ class ProbabilityImportsService {
 }
 
 /**
+ * 遞迴建立目標資料夾，確保後續寫檔可成功。
+ *
  * @param {string} dir
  * @returns {void}
  */

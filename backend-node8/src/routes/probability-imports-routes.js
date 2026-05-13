@@ -3,10 +3,12 @@
 const AsyncHandler = require('../utils/async-handler');
 
 /**
- * Routes for probability XLSX zip import workflows.
+ * 機率 XLSX zip 匯入流程相關 routes。
  */
 class ProbabilityImportsRoutes {
   /**
+   * 初始化機率匯入 routes，保存 route context。
+   *
    * @param {{ container: import('../container'), requireAdmin: Function, upload: Object }} context
    */
   constructor(context) {
@@ -16,6 +18,8 @@ class ProbabilityImportsRoutes {
   }
 
   /**
+   * 把本模組的 API endpoint 掛到 Express router。
+   *
    * @param {Object} router
    * @returns {void}
    */

@@ -30,10 +30,12 @@ const time = require('../utils/time');
  */
 
 /**
- * Raw SQL repository for `spin_records`.
+ * `spin_records` 的 raw SQL repository。
  */
 class SpinRecordsRepository {
   /**
+   * 初始化 repository，保存 DB 連線。
+   *
    * @param {import('../db').DatabaseConnection} db
    */
   constructor(db) {
@@ -41,6 +43,8 @@ class SpinRecordsRepository {
   }
 
   /**
+   * 從資料庫查詢符合條件的資料。
+   *
    * @param {string} playerId
    * @param {string} businessDate
    * @returns {Promise<SpinRecord[]>}
@@ -61,6 +65,8 @@ class SpinRecordsRepository {
   }
 
   /**
+   * 從資料庫查詢符合條件的資料。
+   *
    * @param {string} playerId
    * @param {string} businessDate
    * @param {number[]} stageNumbers
@@ -90,6 +96,8 @@ class SpinRecordsRepository {
   }
 
   /**
+   * 從資料庫彙總指定條件的數值。
+   *
    * @param {string} businessDate
    * @param {import('../db').DatabaseConnection} [tx]
    * @returns {Promise<number>}
@@ -108,6 +116,8 @@ class SpinRecordsRepository {
   }
 
   /**
+   * 寫入資料庫並回傳建立後的資料物件。
+   *
    * @param {Object} input
    * @param {string} input.playerId
    * @param {string} input.businessDate
@@ -155,6 +165,8 @@ class SpinRecordsRepository {
   }
 
   /**
+   * 將資料庫 row 轉成程式內使用的 camelCase 物件。
+   *
    * @param {SpinRecordRow} row
    * @returns {SpinRecord}
    */
@@ -173,6 +185,8 @@ class SpinRecordsRepository {
   }
 
   /**
+   * 依是否傳入 transaction connection 決定要用哪個 DB 連線。
+   *
    * @param {import('../db').DatabaseConnection} [tx]
    * @returns {import('../db').DatabaseConnection}
    */

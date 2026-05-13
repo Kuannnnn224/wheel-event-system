@@ -7,7 +7,7 @@
  */
 
 /**
- * Picks one weighted item using the same roll-down behavior as the previous service.
+ * 提供權重抽選工具，沿用既有的 roll-down 抽選行為。
  *
  * @param {Array<*>} items
  * @param {WeightSelector} getWeight
@@ -41,6 +41,8 @@ function pickWeightedItem(items, getWeight, rng) {
 }
 
 /**
+ * 依 low/high 權重決定本次抽獎使用哪張表。
+ *
  * @param {number} lowWeight
  * @param {number} highWeight
  * @param {Function} [rng]

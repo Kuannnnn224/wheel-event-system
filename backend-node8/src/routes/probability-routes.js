@@ -3,10 +3,12 @@
 const AsyncHandler = require('../utils/async-handler');
 
 /**
- * Routes for probability config inspection.
+ * 機率設定檢視相關 routes。
  */
 class ProbabilityRoutes {
   /**
+   * 初始化機率設定 routes，保存 route context。
+   *
    * @param {{ container: import('../container'), requireAdmin: Function }} context
    */
   constructor(context) {
@@ -15,6 +17,8 @@ class ProbabilityRoutes {
   }
 
   /**
+   * 把本模組的 API endpoint 掛到 Express router。
+   *
    * @param {Object} router
    * @returns {void}
    */
@@ -26,6 +30,8 @@ class ProbabilityRoutes {
 }
 
 /**
+ * 拒絕舊版不再支援的 probability stages 寫入路由。
+ *
  * @returns {Function}
  */
 function probabilityStagesForbidden() {

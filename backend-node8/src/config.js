@@ -7,6 +7,13 @@ const rootDir = path.resolve(__dirname, '..');
 
 dotenv.config({ path: path.join(rootDir, '.env') });
 
+/**
+ * 讀取字串型環境變數，空值時回傳預設值。
+ *
+ * @param {string} name
+ * @param {string} fallback
+ * @returns {string}
+ */
 function readString(name, fallback) {
   const value = process.env[name];
   if (value === undefined || value === null || String(value).trim() === '') {
@@ -16,17 +23,37 @@ function readString(name, fallback) {
   return String(value).trim();
 }
 
+/**
+ * 讀取數字型環境變數，無法解析時回傳預設值。
+ *
+ * @param {string} name
+ * @param {number} fallback
+ * @returns {number}
+ */
 function readNumber(name, fallback) {
   const raw = readString(name, '');
   const parsed = Number(raw);
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+/**
+ * 讀取 port 設定，避免 0 或負數造成隨機監聽埠。
+ *
+ * @param {string} name
+ * @param {number} fallback
+ * @returns {number}
+ */
 function readPort(name, fallback) {
   const parsed = readNumber(name, fallback);
   return parsed > 0 ? parsed : fallback;
 }
 
+/**
+ * 讀取逗號分隔的環境變數清單。
+ *
+ * @param {string} name
+ * @returns {string[]}
+ */
 function readList(name) {
   const raw = readString(name, '');
   if (!raw) {
@@ -38,6 +65,12 @@ function readList(name) {
   }).filter(Boolean);
 }
 
+/**
+ * 將相對路徑轉成以 backend-node8 為基準的絕對路徑。
+ *
+ * @param {string} value
+ * @returns {string}
+ */
 function resolvePath(value) {
   return path.isAbsolute(value) ? value : path.resolve(rootDir, value);
 }

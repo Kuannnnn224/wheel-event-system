@@ -4,10 +4,12 @@ const HttpError = require('../utils/http-error');
 const time = require('../utils/time');
 
 /**
- * Handles admin report endpoints.
+ * 處理後控報表查詢需要的資料整理。
  */
 class ReportsService {
   /**
+   * 初始化報表 service，保存報表與玩家 repository。
+   *
    * @param {Object} options
    * @param {import('../repositories/reports-repository')} options.reportsRepository
    * @param {import('./players-service')} options.playersService
@@ -20,6 +22,8 @@ class ReportsService {
   }
 
   /**
+   * 產生單日報表。
+   *
    * @param {string} date
    * @returns {Promise<Object>}
    */
@@ -40,6 +44,8 @@ class ReportsService {
   }
 
   /**
+   * 產生日期區間報表。
+   *
    * @param {string} startDate
    * @param {string} endDate
    * @returns {Promise<Object>}
@@ -60,6 +66,8 @@ class ReportsService {
   }
 
   /**
+   * 產生指定玩家的區間報表。
+   *
    * @param {string} externalId
    * @param {string} startDate
    * @param {string} endDate
@@ -92,6 +100,8 @@ class ReportsService {
   }
 
   /**
+   * 彙總抽獎紀錄成報表統計。
+   *
    * @param {Object[]} spins
    * @returns {Object}
    */
@@ -127,6 +137,8 @@ class ReportsService {
   }
 
   /**
+   * 解析報表起訖日期。
+   *
    * @param {string} startDate
    * @param {string} endDate
    * @returns {{ startDate: string, endDate: string }}
@@ -146,6 +158,8 @@ class ReportsService {
   }
 
   /**
+   * 檢查報表日期格式。
+   *
    * @param {string|undefined} value
    * @param {string} fieldName
    * @returns {string}

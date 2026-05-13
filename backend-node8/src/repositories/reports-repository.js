@@ -1,10 +1,12 @@
 'use strict';
 
 /**
- * Read-only report repository for spin and daily progress ranges.
+ * 查詢抽獎紀錄與每日進度區間的唯讀報表 repository。
  */
 class ReportsRepository {
   /**
+   * 初始化 repository，保存 DB 連線。
+   *
    * @param {import('../db').DatabaseConnection} db
    */
   constructor(db) {
@@ -12,6 +14,8 @@ class ReportsRepository {
   }
 
   /**
+   * 從資料庫查詢符合條件的資料。
+   *
    * @param {string} startDate
    * @param {string} endDate
    * @returns {Promise<Object[]>}
@@ -31,6 +35,8 @@ class ReportsRepository {
   }
 
   /**
+   * 從資料庫查詢符合條件的資料。
+   *
    * @param {string} playerId
    * @param {string} startDate
    * @param {string} endDate
@@ -51,6 +57,8 @@ class ReportsRepository {
   }
 
   /**
+   * 從資料庫查詢符合條件的資料。
+   *
    * @param {string} playerId
    * @param {string} startDate
    * @param {string} endDate
@@ -72,6 +80,8 @@ class ReportsRepository {
 }
 
 /**
+ * 將 spin_records row 轉成報表 service 使用的物件。
+ *
  * @param {Object} row
  * @returns {Object}
  */
@@ -90,6 +100,8 @@ function mapSpinRow(row) {
 }
 
 /**
+ * 將 player_daily_progress row 轉成報表 service 使用的物件。
+ *
  * @param {Object} row
  * @returns {Object}
  */

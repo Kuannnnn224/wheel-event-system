@@ -3,10 +3,12 @@
 const AsyncHandler = require('../utils/async-handler');
 
 /**
- * Routes for player admin lookup and progress inspection.
+ * 後控玩家查詢與進度檢視相關 routes。
  */
 class PlayersRoutes {
   /**
+   * 初始化玩家 routes，保存 route context。
+   *
    * @param {{ container: import('../container'), requireAdmin: Function }} context
    */
   constructor(context) {
@@ -15,6 +17,8 @@ class PlayersRoutes {
   }
 
   /**
+   * 把本模組的 API endpoint 掛到 Express router。
+   *
    * @param {Object} router
    * @returns {void}
    */

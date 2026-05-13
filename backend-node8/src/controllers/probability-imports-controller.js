@@ -4,10 +4,12 @@ const path = require('path');
 const HttpError = require('../utils/http-error');
 
 /**
- * Express controller for probability XLSX zip imports.
+ * 機率 XLSX zip 匯入 API 的 Express controller。
  */
 class ProbabilityImportsController {
   /**
+   * 初始化機率匯入 controller，保存機率匯入 service。
+   *
    * @param {import('../services/probability-imports-service')} probabilityImportsService
    */
   constructor(probabilityImportsService) {
@@ -15,6 +17,8 @@ class ProbabilityImportsController {
   }
 
   /**
+   * 處理機率 ZIP 預覽 request，回傳 diff 與暫存資訊。
+   *
    * @param {{ file?: Object }} req
    * @param {{ json: Function }} res
    * @returns {Promise<void>}
@@ -28,6 +32,8 @@ class ProbabilityImportsController {
   }
 
   /**
+   * 處理機率 ZIP 套用 request，覆寫目前機率設定。
+   *
    * @param {{ body?: Object }} req
    * @param {{ json: Function }} res
    * @returns {Promise<void>}
@@ -37,6 +43,8 @@ class ProbabilityImportsController {
   }
 
   /**
+   * 回傳已上傳過的機率 ZIP 清單。
+   *
    * @param {Object} _req
    * @param {{ json: Function }} res
    * @returns {Promise<void>}
@@ -46,6 +54,8 @@ class ProbabilityImportsController {
   }
 
   /**
+   * 產生機率 ZIP 下載用的短效 token。
+   *
    * @param {{ params: Object }} req
    * @param {{ json: Function }} res
    * @returns {Promise<void>}
@@ -55,6 +65,8 @@ class ProbabilityImportsController {
   }
 
   /**
+   * 使用短效 token 下載機率 ZIP。
+   *
    * @param {{ params: Object }} req
    * @param {Object} res
    * @returns {Promise<void>}
@@ -65,6 +77,8 @@ class ProbabilityImportsController {
   }
 
   /**
+   * 使用匯入 id 下載機率 ZIP。
+   *
    * @param {{ params: Object }} req
    * @param {Object} res
    * @returns {Promise<void>}
@@ -75,6 +89,8 @@ class ProbabilityImportsController {
   }
 
   /**
+   * 設定下載 header 並串流回傳 ZIP 檔。
+   *
    * @param {Object} res
    * @param {{ path: string, metadata: Object }} file
    * @returns {Promise<void>}

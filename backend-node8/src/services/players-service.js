@@ -23,10 +23,12 @@ const time = require('../utils/time');
  */
 
 /**
- * Handles admin player lookup and current-day progress aggregation.
+ * 處理後控玩家查詢與當日進度彙整。
  */
 class PlayersService {
   /**
+   * 初始化玩家 service，保存玩家、進度與抽獎紀錄 repository。
+   *
    * @param {PlayersServiceOptions} options
    */
   constructor(options) {
@@ -37,6 +39,8 @@ class PlayersService {
   }
 
   /**
+   * 列出玩家清單並限制最大筆數。
+   *
    * @param {string|undefined} rawLimit
    * @returns {Promise<Object[]>}
    */
@@ -46,6 +50,8 @@ class PlayersService {
   }
 
   /**
+   * 依平台玩家 ID 查詢玩家。
+   *
    * @param {string} externalId
    * @returns {Promise<Object|null>}
    */
@@ -54,6 +60,8 @@ class PlayersService {
   }
 
   /**
+   * 依平台玩家 ID 查詢或建立玩家。
+   *
    * @param {string} externalId
    * @param {import('../db').DatabaseConnection} [tx]
    * @returns {Promise<Object>}
@@ -63,6 +71,8 @@ class PlayersService {
   }
 
   /**
+   * 依內部玩家 id 查詢玩家。
+   *
    * @param {string} id
    * @returns {Promise<Object>}
    */
@@ -76,6 +86,8 @@ class PlayersService {
   }
 
   /**
+   * 取得玩家當日公開進度資料。
+   *
    * @param {string} playerId
    * @param {string|undefined} date
    * @returns {Promise<DailyProgressResult>}
@@ -102,6 +114,8 @@ class PlayersService {
   }
 
   /**
+   * 解析列表 limit，避免過大查詢。
+   *
    * @param {string|undefined} rawLimit
    * @returns {number}
    */

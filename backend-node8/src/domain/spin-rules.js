@@ -1,6 +1,8 @@
 'use strict';
 
 /**
+ * 驗證真實抽獎是否符合解鎖與依序抽獎規則。
+ *
  * @param {{ requestedStage: number, unlockedStage: number, playedStages: number[] }} input
  * @returns {{ allowed: boolean, reason?: string }}
  */

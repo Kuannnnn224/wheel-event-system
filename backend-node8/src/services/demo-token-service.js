@@ -28,10 +28,12 @@ const time = require('../utils/time');
  */
 
 /**
- * Handles demo token lifecycle and public webview session state.
+ * 處理 demo token 生命週期與公開 webview session 狀態。
  */
 class DemoTokenService {
   /**
+   * 初始化 demo token service，保存設定、DB 與 session/player 相依。
+   *
    * @param {DemoTokenServiceOptions} options
    */
   constructor(options) {
@@ -44,6 +46,8 @@ class DemoTokenService {
   }
 
   /**
+   * 建立 webview session、更新玩家進度並回傳 webview URL。
+   *
    * @param {CreateDemoSessionInput|Object|null|undefined} input
    * @param {WebviewUrlContext} [context]
    * @returns {Promise<{ player: Object, token: string, expiresAt: number, webviewUrl: string }>}
@@ -83,6 +87,8 @@ class DemoTokenService {
   }
 
   /**
+   * 驗證 webview token 是否存在且未過期。
+   *
    * @param {string} token
    * @returns {Promise<Object>}
    */
@@ -92,6 +98,8 @@ class DemoTokenService {
   }
 
   /**
+   * 回傳 webview 前端可公開讀取的 API 設定。
+   *
    * @returns {{ apiBaseUrl: string }}
    */
   getClientConfig() {
@@ -101,6 +109,8 @@ class DemoTokenService {
   }
 
   /**
+   * 回傳 webview token 對應的玩家與進度狀態。
+   *
    * @param {string} token
    * @returns {Promise<Object>}
    */
@@ -122,6 +132,8 @@ class DemoTokenService {
   }
 
   /**
+   * 解析平台建立 session 的輸入資料。
+   *
    * @param {CreateDemoSessionInput|Object|null|undefined} input
    * @returns {CreateDemoSessionInput}
    */
@@ -152,6 +164,8 @@ class DemoTokenService {
   }
 
   /**
+   * 依 externalId 查詢玩家，沒有時建立新玩家。
+   *
    * @param {string} externalId
    * @returns {Promise<Object>}
    */
@@ -168,6 +182,8 @@ class DemoTokenService {
   }
 
   /**
+   * 取得各階段流水門檻，供 webview 顯示進度。
+   *
    * @returns {Promise<Array<{ stageNumber: number, turnoverThresholdPoints: number }>>}
    */
   async getStageThresholds() {
@@ -185,6 +201,8 @@ class DemoTokenService {
   }
 
   /**
+   * 查詢玩家指定業務日期的進度快照。
+   *
    * @param {import('../db').DatabaseConnection} db
    * @param {string} playerId
    * @param {string} businessDate
@@ -212,6 +230,8 @@ class DemoTokenService {
   }
 
   /**
+   * 寫入或提高玩家當日流水與解鎖階段。
+   *
    * @param {import('../db').DatabaseConnection} db
    * @param {string} playerId
    * @param {string} businessDate
@@ -234,6 +254,8 @@ class DemoTokenService {
   }
 
   /**
+   * 取得玩家當日公開進度資料。
+   *
    * @param {string} playerId
    * @param {string} businessDate
    * @returns {Promise<Object>}
@@ -247,6 +269,8 @@ class DemoTokenService {
   }
 
   /**
+   * 把內部進度資料轉成前端可用格式。
+   *
    * @param {Object} progress
    * @returns {Object}
    */
@@ -272,6 +296,8 @@ class DemoTokenService {
   }
 
   /**
+   * 把階段設定轉成 webview 可顯示格式。
+   *
    * @param {Object[]} stages
    * @returns {Object[]}
    */
@@ -293,6 +319,8 @@ class DemoTokenService {
   }
 
   /**
+   * 決定產生 webview URL 時使用的 base URL。
+   *
    * @param {WebviewUrlContext} context
    * @returns {string}
    */
@@ -311,6 +339,8 @@ class DemoTokenService {
   }
 
   /**
+   * 決定 webview 呼叫 API 時使用的 base URL。
+   *
    * @returns {string}
    */
   resolveWebviewApiBaseUrl() {
@@ -318,6 +348,8 @@ class DemoTokenService {
   }
 
   /**
+   * 從 request context 推出目前請求來源。
+   *
    * @param {WebviewUrlContext} context
    * @returns {string|undefined}
    */
@@ -339,6 +371,8 @@ class DemoTokenService {
   }
 
   /**
+   * 把 base URL 與 token 組成完整 webview 連結。
+   *
    * @param {string} baseUrl
    * @param {string} token
    * @returns {string}
@@ -350,6 +384,8 @@ class DemoTokenService {
   }
 
   /**
+   * 查詢 token session 並確認尚未過期。
+   *
    * @param {string} token
    * @returns {Promise<Object>}
    */
@@ -368,6 +404,8 @@ class DemoTokenService {
 }
 
 /**
+ * 依流水點數計算玩家目前解鎖到哪個階段。
+ *
  * @param {number} turnoverPoints
  * @param {Array<{ stageNumber: number, turnoverThresholdPoints: number }>} stages
  * @returns {number}
@@ -381,6 +419,8 @@ function calculateUnlockedStage(turnoverPoints, stages) {
 }
 
 /**
+ * 整理設定字串，將 undefined 或空白值轉成空字串。
+ *
  * @param {string|undefined} value
  * @returns {string}
  */
@@ -389,6 +429,8 @@ function normalizeConfigString(value) {
 }
 
 /**
+ * 解析並正規化 origin，只保留協定、網域與 port。
+ *
  * @param {string|undefined} origin
  * @returns {string|undefined}
  */

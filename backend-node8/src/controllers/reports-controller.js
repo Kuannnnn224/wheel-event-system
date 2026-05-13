@@ -1,10 +1,12 @@
 'use strict';
 
 /**
- * Express controller for report endpoints.
+ * 報表 API 的 Express controller。
  */
 class ReportsController {
   /**
+   * 初始化報表 controller，保存報表 service。
+   *
    * @param {import('../services/reports-service')} reportsService
    */
   constructor(reportsService) {
@@ -12,6 +14,8 @@ class ReportsController {
   }
 
   /**
+   * 處理單日報表查詢 request。
+   *
    * @param {{ query: Object }} req
    * @param {{ json: Function }} res
    * @returns {Promise<void>}
@@ -21,6 +25,8 @@ class ReportsController {
   }
 
   /**
+   * 處理日期區間報表查詢 request。
+   *
    * @param {{ query: Object }} req
    * @param {{ json: Function }} res
    * @returns {Promise<void>}
@@ -30,6 +36,8 @@ class ReportsController {
   }
 
   /**
+   * 處理指定玩家報表查詢 request。
+   *
    * @param {{ query: Object }} req
    * @param {{ json: Function }} res
    * @returns {Promise<void>}

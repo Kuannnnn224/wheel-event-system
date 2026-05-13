@@ -8,6 +8,12 @@ const createApiRouter = require('./routes');
 const errorHandler = require('./middleware/error-handler');
 const notFound = require('./middleware/not-found');
 
+/**
+ * 建立 Express app，掛上共用 middleware、API routes 與靜態檔服務。
+ *
+ * @param {{ config: Object, container: Object }} options
+ * @returns {import('express').Express}
+ */
 function createApp(options) {
   const config = options.config;
   const container = options.container;
@@ -42,6 +48,12 @@ function createApp(options) {
   return app;
 }
 
+/**
+ * 建立 health check handler，回傳服務狀態與目前 Node 環境。
+ *
+ * @param {Object} config
+ * @returns {Function}
+ */
 function health(config) {
   return function (_req, res) {
     res.json({
@@ -53,6 +65,13 @@ function health(config) {
   };
 }
 
+/**
+ * 如果 webview 靜態目錄存在，就把它掛到 Express app。
+ *
+ * @param {import('express').Express} app
+ * @param {Object} config
+ * @returns {void}
+ */
 function attachWebviewStatic(app, config) {
   if (!directoryExists(config.webviewPublicPath)) {
     return;
@@ -61,6 +80,13 @@ function attachWebviewStatic(app, config) {
   app.use(express.static(config.webviewPublicPath));
 }
 
+/**
+ * 如果後控前端靜態目錄存在，就掛上 static 與 SPA fallback。
+ *
+ * @param {import('express').Express} app
+ * @param {Object} config
+ * @returns {void}
+ */
 function attachFrontendStatic(app, config) {
   if (!directoryExists(config.frontendDistPath)) {
     return;
@@ -76,6 +102,12 @@ function attachFrontendStatic(app, config) {
   });
 }
 
+/**
+ * 檢查指定路徑是否存在且為資料夾。
+ *
+ * @param {string} targetPath
+ * @returns {boolean}
+ */
 function directoryExists(targetPath) {
   try {
     return fs.statSync(targetPath).isDirectory();

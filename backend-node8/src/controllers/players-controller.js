@@ -1,10 +1,12 @@
 'use strict';
 
 /**
- * Express controller for player admin endpoints.
+ * 玩家後控查詢 API 的 Express controller。
  */
 class PlayersController {
   /**
+   * 初始化玩家 controller，保存玩家 service。
+   *
    * @param {import('../services/players-service')} playersService
    */
   constructor(playersService) {
@@ -12,6 +14,8 @@ class PlayersController {
   }
 
   /**
+   * 依 query 查詢玩家資料。
+   *
    * @param {{ query: Object }} req
    * @param {{ json: Function }} res
    * @returns {Promise<void>}
@@ -28,6 +32,8 @@ class PlayersController {
   }
 
   /**
+   * 查詢玩家指定日期的流水與抽獎進度。
+   *
    * @param {{ params: Object, query: Object }} req
    * @param {{ json: Function }} res
    * @returns {Promise<void>}

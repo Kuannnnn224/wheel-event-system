@@ -10,10 +10,12 @@ const time = require('../utils/time');
  */
 
 /**
- * Handles spin simulation and later real spin orchestration.
+ * 處理抽獎模擬與真實抽獎的主要流程編排。
  */
 class SpinsService {
   /**
+   * 初始化抽獎 service，保存抽獎流程需要的 service 與 repository。
+   *
    * @param {Object} options
    * @param {Object} options.config
    * @param {import('../db').Database} options.db
@@ -34,6 +36,8 @@ class SpinsService {
   }
 
   /**
+   * 執行不寫 DB 的抽獎模擬流程。
+   *
    * @param {SimulateSpinInput} input
    * @returns {Promise<Object>}
    */
@@ -53,6 +57,8 @@ class SpinsService {
   }
 
   /**
+   * 執行真實抽獎流程，包含 token、進度、重複抽與交易寫入。
+   *
    * @param {{ token: string, stageNumber: number|string }} input
    * @returns {Promise<Object>}
    */
@@ -103,6 +109,8 @@ class SpinsService {
   }
 
   /**
+   * 依指定派獎、每日上限與一般機率決定本次抽獎來源。
+   *
    * @param {Object|null} overrideRule
    * @param {string} businessDate
    * @param {number} stageNumber
@@ -122,6 +130,8 @@ class SpinsService {
   }
 
   /**
+   * 判斷當日累計派獎是否已達每日上限。
+   *
    * @param {string} businessDate
    * @param {import('../db').DatabaseConnection} tx
    * @returns {Promise<boolean>}
@@ -138,6 +148,8 @@ class SpinsService {
   }
 
   /**
+   * 建立真實抽獎紀錄，並把重複抽獎轉成 API 錯誤。
+   *
    * @param {string} playerId
    * @param {string} businessDate
    * @param {number} stageNumber
@@ -165,6 +177,8 @@ class SpinsService {
   }
 
   /**
+   * 解析 API 傳入的 stageNumber，限制只能是 LV1 到 LV5。
+   *
    * @param {SimulateSpinInput|Object|null|undefined} input
    * @returns {number}
    */
@@ -188,6 +202,8 @@ class SpinsService {
   }
 
   /**
+   * 解析 webview 真實抽獎輸入，集中回報驗證錯誤。
+   *
    * @param {Object|null|undefined} input
    * @returns {{ token: string, stageNumber: number }}
    */
