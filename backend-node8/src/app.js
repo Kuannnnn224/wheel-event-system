@@ -30,7 +30,7 @@ function createApp(options) {
   });
   app.use('/api', apiRouter);
 
-  // Keep Vite dev proxy compatibility: existing frontend dev rewrites /api away.
+  // Keep compatibility for clients that call the API without the /api prefix.
   app.use(apiRouter);
 
   attachWebviewStatic(app, config);

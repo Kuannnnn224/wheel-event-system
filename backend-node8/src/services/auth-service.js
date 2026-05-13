@@ -34,7 +34,7 @@ const signJwt = util.promisify(jwt.sign);
  */
 
 /**
- * Handles admin identity flows and mirrors the current NestJS auth behavior.
+ * Handles admin identity flows and mirrors the previous auth behavior.
  */
 class AuthService {
   /**

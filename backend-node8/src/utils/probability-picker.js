@@ -7,7 +7,7 @@
  */
 
 /**
- * Picks one weighted item using the same roll-down behavior as the NestJS service.
+ * Picks one weighted item using the same roll-down behavior as the previous service.
  *
  * @param {Array<*>} items
  * @param {WeightSelector} getWeight

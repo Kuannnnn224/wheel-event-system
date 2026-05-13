@@ -1,18 +1,20 @@
-# 轉盤活動系統
+# 轉盤活動系統 Node 8 Runtime
 
-這是一個每日 5 階段轉盤活動系統，包含後控 React、NestJS API、MySQL，以及玩家端 webview HTML。
+這個分支用來模擬 Node 8.17 正式機啟動方式。原本較新的 backend/frontend source 已移除，後端改由 `backend-node8/` 的 Express runtime 啟動，前端則使用已 build 好的靜態檔。
 
-- 後端：`backend/`，NestJS + TypeORM + MySQL。
-- 前端：`frontend/`，React + Vite + TypeScript + Ant Design。
-- Webview：`frontend/public/webview.html`，目前使用 bronze 版素材與後端 API 對接。
-- 工程師導覽：`docs/ENGINEERING_GUIDE.md`。
+- Runtime：`backend-node8/`，Express 4 + CommonJS + raw SQL。
+- 後控頁面：`backend-node8/public/index.html`。
+- Webview：`backend-node8/public/webview.html`。
+- 機率設定：`backend-node8/config/probability.json`。
 - Agent 協作規則：`AGENT.md`。
 
 ## 快速啟動
 
-先安裝根目錄工具：
+先安裝 Node 8 runtime 依賴：
 
 ```bash
+cd backend-node8
+copy .env.example .env
 npm install
 ```
 
@@ -22,40 +24,26 @@ npm install
 npm run db
 ```
 
-安裝前後端依賴：
+從根目錄啟動 Node 8 runtime：
 
 ```bash
-cd backend
-cp .env.example .env
-npm install
-
-cd ../frontend
-cp .env.example .env
-npm install
-```
-
-從根目錄同時啟動前後端：
-
-```bash
-npm run dev
+npm start
 ```
 
 預設網址：
 
-- 後控前端：`http://127.0.0.1:5173`
-- 同網路同事可用：`http://你的內網 IP:5173`
-- 後端 API：`http://127.0.0.1:3001`
+- 後控前端：`http://127.0.0.1:3001`
+- 後端 API：`http://127.0.0.1:3001/api`
+- Webview：`http://127.0.0.1:3001/webview.html`
 
-本機開發時 Vite 會把 `/api` proxy 到 `http://127.0.0.1:3001`。所以同事用你的 IP 開後控時，瀏覽器會打 `http://你的內網 IP:5173/api/...`，再由你的前端 dev server 轉到本機後端，不需要同事端另外改 API 位址。
-
-若要讓同事連線，仍需確認 Windows 防火牆允許 `5173`；若前端改成直接打後端絕對 URL，也要允許 `3001` 並設定 `CORS_ORIGIN`。
+若要讓同事連線，需確認 Windows 防火牆允許 `3001`。
 
 本機預設後控帳號：
 
 - username：`admin`
 - password：`admin123`
 
-真實資料環境請務必改掉 `backend/.env` 的預設帳密與 JWT secret。
+真實資料環境請務必改掉 `backend-node8/.env` 的預設帳密與 JWT secret。
 平台後端建立 webview token 需設定 `PLATFORM_API_KEY`，此 key 不可放到瀏覽器或 webview。
 
 ## 常用指令
@@ -64,31 +52,15 @@ npm run dev
 
 ```bash
 npm run db
-npm run dev
-npm run dev:backend
-npm run dev:frontend
-npm run lint
-npm run test
-npm run build
-```
-
-Node 8 相容後端骨架：
-
-```bash
-npm run node8:check
-npm run node8:smoke:offline
-npm run node8:check-db
-npm run node8:smoke:http
-npm run node8:start
+npm start
+npm run check
+npm run smoke:offline
+npm run check-db
+npm run smoke:http
+npm run verify
 ```
 
 詳細設定與部署注意事項在 `backend-node8/README.md`。
-
-匯入 XLSX 機率來源：
-
-```bash
-npm run probability:import -- C:\path\to\source
-```
 
 dev log 預期放在 `logs/`，產生的 `.log` 檔不進 Git。
 
@@ -136,7 +108,7 @@ Content-Type: application/json
 機率設定不放 DB，而是放在：
 
 ```text
-backend/config/probability.json
+backend-node8/config/probability.json
 ```
 
 後端會在需要抽獎時讀取 JSON，因此 parser 或 PM ZIP 套用後可以熱更新。
@@ -157,9 +129,9 @@ ZIP 匯入目前需要：
 
 ## DB 設定
 
-本機 MySQL 由 `docker-compose.yml` 啟動。後端 DB 連線設定在 `backend/.env`。
+本機 MySQL 由 `docker-compose.yml` 啟動。後端 DB 連線設定在 `backend-node8/.env`。
 
-第一版本機開發使用 TypeORM `synchronize=true` 自動同步 Entity 到 DB。正式環境請改成 migration 流程，避免自動改表造成風險。
+Node 8 runtime 不使用 TypeORM `synchronize`，資料庫 schema 需先存在。參考 baseline 在 `backend-node8/src/db/schema.sql`，可用 `npm run check-db` 做非破壞性檢查。
 
 主要資料表：
 
@@ -173,39 +145,21 @@ ZIP 匯入目前需要：
 
 ## 驗證
 
-後端：
-
 ```bash
-cd backend
-npm run lint
-npm run test
-npm run build
+npm run check
+npm run smoke:offline
+npm run check-db
+npm run smoke:http
 ```
 
-前端：
-
-```bash
-cd frontend
-npm run lint
-npm run build
-```
-
-整包：
-
-```bash
-npm run lint
-npm run test
-npm run build
-```
-
-目前前端 build 可能會出現 chunk size warning，這不是失敗；之後頁面更多時可用 code splitting 優化。
+`smoke:offline` 不連 DB，主要檢查 config、route 掛載、靜態機率設定。`smoke:http` 會連 DB、啟動臨時 HTTP server，並檢查 `/health` 與 `/api/health`。
 
 ## 進一步閱讀
 
 如果你要自己 debug 或理解架構，先看：
 
-1. `docs/ENGINEERING_GUIDE.md`
-2. `backend/src/app.module.ts`
-3. `frontend/src/App.tsx`
-4. `frontend/src/api/client.ts`
-5. `backend/src/spins/spins.service.ts`
+1. `backend-node8/README.md`
+2. `backend-node8/server.js`
+3. `backend-node8/src/app.js`
+4. `backend-node8/src/container.js`
+5. `backend-node8/src/services/spins-service.js`

@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "dailyPayoutLimitPoints": 10000,
   "stages": [
     {
       "stageNumber": 1,
@@ -13,7 +14,9 @@
           "amountPoints": 1,
           "sortOrder": 1,
           "lowWeight": 64,
-          "highWeight": 41
+          "highWeight": 41,
+          "prizeWeight": 0,
+          "dailyLimitWeight": 1
         },
         {
           "rewardCode": "B",
@@ -21,7 +24,9 @@
           "amountPoints": 3,
           "sortOrder": 2,
           "lowWeight": 30,
-          "highWeight": 50
+          "highWeight": 50,
+          "prizeWeight": 0,
+          "dailyLimitWeight": 0
         },
         {
           "rewardCode": "C",
@@ -29,7 +34,9 @@
           "amountPoints": 10,
           "sortOrder": 3,
           "lowWeight": 5,
-          "highWeight": 7
+          "highWeight": 7,
+          "prizeWeight": 50,
+          "dailyLimitWeight": 0
         },
         {
           "rewardCode": "D",
@@ -37,7 +44,9 @@
           "amountPoints": 25,
           "sortOrder": 4,
           "lowWeight": 1,
-          "highWeight": 2
+          "highWeight": 2,
+          "prizeWeight": 49,
+          "dailyLimitWeight": 0
         },
         {
           "rewardCode": "E",
@@ -45,7 +54,9 @@
           "amountPoints": 500,
           "sortOrder": 5,
           "lowWeight": 0,
-          "highWeight": 0
+          "highWeight": 0,
+          "prizeWeight": 1,
+          "dailyLimitWeight": 0
         }
       ]
     },
@@ -61,7 +72,9 @@
           "amountPoints": 3,
           "sortOrder": 1,
           "lowWeight": 64,
-          "highWeight": 40
+          "highWeight": 40,
+          "prizeWeight": 0,
+          "dailyLimitWeight": 1
         },
         {
           "rewardCode": "B",
@@ -69,7 +82,9 @@
           "amountPoints": 8,
           "sortOrder": 2,
           "lowWeight": 30,
-          "highWeight": 50
+          "highWeight": 50,
+          "prizeWeight": 0,
+          "dailyLimitWeight": 0
         },
         {
           "rewardCode": "C",
@@ -77,7 +92,9 @@
           "amountPoints": 50,
           "sortOrder": 3,
           "lowWeight": 5,
-          "highWeight": 7
+          "highWeight": 7,
+          "prizeWeight": 50,
+          "dailyLimitWeight": 0
         },
         {
           "rewardCode": "D",
@@ -85,7 +102,9 @@
           "amountPoints": 250,
           "sortOrder": 4,
           "lowWeight": 1,
-          "highWeight": 3
+          "highWeight": 3,
+          "prizeWeight": 49,
+          "dailyLimitWeight": 0
         },
         {
           "rewardCode": "E",
@@ -93,7 +112,9 @@
           "amountPoints": 5000,
           "sortOrder": 5,
           "lowWeight": 0,
-          "highWeight": 0
+          "highWeight": 0,
+          "prizeWeight": 1,
+          "dailyLimitWeight": 0
         }
       ]
     },
@@ -109,7 +130,9 @@
           "amountPoints": 8,
           "sortOrder": 1,
           "lowWeight": 64,
-          "highWeight": 40
+          "highWeight": 40,
+          "prizeWeight": 0,
+          "dailyLimitWeight": 1
         },
         {
           "rewardCode": "B",
@@ -117,7 +140,9 @@
           "amountPoints": 15,
           "sortOrder": 2,
           "lowWeight": 30,
-          "highWeight": 50
+          "highWeight": 50,
+          "prizeWeight": 0,
+          "dailyLimitWeight": 0
         },
         {
           "rewardCode": "C",
@@ -125,7 +150,9 @@
           "amountPoints": 50,
           "sortOrder": 3,
           "lowWeight": 5,
-          "highWeight": 7
+          "highWeight": 7,
+          "prizeWeight": 50,
+          "dailyLimitWeight": 0
         },
         {
           "rewardCode": "D",
@@ -133,7 +160,9 @@
           "amountPoints": 300,
           "sortOrder": 4,
           "lowWeight": 1,
-          "highWeight": 3
+          "highWeight": 3,
+          "prizeWeight": 50,
+          "dailyLimitWeight": 0
         },
         {
           "rewardCode": "E",
@@ -141,7 +170,9 @@
           "amountPoints": 20000,
           "sortOrder": 5,
           "lowWeight": 0,
-          "highWeight": 0
+          "highWeight": 0,
+          "prizeWeight": 0,
+          "dailyLimitWeight": 0
         }
       ]
     },
@@ -157,7 +188,9 @@
           "amountPoints": 15,
           "sortOrder": 1,
           "lowWeight": 64,
-          "highWeight": 40
+          "highWeight": 40,
+          "prizeWeight": 0,
+          "dailyLimitWeight": 1
         },
         {
           "rewardCode": "B",
@@ -165,7 +198,9 @@
           "amountPoints": 30,
           "sortOrder": 2,
           "lowWeight": 30,
-          "highWeight": 50
+          "highWeight": 50,
+          "prizeWeight": 0,
+          "dailyLimitWeight": 0
         },
         {
           "rewardCode": "C",
@@ -173,7 +208,9 @@
           "amountPoints": 80,
           "sortOrder": 3,
           "lowWeight": 5,
-          "highWeight": 7
+          "highWeight": 7,
+          "prizeWeight": 50,
+          "dailyLimitWeight": 0
         },
         {
           "rewardCode": "D",
@@ -181,7 +218,9 @@
           "amountPoints": 500,
           "sortOrder": 4,
           "lowWeight": 1,
-          "highWeight": 3
+          "highWeight": 3,
+          "prizeWeight": 50,
+          "dailyLimitWeight": 0
         },
         {
           "rewardCode": "E",
@@ -189,7 +228,9 @@
           "amountPoints": 50000,
           "sortOrder": 5,
           "lowWeight": 0,
-          "highWeight": 0
+          "highWeight": 0,
+          "prizeWeight": 0,
+          "dailyLimitWeight": 0
         }
       ]
     },
@@ -205,7 +246,9 @@
           "amountPoints": 30,
           "sortOrder": 1,
           "lowWeight": 64,
-          "highWeight": 40
+          "highWeight": 40,
+          "prizeWeight": 0,
+          "dailyLimitWeight": 1
         },
         {
           "rewardCode": "B",
@@ -213,7 +256,9 @@
           "amountPoints": 80,
           "sortOrder": 2,
           "lowWeight": 30,
-          "highWeight": 50
+          "highWeight": 50,
+          "prizeWeight": 0,
+          "dailyLimitWeight": 0
         },
         {
           "rewardCode": "C",
@@ -221,7 +266,9 @@
           "amountPoints": 300,
           "sortOrder": 3,
           "lowWeight": 5,
-          "highWeight": 7
+          "highWeight": 7,
+          "prizeWeight": 50,
+          "dailyLimitWeight": 0
         },
         {
           "rewardCode": "D",
@@ -229,7 +276,9 @@
           "amountPoints": 1000,
           "sortOrder": 4,
           "lowWeight": 1,
-          "highWeight": 3
+          "highWeight": 3,
+          "prizeWeight": 50,
+          "dailyLimitWeight": 0
         },
         {
           "rewardCode": "E",
@@ -237,7 +286,9 @@
           "amountPoints": 100000,
           "sortOrder": 5,
           "lowWeight": 0,
-          "highWeight": 0
+          "highWeight": 0,
+          "prizeWeight": 0,
+          "dailyLimitWeight": 0
         }
       ]
     }

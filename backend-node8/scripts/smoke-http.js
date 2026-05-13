@@ -25,13 +25,22 @@ async function main() {
 
     const health = await getJson(base, '/health');
     const apiHealth = await getJson(base, '/api/health');
+    const adminHtml = await getText(base, '/');
+    const webviewHtml = await getText(base, '/webview.html');
+
+    assertContains(adminHtml, '<div id="root"></div>', 'admin page root');
+    assertContains(webviewHtml, '100% Winning Bronze Spin', 'webview page marker');
 
     console.log(JSON.stringify({
       ok: true,
       service: 'wheel-event-backend-node8',
       port: address.port,
       health: health,
-      apiHealth: apiHealth
+      apiHealth: apiHealth,
+      staticPages: {
+        admin: true,
+        webview: true
+      }
     }, null, 2));
   } finally {
     await closeServer(server);
@@ -60,6 +69,21 @@ function listen(app) {
  * @returns {Promise<Object>}
  */
 function getJson(base, path) {
+  return getText(base, path).then(function (body) {
+    try {
+      return JSON.parse(body);
+    } catch (err) {
+      throw new Error(path + ' returned invalid JSON: ' + err.message);
+    }
+  });
+}
+
+/**
+ * @param {{ host: string, port: number }} base
+ * @param {string} path
+ * @returns {Promise<string>}
+ */
+function getText(base, path) {
   return new Promise(function (resolve, reject) {
     const req = http.get({
       hostname: base.host,
@@ -79,11 +103,7 @@ function getJson(base, path) {
           return;
         }
 
-        try {
-          resolve(JSON.parse(body));
-        } catch (err) {
-          reject(new Error(path + ' returned invalid JSON: ' + err.message));
-        }
+        resolve(body);
       });
     });
 
@@ -93,6 +113,18 @@ function getJson(base, path) {
       reject(new Error(path + ' timed out.'));
     });
   });
+}
+
+/**
+ * @param {string} body
+ * @param {string} expected
+ * @param {string} label
+ * @returns {void}
+ */
+function assertContains(body, expected, label) {
+  if (body.indexOf(expected) === -1) {
+    throw new Error('Missing ' + label + ' in HTTP smoke response.');
+  }
 }
 
 /**
