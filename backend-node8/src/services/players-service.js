@@ -52,26 +52,26 @@ class PlayersService {
   /**
    * 依平台玩家 ID 查詢玩家。
    *
-   * @param {string} externalId
+   * @param {string} playerId
    * @returns {Promise<Object|null>}
    */
-  async findByExternalId(externalId) {
-    return this.playersRepository.findByExternalId(externalId);
+  async findByPlayerId(playerId) {
+    return this.playersRepository.findById(playerId);
   }
 
   /**
    * 依平台玩家 ID 查詢或建立玩家。
    *
-   * @param {string} externalId
+   * @param {string} playerId
    * @param {import('../db').DatabaseConnection} [tx]
    * @returns {Promise<Object>}
    */
-  async getOrCreateByExternalId(externalId, tx) {
-    return this.playersRepository.getOrCreateByExternalId(externalId, tx);
+  async getOrCreateByPlayerId(playerId, tx) {
+    return this.playersRepository.getOrCreateByPlayerId(playerId, tx);
   }
 
   /**
-   * 依內部玩家 id 查詢玩家。
+   * 依平台玩家 ID 查詢玩家。
    *
    * @param {string} id
    * @returns {Promise<Object>}

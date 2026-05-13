@@ -21,10 +21,10 @@ class PlayersController {
    * @returns {Promise<void>}
    */
   async search(req, res) {
-    const externalId = typeof req.query.externalId === 'string' ? req.query.externalId : '';
+    const playerId = typeof req.query.playerId === 'string' ? req.query.playerId.trim() : '';
 
-    if (externalId) {
-      res.json({ player: await this.playersService.findByExternalId(externalId) });
+    if (playerId) {
+      res.json({ player: await this.playersService.findByPlayerId(playerId) });
       return;
     }
 

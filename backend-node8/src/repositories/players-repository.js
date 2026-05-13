@@ -1,12 +1,10 @@
 'use strict';
 
-const ids = require('../utils/ids');
 const time = require('../utils/time');
 
 /**
  * @typedef {Object} Player
  * @property {string} id
- * @property {string} externalId
  * @property {number} createdAt
  * @property {number} updatedAt
  */
@@ -14,7 +12,6 @@ const time = require('../utils/time');
 /**
  * @typedef {Object} PlayerRow
  * @property {string} id
- * @property {string} external_id
  * @property {number} created_at
  * @property {number} updated_at
  */
@@ -41,7 +38,7 @@ class PlayersRepository {
   async listPlayers(limit, tx) {
     const rows = await this.getDb(tx).query(
       [
-        'SELECT id, external_id, created_at, updated_at',
+        'SELECT id, created_at, updated_at',
         'FROM players',
         'ORDER BY created_at DESC',
         'LIMIT ?'
@@ -61,7 +58,7 @@ class PlayersRepository {
   async findById(id, tx) {
     const row = await this.getDb(tx).maybeOne(
       [
-        'SELECT id, external_id, created_at, updated_at',
+        'SELECT id, created_at, updated_at',
         'FROM players',
         'WHERE id = ?',
         'LIMIT 1'
@@ -73,37 +70,16 @@ class PlayersRepository {
   }
 
   /**
-   * 從資料庫查詢符合條件的資料。
-   *
-   * @param {string} externalId
-   * @returns {Promise<Player|null>}
-   */
-  async findByExternalId(externalId, tx) {
-    const row = await this.getDb(tx).maybeOne(
-      [
-        'SELECT id, external_id, created_at, updated_at',
-        'FROM players',
-        'WHERE external_id = ?',
-        'LIMIT 1'
-      ].join(' '),
-      [externalId]
-    );
-
-    return this.mapRow(row);
-  }
-
-  /**
    * 寫入資料庫並回傳建立後的資料物件。
    *
-   * @param {string} externalId
+   * @param {string} playerId
    * @param {import('../db').DatabaseConnection} [tx]
    * @returns {Promise<Player>}
    */
-  async create(externalId, tx) {
+  async create(playerId, tx) {
     const now = time.unixTimestampSeconds();
     const player = {
-      id: ids.pseudoUuid(),
-      externalId: externalId,
+      id: playerId,
       createdAt: now,
       updatedAt: now
     };
@@ -111,10 +87,10 @@ class PlayersRepository {
     await this.getDb(tx).execute(
       [
         'INSERT INTO players',
-        '(id, external_id, created_at, updated_at)',
-        'VALUES (?, ?, ?, ?)'
+        '(id, created_at, updated_at)',
+        'VALUES (?, ?, ?)'
       ].join(' '),
-      [player.id, player.externalId, player.createdAt, player.updatedAt]
+      [player.id, player.createdAt, player.updatedAt]
     );
 
     return player;
@@ -123,21 +99,21 @@ class PlayersRepository {
   /**
    * 取得指定條件下的資料。
    *
-   * @param {string} externalId
+   * @param {string} playerId
    * @param {import('../db').DatabaseConnection} [tx]
    * @returns {Promise<Player>}
    */
-  async getOrCreateByExternalId(externalId, tx) {
-    const existing = await this.findByExternalId(externalId, tx);
+  async getOrCreateByPlayerId(playerId, tx) {
+    const existing = await this.findById(playerId, tx);
     if (existing) {
       return existing;
     }
 
     try {
-      return await this.create(externalId, tx);
+      return await this.create(playerId, tx);
     } catch (err) {
       if (err && err.code === 'ER_DUP_ENTRY') {
-        return this.findByExternalId(externalId, tx);
+        return this.findById(playerId, tx);
       }
 
       throw err;
@@ -157,7 +133,6 @@ class PlayersRepository {
 
     return {
       id: row.id,
-      externalId: row.external_id,
       createdAt: row.created_at,
       updatedAt: row.updated_at
     };

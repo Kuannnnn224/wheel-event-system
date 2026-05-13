@@ -13,21 +13,20 @@ const REQUIRED_COLUMNS = {
     updated_at: { type: 'int unsigned', nullable: false }
   },
   players: {
-    id: { type: 'varchar(36)', nullable: false },
-    external_id: { type: 'varchar(120)', nullable: false },
+    id: { type: 'varchar(120)', nullable: false },
     created_at: { type: 'int unsigned', nullable: false },
     updated_at: { type: 'int unsigned', nullable: false }
   },
   player_daily_progress: {
     id: { type: 'varchar(36)', nullable: false },
-    player_id: { type: /^varchar\(/, nullable: false },
+    player_id: { type: 'varchar(120)', nullable: false },
     business_date: { type: 'varchar(10)', nullable: false },
     turnover_points: { type: 'int unsigned', nullable: false },
     unlocked_stage: { type: 'tinyint unsigned', nullable: false }
   },
   spin_records: {
     id: { type: 'varchar(36)', nullable: false },
-    player_id: { type: /^varchar\(/, nullable: false },
+    player_id: { type: 'varchar(120)', nullable: false },
     business_date: { type: 'varchar(10)', nullable: false },
     stage_number: { type: 'tinyint unsigned', nullable: false },
     prize_config_id: { type: 'int', nullable: true },
@@ -38,7 +37,7 @@ const REQUIRED_COLUMNS = {
   },
   award_override_rules: {
     id: { type: 'varchar(36)', nullable: false },
-    player_id: { type: /^varchar\(/, nullable: false },
+    player_id: { type: 'varchar(120)', nullable: false },
     business_date: { type: 'varchar(10)', nullable: false },
     stage_number: { type: 'tinyint unsigned', nullable: false },
     status: { type: 'varchar(20)', nullable: false },
@@ -54,7 +53,7 @@ const REQUIRED_COLUMNS = {
   },
   webview_sessions: {
     id: { type: 'varchar(36)', nullable: false },
-    player_id: { type: /^varchar\(/, nullable: false },
+    player_id: { type: 'varchar(120)', nullable: false },
     token: { type: 'varchar(128)', nullable: false },
     expires_at: { type: 'int unsigned', nullable: false },
     created_at: { type: 'int unsigned', nullable: false }
@@ -63,7 +62,6 @@ const REQUIRED_COLUMNS = {
 
 const REQUIRED_UNIQUE_INDEXES = [
   { table: 'admin_users', columns: ['username'] },
-  { table: 'players', columns: ['external_id'] },
   { table: 'player_daily_progress', columns: ['player_id', 'business_date'] },
   { table: 'spin_records', columns: ['player_id', 'business_date', 'stage_number'] },
   { table: 'award_override_rules', columns: ['pending_key'] },
@@ -80,6 +78,10 @@ const REQUIRED_INDEXES = [
 const OPTIONAL_INDEXES = [
   { table: 'players', columns: ['created_at'] }
 ];
+
+const FORBIDDEN_COLUMNS = {
+  players: ['external_id']
+};
 
 async function main() {
   const columnsByTable = await loadColumnsByTable();
@@ -124,6 +126,19 @@ async function main() {
     if (!hasIndexPrefix(allIndexesByTable[index.table], index.columns)) {
       warnings.push('Optional performance index is missing: ' + index.table + '(' + index.columns.join(', ') + ')');
     }
+  });
+
+  Object.keys(FORBIDDEN_COLUMNS).forEach(function (tableName) {
+    const tableColumns = columnsByTable[tableName];
+    if (!tableColumns) {
+      return;
+    }
+
+    FORBIDDEN_COLUMNS[tableName].forEach(function (columnName) {
+      if (tableColumns[columnName]) {
+        errors.push('Forbidden legacy column exists: ' + tableName + '.' + columnName);
+      }
+    });
   });
 
   if (errors.length) {

@@ -220,7 +220,7 @@ class AwardOverridesRepository {
       'r.id, r.player_id, r.business_date, r.stage_number, r.status, r.pending_key, r.reason,',
       'r.created_by_admin_id, r.cancelled_by_admin_id, r.consumed_spin_record_id,',
       'r.created_at, r.updated_at, r.consumed_at, r.cancelled_at,',
-      'p.external_id, p.created_at AS player_created_at, p.updated_at AS player_updated_at,',
+      'p.created_at AS player_created_at, p.updated_at AS player_updated_at,',
       's.business_date AS spin_business_date, s.stage_number AS spin_stage_number,',
       's.prize_name AS spin_prize_name, s.amount_points AS spin_amount_points, s.created_at AS spin_created_at',
       'FROM award_override_rules r',
@@ -257,7 +257,6 @@ class AwardOverridesRepository {
       cancelledAt: row.cancelled_at,
       player: {
         id: row.player_id,
-        externalId: row.external_id,
         createdAt: row.player_created_at,
         updatedAt: row.player_updated_at
       },

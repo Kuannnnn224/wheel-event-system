@@ -20,7 +20,6 @@ const time = require('../utils/time');
  * @property {string} token
  * @property {number} expires_at
  * @property {number} created_at
- * @property {string|null} player_external_id
  * @property {number|null} player_created_at
  * @property {number|null} player_updated_at
  */
@@ -85,7 +84,6 @@ class WebviewSessionsRepository {
     const row = await this.db.maybeOne(
       [
         'SELECT ws.id, ws.player_id, ws.token, ws.expires_at, ws.created_at,',
-        'p.external_id AS player_external_id,',
         'p.created_at AS player_created_at,',
         'p.updated_at AS player_updated_at',
         'FROM webview_sessions ws',
@@ -118,7 +116,6 @@ class WebviewSessionsRepository {
       createdAt: row.created_at,
       player: {
         id: row.player_id,
-        externalId: row.player_external_id,
         createdAt: row.player_created_at,
         updatedAt: row.player_updated_at
       }

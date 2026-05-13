@@ -14,18 +14,16 @@ CREATE TABLE IF NOT EXISTS admin_users (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='後控管理員帳號';
 
 CREATE TABLE IF NOT EXISTS players (
-  id varchar(36) NOT NULL COMMENT '玩家內部 ID',
-  external_id varchar(120) NOT NULL COMMENT '外部系統玩家 ID',
+  id varchar(120) NOT NULL COMMENT '平台玩家 ID',
   created_at int unsigned NOT NULL COMMENT '建立時間 Unix timestamp 秒',
   updated_at int unsigned NOT NULL COMMENT '更新時間 Unix timestamp 秒',
   PRIMARY KEY (id),
-  UNIQUE KEY uq_players_external_id (external_id),
   KEY idx_players_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='玩家主檔';
 
 CREATE TABLE IF NOT EXISTS player_daily_progress (
   id varchar(36) NOT NULL COMMENT '玩家每日進度 ID',
-  player_id varchar(255) NOT NULL COMMENT '玩家內部 ID',
+  player_id varchar(120) NOT NULL COMMENT '平台玩家 ID',
   business_date varchar(10) NOT NULL COMMENT '活動業務日期 YYYY-MM-DD',
   turnover_points int unsigned NOT NULL DEFAULT 0 COMMENT '當日累積流水點數',
   unlocked_stage tinyint unsigned NOT NULL DEFAULT 0 COMMENT '已解鎖最高階段',
@@ -37,7 +35,7 @@ CREATE TABLE IF NOT EXISTS player_daily_progress (
 
 CREATE TABLE IF NOT EXISTS spin_records (
   id varchar(36) NOT NULL COMMENT '抽獎紀錄 ID',
-  player_id varchar(255) NOT NULL COMMENT '玩家內部 ID',
+  player_id varchar(120) NOT NULL COMMENT '平台玩家 ID',
   business_date varchar(10) NOT NULL COMMENT '活動業務日期 YYYY-MM-DD',
   stage_number tinyint unsigned NOT NULL COMMENT '抽獎階段 LV1-LV5',
   prize_config_id int NULL COMMENT '舊版獎項設定 ID，Node 8 runtime 目前不依賴',
@@ -53,7 +51,7 @@ CREATE TABLE IF NOT EXISTS spin_records (
 
 CREATE TABLE IF NOT EXISTS award_override_rules (
   id varchar(36) NOT NULL COMMENT '指定派獎規則 ID',
-  player_id varchar(255) NOT NULL COMMENT '玩家內部 ID',
+  player_id varchar(120) NOT NULL COMMENT '平台玩家 ID',
   business_date varchar(10) NOT NULL COMMENT '活動業務日期 YYYY-MM-DD',
   stage_number tinyint unsigned NOT NULL COMMENT '指定派獎階段 LV1-LV5',
   status varchar(20) NOT NULL DEFAULT 'pending' COMMENT '規則狀態 pending/consumed/cancelled',
@@ -77,7 +75,7 @@ CREATE TABLE IF NOT EXISTS award_override_rules (
 
 CREATE TABLE IF NOT EXISTS webview_sessions (
   id varchar(36) NOT NULL COMMENT 'Webview session ID',
-  player_id varchar(255) NOT NULL COMMENT '玩家內部 ID',
+  player_id varchar(120) NOT NULL COMMENT '平台玩家 ID',
   token varchar(128) NOT NULL COMMENT 'Webview 啟動驗證 token',
   expires_at int unsigned NOT NULL COMMENT 'Session 到期時間 Unix timestamp 秒',
   created_at int unsigned NOT NULL COMMENT '建立時間 Unix timestamp 秒',

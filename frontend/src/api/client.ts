@@ -124,19 +124,19 @@ export async function downloadProbabilityImport(upload: ProbabilityImportUpload)
   link.remove();
 }
 
-export async function fetchPlayerByExternalId(externalId: string) {
-  const { data } = await api.get<{ player: Player | null }>('/players', { params: { externalId } });
+export async function fetchPlayerByPlayerId(playerId: string) {
+  const { data } = await api.get<{ player: Player | null }>('/players', { params: { playerId } });
   return data.player;
 }
 
-export async function fetchAwardOverrides(externalId?: string) {
+export async function fetchAwardOverrides(playerId?: string) {
   const { data } = await api.get<{ rules: AwardOverrideRule[] }>('/award-overrides', {
-    params: { externalId: externalId || undefined },
+    params: { playerId: playerId || undefined },
   });
   return data.rules;
 }
 
-export async function createAwardOverrides(values: { externalId: string; stageNumbers: number[]; reason?: string }) {
+export async function createAwardOverrides(values: { playerId: string; stageNumbers: number[]; reason?: string }) {
   const { data } = await api.post<{ rules: AwardOverrideRule[] }>('/award-overrides', values);
   return data.rules;
 }

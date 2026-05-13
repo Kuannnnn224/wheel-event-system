@@ -17,13 +17,13 @@ const STATUS_META: Record<AwardOverrideRule['status'], { label: string; color: s
 };
 
 interface AwardOverridePanelProps {
-  fixedExternalId?: string;
+  fixedPlayerId?: string;
   title?: string;
   description?: string;
 }
 
 interface AwardOverrideFormValues {
-  externalId?: string;
+  playerId?: string;
   stageNumbers: Array<string | number | boolean>;
   reason?: string;
 }
@@ -41,30 +41,30 @@ function formatPoints(value?: number | null) {
 }
 
 export default function AwardOverridePanel({
-  fixedExternalId,
+  fixedPlayerId,
   title = '指定派獎',
   description = '建立與管理當日所有指定派獎紀錄',
 }: AwardOverridePanelProps) {
   const navigate = useNavigate();
   const [form] = Form.useForm<AwardOverrideFormValues>();
   const [rules, setRules] = useState<AwardOverrideRule[]>([]);
-  const [filterExternalId, setFilterExternalId] = useState(fixedExternalId ?? '');
+  const [filterPlayerId, setFilterPlayerId] = useState(fixedPlayerId ?? '');
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [cancellingId, setCancellingId] = useState<string>();
   const [error, setError] = useState<string>();
-  const activeExternalId = fixedExternalId ?? filterExternalId;
+  const activePlayerId = fixedPlayerId ?? filterPlayerId;
   const sortedRules = useMemo(
     () => [...rules].sort((a, b) => b.createdAt - a.createdAt || a.stageNumber - b.stageNumber),
     [rules],
   );
 
-  async function loadRules(nextExternalId = activeExternalId) {
+  async function loadRules(nextPlayerId = activePlayerId) {
     setLoading(true);
     setError(undefined);
 
     try {
-      setRules(await fetchAwardOverrides(nextExternalId.trim() || undefined));
+      setRules(await fetchAwardOverrides(nextPlayerId.trim() || undefined));
     } catch (err) {
       setError(getApiErrorMessage(err, '指定派獎讀取失敗'));
     } finally {
@@ -73,16 +73,16 @@ export default function AwardOverridePanel({
   }
 
   useEffect(() => {
-    setFilterExternalId(fixedExternalId ?? '');
+    setFilterPlayerId(fixedPlayerId ?? '');
     form.resetFields();
-    void loadRules(fixedExternalId ?? '');
-  }, [fixedExternalId]);
+    void loadRules(fixedPlayerId ?? '');
+  }, [fixedPlayerId]);
 
   async function submit(values: AwardOverrideFormValues) {
-    const externalId = (fixedExternalId ?? values.externalId ?? '').trim();
+    const playerId = (fixedPlayerId ?? values.playerId ?? '').trim();
     const stageNumbers = values.stageNumbers.map(Number);
 
-    if (!externalId || stageNumbers.length === 0) {
+    if (!playerId || stageNumbers.length === 0) {
       return;
     }
 
@@ -91,13 +91,13 @@ export default function AwardOverridePanel({
 
     try {
       await createAwardOverrides({
-        externalId,
+        playerId,
         stageNumbers,
         reason: values.reason?.trim() || undefined,
       });
-      setFilterExternalId(externalId);
+      setFilterPlayerId(playerId);
       form.resetFields(['stageNumbers', 'reason']);
-      await loadRules(externalId);
+      await loadRules(playerId);
     } catch (err) {
       setError(getApiErrorMessage(err, '指定派獎建立失敗'));
     } finally {
@@ -111,7 +111,7 @@ export default function AwardOverridePanel({
 
     try {
       await cancelAwardOverride(rule.id);
-      await loadRules(activeExternalId);
+      await loadRules(activePlayerId);
     } catch (err) {
       setError(getApiErrorMessage(err, '取消指定派獎失敗'));
     } finally {
@@ -120,13 +120,13 @@ export default function AwardOverridePanel({
   }
 
   function openPlayerLookup(rule: AwardOverrideRule) {
-    const externalId = rule.player?.externalId ?? activeExternalId;
+    const playerId = rule.player?.id ?? activePlayerId;
 
-    if (!externalId) {
+    if (!playerId) {
       return;
     }
 
-    navigate(`/players?externalId=${encodeURIComponent(externalId)}`);
+    navigate(`/players?playerId=${encodeURIComponent(playerId)}`);
   }
 
   function renderConsumedReward(rule: AwardOverrideRule) {
@@ -165,15 +165,15 @@ export default function AwardOverridePanel({
         form={form}
         className="award-override-form"
         layout="vertical"
-        initialValues={{ externalId: fixedExternalId, stageNumbers: [] }}
+        initialValues={{ playerId: fixedPlayerId, stageNumbers: [] }}
         onFinish={submit}
       >
-        {fixedExternalId ? null : (
-          <Form.Item label="玩家 ID" name="externalId" rules={[{ required: true }]}>
+        {fixedPlayerId ? null : (
+          <Form.Item label="玩家 ID" name="playerId" rules={[{ required: true }]}>
             <Input
-              placeholder="external id"
-              onChange={(event) => setFilterExternalId(event.target.value)}
-              onPressEnter={() => void loadRules(filterExternalId)}
+              placeholder="player-001"
+              onChange={(event) => setFilterPlayerId(event.target.value)}
+              onPressEnter={() => void loadRules(filterPlayerId)}
             />
           </Form.Item>
         )}
@@ -188,8 +188,8 @@ export default function AwardOverridePanel({
             <Button type="primary" htmlType="submit" loading={submitting}>
               新增指定派獎
             </Button>
-            {!fixedExternalId ? (
-              <Button onClick={() => void loadRules(filterExternalId)} loading={loading}>
+            {!fixedPlayerId ? (
+              <Button onClick={() => void loadRules(filterPlayerId)} loading={loading}>
                 查詢紀錄
               </Button>
             ) : null}
@@ -207,12 +207,12 @@ export default function AwardOverridePanel({
           {
             title: '玩家 ID',
             render: (_, rule) => {
-              const externalId = rule.player?.externalId ?? (activeExternalId || rule.playerId);
+              const playerId = rule.player?.id ?? (activePlayerId || rule.playerId);
 
               return (
                 <Space size={8}>
-                  <Typography.Text>{externalId}</Typography.Text>
-                  <Button size="small" aria-label={`查詢玩家 ${externalId}`} onClick={() => openPlayerLookup(rule)}>
+                  <Typography.Text>{playerId}</Typography.Text>
+                  <Button size="small" aria-label={`查詢玩家 ${playerId}`} onClick={() => openPlayerLookup(rule)}>
                     查詢
                   </Button>
                 </Space>

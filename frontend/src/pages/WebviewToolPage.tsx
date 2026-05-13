@@ -16,7 +16,7 @@ export default function WebviewToolPage() {
   const [error, setError] = useState<string>();
   const [loading, setLoading] = useState(false);
 
-  async function createSession(values: { externalId: string; turnoverPoints: number }) {
+  async function createSession(values: { playerId: string; turnoverPoints: number }) {
     setLoading(true);
     setError(undefined);
 
@@ -35,7 +35,7 @@ export default function WebviewToolPage() {
       <Typography.Title level={3}>Webview 工具</Typography.Title>
       <Alert type="info" showIcon message="此工具只允許開發環境建立連結，正式環境請由 app 建立 webview session。" />
       <Form className="toolbar" layout="vertical" onFinish={createSession}>
-        <Form.Item label="玩家 ID" name="externalId" rules={[{ required: true }]}>
+        <Form.Item label="玩家 ID" name="playerId" rules={[{ required: true }]}>
           <Input placeholder="player-001" />
         </Form.Item>
         <Form.Item
@@ -56,7 +56,7 @@ export default function WebviewToolPage() {
       {session ? (
         <section className="result-panel">
           <Space direction="vertical" size={8} style={{ width: '100%' }}>
-            <Typography.Text>玩家：{session.player.externalId}</Typography.Text>
+            <Typography.Text>玩家：{session.player.id}</Typography.Text>
             <Typography.Text>到期：{dayjs.unix(session.expiresAt).format('YYYY-MM-DD HH:mm:ss')}</Typography.Text>
             <Input.TextArea value={session.webviewUrl} rows={3} readOnly />
             <Button href={session.webviewUrl} target="_blank" rel="noreferrer">

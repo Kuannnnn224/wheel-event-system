@@ -68,18 +68,18 @@ class ReportsService {
   /**
    * 產生指定玩家的區間報表。
    *
-   * @param {string} externalId
+   * @param {string} playerId
    * @param {string} startDate
    * @param {string} endDate
    * @returns {Promise<Object>}
    */
-  async getPlayerReport(externalId, startDate, endDate) {
-    if (!externalId) {
-      throw HttpError.badRequest('externalId is required.');
+  async getPlayerReport(playerId, startDate, endDate) {
+    if (!playerId) {
+      throw HttpError.badRequest('playerId is required.');
     }
 
     const range = this.resolveReportRange(startDate, endDate);
-    const player = await this.playersService.findByExternalId(externalId);
+    const player = await this.playersService.findByPlayerId(playerId);
 
     if (!player) {
       throw HttpError.notFound('Player not found.');

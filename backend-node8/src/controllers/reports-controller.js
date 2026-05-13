@@ -43,7 +43,8 @@ class ReportsController {
    * @returns {Promise<void>}
    */
   async getPlayer(req, res) {
-    res.json(await this.reportsService.getPlayerReport(req.query.externalId, req.query.startDate, req.query.endDate));
+    const playerId = typeof req.query.playerId === 'string' ? req.query.playerId.trim() : undefined;
+    res.json(await this.reportsService.getPlayerReport(playerId, req.query.startDate, req.query.endDate));
   }
 }
 

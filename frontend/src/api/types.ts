@@ -1,6 +1,5 @@
 export interface Player {
   id: string;
-  externalId: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -75,7 +74,6 @@ export interface AwardOverrideRule {
   playerId: string;
   player?: {
     id: string;
-    externalId: string;
   };
   businessDate: string;
   stageNumber: number;

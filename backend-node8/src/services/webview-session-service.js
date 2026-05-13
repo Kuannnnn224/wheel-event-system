@@ -17,7 +17,7 @@ const time = require('../utils/time');
 
 /**
  * @typedef {Object} CreateWebviewSessionInput
- * @property {string} externalId
+ * @property {string} playerId
  * @property {number} turnoverPoints
  */
 
@@ -54,7 +54,7 @@ class WebviewSessionService {
    */
   async createSession(input, context) {
     const dto = this.parseCreateSessionInput(input);
-    const player = await this.getOrCreatePlayer(dto.externalId);
+    const player = await this.getOrCreatePlayer(dto.playerId);
     const businessDate = time.resolveCurrentBusinessDate(undefined, this.config.businessTimeZone);
     const stageThresholds = await this.getStageThresholds();
     const token = ids.randomToken();
@@ -140,11 +140,12 @@ class WebviewSessionService {
   parseCreateSessionInput(input) {
     const errors = [];
     const source = input || {};
+    const playerId = typeof source.playerId === 'string' ? source.playerId.trim() : '';
 
-    if (typeof source.externalId !== 'string') {
-      errors.push('externalId must be a string');
-    } else if (source.externalId.length < 1) {
-      errors.push('externalId must be longer than or equal to 1 characters');
+    if (typeof source.playerId !== 'string') {
+      errors.push('playerId must be a string');
+    } else if (playerId.length < 1 || playerId.length > 120) {
+      errors.push('playerId must be between 1 and 120 characters');
     }
 
     if (!Number.isInteger(source.turnoverPoints)) {
@@ -158,24 +159,24 @@ class WebviewSessionService {
     }
 
     return {
-      externalId: source.externalId,
+      playerId: playerId,
       turnoverPoints: source.turnoverPoints
     };
   }
 
   /**
-   * 依 externalId 查詢玩家，沒有時建立新玩家。
+   * 依平台玩家 ID 查詢玩家，沒有時建立新玩家。
    *
-   * @param {string} externalId
+   * @param {string} playerId
    * @returns {Promise<Object>}
    */
-  async getOrCreatePlayer(externalId) {
-    if (this.playersService && typeof this.playersService.getOrCreateByExternalId === 'function') {
-      return this.playersService.getOrCreateByExternalId(externalId);
+  async getOrCreatePlayer(playerId) {
+    if (this.playersService && typeof this.playersService.getOrCreateByPlayerId === 'function') {
+      return this.playersService.getOrCreateByPlayerId(playerId);
     }
 
-    if (this.playersRepository && typeof this.playersRepository.getOrCreateByExternalId === 'function') {
-      return this.playersRepository.getOrCreateByExternalId(externalId);
+    if (this.playersRepository && typeof this.playersRepository.getOrCreateByPlayerId === 'function') {
+      return this.playersRepository.getOrCreateByPlayerId(playerId);
     }
 
     throw new Error('WebviewSessionService requires player get-or-create support.');

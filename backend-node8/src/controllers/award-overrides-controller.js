@@ -22,8 +22,8 @@ class AwardOverridesController {
    */
   async list(req, res) {
     const status = typeof req.query.status === 'string' ? req.query.status : undefined;
-    const externalId = typeof req.query.externalId === 'string' ? req.query.externalId : undefined;
-    res.json({ rules: await this.awardOverridesService.list(status, externalId) });
+    const playerId = typeof req.query.playerId === 'string' ? req.query.playerId.trim() : undefined;
+    res.json({ rules: await this.awardOverridesService.list(status, playerId) });
   }
 
   /**

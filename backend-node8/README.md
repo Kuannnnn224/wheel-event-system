@@ -113,13 +113,14 @@ npm run test:probability-model
 Node 8 backend does not use TypeORM `synchronize`, so the database schema must already exist. The reference baseline is [src/db/schema.sql](src/db/schema.sql), and it mirrors the current TypeORM entities for:
 
 - `admin_users`
-- `players`
+- `players` (`id` is the platform player ID)
 - `player_daily_progress`
 - `spin_records`
 - `award_override_rules`
 - `webview_sessions`
 
 Legacy `turnover_adjustments` is no longer part of the Node 8 runtime baseline. If an existing test database still has it, drop it only after confirming historical data retention is not needed.
+The runtime no longer keeps a separate `players.external_id`; `players.id` is the platform-provided player ID, and related `player_id` columns store that same value.
 
 For an existing database, run `npm run check:db` before switching traffic. The check is intentionally non-destructive.
 

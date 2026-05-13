@@ -39,6 +39,7 @@
 - `BUSINESS_TIME_ZONE` 可設定部署地區時區；未設定時使用執行環境本地時區。
 - 目前沒有每日 12:00 清除資料排程；每日重置靠 `businessDate` 隔離資料。
 - 玩家流水不跨日，`player_daily_progress` 每位玩家每天一筆；正式流程由 app 建立 webview session 時帶入當日累積流水快照。
+- `players.id` 直接使用平台帶入的玩家 ID；不要再新增內部 ID / external ID 雙欄位或 `external_id` 查詢流程。
 - 玩家每日最多可抽 LV1 到 LV5 各一次。
 - 即使玩家一次補滿最高流水，也必須照 LV1、LV2、LV3、LV4、LV5 順序抽。
 - 抽獎金額與流水都用整數點數，不使用浮點數。

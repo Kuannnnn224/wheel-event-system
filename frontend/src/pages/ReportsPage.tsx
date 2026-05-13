@@ -37,13 +37,13 @@ export default function ReportsPage() {
     }
   }
 
-  async function loadPlayer(values: { externalId: string; range: [Dayjs, Dayjs] }) {
+  async function loadPlayer(values: { playerId: string; range: [Dayjs, Dayjs] }) {
     setLoading(true);
     setError(undefined);
     try {
       const { data } = await api.get<PlayerReport>('/reports/player', {
         params: {
-          externalId: values.externalId,
+          playerId: values.playerId,
           startDate: values.range[0].format('YYYY-MM-DD'),
           endDate: values.range[1].format('YYYY-MM-DD'),
         },
@@ -110,8 +110,8 @@ export default function ReportsPage() {
             children: (
               <Space direction="vertical" size={16} style={{ width: '100%' }}>
                 <Form layout="inline" initialValues={{ range: [dayjs(), dayjs()] }} onFinish={loadPlayer}>
-                  <Form.Item label="玩家 ID" name="externalId" rules={[{ required: true }]}>
-                    <Input placeholder="external id" />
+                  <Form.Item label="玩家 ID" name="playerId" rules={[{ required: true }]}>
+                    <Input placeholder="player-001" />
                   </Form.Item>
                   <Form.Item label="區間" name="range" rules={[{ required: true }]}>
                     <RangePicker />

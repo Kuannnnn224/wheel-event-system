@@ -28,25 +28,15 @@ class AwardOverridesService {
   }
 
   /**
-   * 列出今日指定派獎規則，可用狀態與玩家外部 ID 篩選。
+   * 列出今日指定派獎規則，可用狀態與平台玩家 ID 篩選。
    *
    * @param {string|undefined} status
-   * @param {string|undefined} externalId
+   * @param {string|undefined} playerId
    * @returns {Promise<Object[]>}
    */
-  async list(status, externalId) {
+  async list(status, playerId) {
     const normalizedStatus = status && status !== 'all' ? this.assertStatus(status) : undefined;
     const businessDate = time.resolveCurrentBusinessDate(undefined, this.config.businessTimeZone);
-    let playerId;
-
-    if (externalId) {
-      const player = await this.playersService.findByExternalId(externalId);
-      if (!player) {
-        return [];
-      }
-
-      playerId = player.id;
-    }
 
     return this.awardOverridesRepository.list({
       businessDate: businessDate,
@@ -64,7 +54,7 @@ class AwardOverridesService {
    */
   async create(input, adminId) {
     const dto = this.parseCreateInput(input);
-    const player = await this.playersService.findByExternalId(dto.externalId);
+    const player = await this.playersService.findByPlayerId(dto.playerId);
 
     if (!player) {
       throw HttpError.notFound('找不到玩家，請先建立玩家後再新增指定派獎。');
@@ -77,7 +67,7 @@ class AwardOverridesService {
 
       if (existingSpins.length > 0) {
         const playedStages = existingSpins.map((spin) => spin.stageNumber).sort(sortNumbers);
-        throw HttpError.badRequest('玩家 ' + player.externalId + ' 今天 ' + this.formatStages(playedStages) + ' 已經抽過，該階段轉盤次數已用盡，不能新增指定派獎。');
+        throw HttpError.badRequest('玩家 ' + player.id + ' 今天 ' + this.formatStages(playedStages) + ' 已經抽過，該階段轉盤次數已用盡，不能新增指定派獎。');
       }
 
       const pendingKeys = dto.stageNumbers.map((stageNumber) => this.buildPendingKey(player.id, businessDate, stageNumber));
@@ -85,7 +75,7 @@ class AwardOverridesService {
 
       if (existingRules.length > 0) {
         const duplicatedStages = existingRules.map((rule) => rule.stageNumber).sort(sortNumbers);
-        throw HttpError.badRequest('玩家 ' + player.externalId + ' 今天 ' + this.formatStages(duplicatedStages) + ' 已有等待中的指定派獎，請先取消原規則。');
+        throw HttpError.badRequest('玩家 ' + player.id + ' 今天 ' + this.formatStages(duplicatedStages) + ' 已有等待中的指定派獎，請先取消原規則。');
       }
 
       const rules = dto.stageNumbers.map((stageNumber) => ({
@@ -149,16 +139,16 @@ class AwardOverridesService {
    * 解析建立類 API 的輸入資料。
    *
    * @param {Object|null|undefined} input
-   * @returns {{ externalId: string, stageNumbers: number[], reason: string|undefined }}
+   * @returns {{ playerId: string, stageNumbers: number[], reason: string|undefined }}
    */
   parseCreateInput(input) {
     const messages = [];
-    const externalId = input && typeof input.externalId === 'string' ? input.externalId : '';
+    const playerId = input && typeof input.playerId === 'string' ? input.playerId.trim() : '';
     const stageNumbers = input && Array.isArray(input.stageNumbers) ? input.stageNumbers.map(Number).sort(sortNumbers) : [];
     const reason = input && typeof input.reason === 'string' ? input.reason : undefined;
 
-    if (!externalId || externalId.length > 120) {
-      messages.push('externalId must be a string shorter than or equal to 120 characters');
+    if (!playerId || playerId.length > 120) {
+      messages.push('playerId must be a string shorter than or equal to 120 characters');
     }
 
     if (!stageNumbers.length || stageNumbers.length > 5) {
@@ -184,7 +174,7 @@ class AwardOverridesService {
     }
 
     return {
-      externalId: externalId,
+      playerId: playerId,
       stageNumbers: stageNumbers,
       reason: reason
     };

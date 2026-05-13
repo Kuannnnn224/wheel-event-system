@@ -2,13 +2,13 @@ import { Alert, Button, Form, Input, Table, Tag, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { api, fetchPlayerByExternalId, fetchStages } from '../api/client';
+import { api, fetchPlayerByPlayerId, fetchStages } from '../api/client';
 import type { Player, PlayerDailyProgress, SpinRecord, StageConfig } from '../api/types';
 import AwardOverridePanel from '../components/AwardOverridePanel';
 import ProbabilityTableTag from '../components/ProbabilityTableTag';
 
 interface SearchValues {
-  externalId: string;
+  playerId: string;
 }
 
 type StageState = 'done' | 'active' | 'waiting' | 'locked';
@@ -103,7 +103,7 @@ export default function PlayerLookupPage() {
   const [stageConfigError, setStageConfigError] = useState<string>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
-  const queryExternalId = searchParams.get('externalId')?.trim() ?? '';
+  const queryPlayerId = searchParams.get('playerId')?.trim() ?? '';
 
   useEffect(() => {
     fetchStages()
@@ -112,13 +112,13 @@ export default function PlayerLookupPage() {
   }, []);
 
   useEffect(() => {
-    if (!queryExternalId) {
+    if (!queryPlayerId) {
       return;
     }
 
-    searchForm.setFieldsValue({ externalId: queryExternalId });
-    void search({ externalId: queryExternalId });
-  }, [queryExternalId, searchForm]);
+    searchForm.setFieldsValue({ playerId: queryPlayerId });
+    void search({ playerId: queryPlayerId });
+  }, [queryPlayerId, searchForm]);
 
   const stagesByNumber = useMemo(() => new Map(stages.map((stage) => [stage.stageNumber, stage])), [stages]);
   const spinsByStage = useMemo(
@@ -128,7 +128,7 @@ export default function PlayerLookupPage() {
   const dailyStatus = getDailyStatus(progress);
 
   async function loadProgress(nextPlayer: Player) {
-    const { data } = await api.get<PlayerDailyProgress>(`/players/${nextPlayer.id}/daily-progress`);
+    const { data } = await api.get<PlayerDailyProgress>(`/players/${encodeURIComponent(nextPlayer.id)}/daily-progress`);
     setProgress(data);
   }
 
@@ -138,7 +138,7 @@ export default function PlayerLookupPage() {
     setProgress(undefined);
 
     try {
-      const found = await fetchPlayerByExternalId(values.externalId);
+      const found = await fetchPlayerByPlayerId(values.playerId);
       setPlayer(found);
 
       if (found) {
@@ -201,8 +201,8 @@ export default function PlayerLookupPage() {
       </div>
 
       <Form form={searchForm} className="lookup-search-panel toolbar" layout="vertical" onFinish={search}>
-        <Form.Item label="玩家 ID" name="externalId" rules={[{ required: true }]}>
-          <Input placeholder="external id" />
+        <Form.Item label="玩家 ID" name="playerId" rules={[{ required: true }]}>
+          <Input placeholder="player-001" />
         </Form.Item>
         <Form.Item>
           <Button type="primary" htmlType="submit" loading={loading}>
@@ -211,7 +211,7 @@ export default function PlayerLookupPage() {
         </Form.Item>
         {player && progress ? (
           <div className="lookup-query-summary">
-            <span>玩家 {player.externalId}</span>
+            <span>玩家 {player.id}</span>
             <span>{progress.businessDate}</span>
           </div>
         ) : null}
@@ -224,7 +224,7 @@ export default function PlayerLookupPage() {
 
       {player ? (
         <AwardOverridePanel
-          fixedExternalId={player.externalId}
+          fixedPlayerId={player.id}
           title="指定派獎"
           description="查詢此玩家當日所有指定派獎紀錄，並可直接新增 LV 階段或取消等待中規則"
         />
