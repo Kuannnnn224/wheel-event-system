@@ -26,7 +26,7 @@ const time = require('../utils/time');
  */
 
 /**
- * 短效 webview session 的 raw SQL repository。
+ * webview 存取 session 的 raw SQL repository。
  */
 class WebviewSessionsRepository {
   /**

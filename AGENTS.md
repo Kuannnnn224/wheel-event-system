@@ -30,6 +30,7 @@
 - 改前端頁面或 webview source 時，在 `frontend/` 跑 lint/test/build；`npm run build` 會清空並重建 `backend-node8/public/`。
 - Vite dev server 只供本機開發，預設 `/api` proxy 到 `http://127.0.0.1:3001`；不要把 localhost 或 LAN IP 寫死進 webview source。
 - `VITE_API_BASE_URL` 預設空值，讓 build 後頁面使用 `/api`。只有在前端不透過同源 `/api` 反代時才設絕對 URL。
+- CDN 或 GitHub Pages 測試 webview 時，後端 `.env` 應設定 `WEBVIEW_BASE_URL` 與絕對的 `WEBVIEW_API_BASE_URL`；後端會把絕對 API base 追加成 `apiBase` query 給靜態 webview。
 - 共用 API helper 放在 `frontend/src/api`；共用 UI component 放在 `frontend/src/components`；單頁私有邏輯留在 `frontend/src/pages`。
 
 ## 重要業務規則

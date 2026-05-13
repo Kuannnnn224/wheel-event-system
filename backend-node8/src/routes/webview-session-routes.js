@@ -3,7 +3,7 @@
 const AsyncHandler = require('../utils/async-handler');
 
 /**
- * app/public webview session 與後控 webview 工具 routes。
+ * app/public webview session 與開發環境後控 webview 工具 routes。
  */
 class WebviewSessionRoutes {
   /**

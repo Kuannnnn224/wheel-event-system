@@ -15,7 +15,7 @@ Current skeleton status:
 - Implemented protected `GET /probability/config` and `GET /probability/stages`.
 - Implemented protected `POST /spins/simulate` with the file-backed probability config parser.
 - Implemented webview session, real spin, award overrides, reports, simulations, and probability import endpoints.
-- JWT admin middleware and platform API key middleware.
+- JWT admin middleware for back-office APIs.
 - Full current API surface registered through per-module route files.
 - Static serving hooks for prebuilt admin and webview files in `backend-node8/public`.
 - Schema reference SQL for the existing tables.
@@ -52,6 +52,22 @@ POST /api/admin/webview-sessions
 ```
 
 `POST /api/webview/sessions` is the app-facing session creation endpoint and does not require an extra platform API key. `POST /api/admin/webview-sessions` is protected by admin JWT and is only enabled when `NODE_ENV=development`.
+
+GitHub Pages test webview:
+
+```text
+https://kuannnnn224.github.io/wheel-event-system/webview.html
+```
+
+For CDN or GitHub Pages hosting, configure:
+
+```text
+CORS_ORIGIN=http://localhost:5173,http://127.0.0.1:5173,https://kuannnnn224.github.io
+WEBVIEW_BASE_URL=https://kuannnnn224.github.io/wheel-event-system/webview.html
+WEBVIEW_API_BASE_URL=https://your-public-api-domain.example/api
+```
+
+When `WEBVIEW_API_BASE_URL` is an absolute HTTP(S) URL, generated session links include it as the `apiBase` query parameter. Keep `WEBVIEW_API_BASE_URL=/api` when the built webview is served by this Express backend on the same origin.
 
 Default admin credentials are kept for local smoke testing unless overridden. Change these before any shared environment:
 
@@ -108,5 +124,11 @@ The baseline also includes legacy `turnover_adjustments` for historical compatib
 For an existing database, run `npm run check:db` before switching traffic. The check is intentionally non-destructive.
 
 If an older local or staging database still has `demo_sessions`, rename it to `webview_sessions` or rebuild from [src/db/schema.sql](src/db/schema.sql) before testing the webview session endpoints.
+
+If the existing `webview_sessions` table comment still contains demo wording, update only the metadata:
+
+```sql
+ALTER TABLE webview_sessions COMMENT = 'App webview access sessions';
+```
 
 If the admin frontend needs to change later, rebuild it outside this runtime package and replace the static files in `backend-node8/public`. The Node 8 server should only run the built assets.

@@ -27,7 +27,7 @@ class WebviewSessionController {
   }
 
   /**
-   * 由後控工具建立 webview session。
+   * 由開發環境後控工具建立 webview session。
    *
    * @param {{ body: Object, headers: Object }} req
    * @param {{ json: Function }} res
@@ -79,7 +79,7 @@ class WebviewSessionController {
   }
 
   /**
-   * 後控建立 webview 連結只允許開發環境，避免正式環境污染真實玩家資料。
+   * 後控工具建立 webview 連結只允許開發環境，避免正式環境污染真實玩家資料。
    *
    * @returns {void}
    */

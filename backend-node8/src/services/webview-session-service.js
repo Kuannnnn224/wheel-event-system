@@ -379,6 +379,12 @@ class WebviewSessionService {
    */
   buildWebviewUrl(baseUrl, token) {
     const url = new Url(baseUrl);
+    const apiBaseUrl = this.resolveWebviewApiBaseUrl();
+
+    if (!url.searchParams.has('apiBase') && isHttpUrl(apiBaseUrl)) {
+      url.searchParams.set('apiBase', apiBaseUrl);
+    }
+
     url.searchParams.set('token', token);
     return url.toString();
   }
@@ -443,6 +449,25 @@ function normalizeOrigin(origin) {
     return new Url(origin).origin;
   } catch (_err) {
     return undefined;
+  }
+}
+
+/**
+ * 判斷設定值是否為可公開給 webview 使用的 HTTP(S) URL。
+ *
+ * @param {string} value
+ * @returns {boolean}
+ */
+function isHttpUrl(value) {
+  if (!value) {
+    return false;
+  }
+
+  try {
+    const url = new Url(value);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch (_err) {
+    return false;
   }
 }
 
