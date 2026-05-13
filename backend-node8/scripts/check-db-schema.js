@@ -61,18 +61,6 @@ const REQUIRED_COLUMNS = {
   }
 };
 
-const OPTIONAL_COLUMNS = {
-  turnover_adjustments: {
-    id: { type: 'varchar(36)', nullable: false },
-    player_id: { type: /^varchar\(/, nullable: false },
-    business_date: { type: 'varchar(10)', nullable: false },
-    amount_points: { type: 'int unsigned', nullable: false },
-    source: { type: 'varchar(40)', nullable: false },
-    reason: { type: 'varchar(255)', nullable: true },
-    created_at: { type: 'int unsigned', nullable: false }
-  }
-};
-
 const REQUIRED_UNIQUE_INDEXES = [
   { table: 'admin_users', columns: ['username'] },
   { table: 'players', columns: ['external_id'] },
@@ -136,25 +124,6 @@ async function main() {
     if (!hasIndexPrefix(allIndexesByTable[index.table], index.columns)) {
       warnings.push('Optional performance index is missing: ' + index.table + '(' + index.columns.join(', ') + ')');
     }
-  });
-
-  Object.keys(OPTIONAL_COLUMNS).forEach(function (tableName) {
-    if (!columnsByTable[tableName]) {
-      warnings.push('Optional legacy table is missing: ' + tableName);
-      return;
-    }
-
-    Object.keys(OPTIONAL_COLUMNS[tableName]).forEach(function (columnName) {
-      const column = columnsByTable[tableName][columnName];
-      const expected = OPTIONAL_COLUMNS[tableName][columnName];
-
-      if (!column) {
-        warnings.push('Optional legacy column is missing: ' + tableName + '.' + columnName);
-        return;
-      }
-
-      validateColumn(warnings, tableName, columnName, column, expected);
-    });
   });
 
   if (errors.length) {

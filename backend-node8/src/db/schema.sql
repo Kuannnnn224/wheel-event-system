@@ -86,16 +86,3 @@ CREATE TABLE IF NOT EXISTS webview_sessions (
   KEY idx_webview_sessions_player_id (player_id),
   CONSTRAINT fk_webview_sessions_player FOREIGN KEY (player_id) REFERENCES players (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='App Webview 存取 session';
-
-CREATE TABLE IF NOT EXISTS turnover_adjustments (
-  id varchar(36) NOT NULL COMMENT '流水異動紀錄 ID',
-  player_id varchar(255) NOT NULL COMMENT '玩家內部 ID',
-  business_date varchar(10) NOT NULL COMMENT '活動業務日期 YYYY-MM-DD',
-  amount_points int unsigned NOT NULL COMMENT '異動流水點數',
-  source varchar(40) NOT NULL DEFAULT 'admin' COMMENT '異動來源',
-  reason varchar(255) NULL COMMENT '異動原因',
-  created_at int unsigned NOT NULL COMMENT '建立時間 Unix timestamp 秒',
-  PRIMARY KEY (id),
-  KEY idx_turnover_adjustments_player_date (player_id, business_date),
-  CONSTRAINT fk_turnover_adjustments_player FOREIGN KEY (player_id) REFERENCES players (id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='舊版流水異動紀錄';

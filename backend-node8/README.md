@@ -119,7 +119,7 @@ Node 8 backend does not use TypeORM `synchronize`, so the database schema must a
 - `award_override_rules`
 - `webview_sessions`
 
-The baseline also includes legacy `turnover_adjustments` for historical compatibility. The Node 8 runtime does not currently query that table, so `npm run check:db` reports it as a warning rather than a startup-blocking failure.
+Legacy `turnover_adjustments` is no longer part of the Node 8 runtime baseline. If an existing test database still has it, drop it only after confirming historical data retention is not needed.
 
 For an existing database, run `npm run check:db` before switching traffic. The check is intentionally non-destructive.
 
