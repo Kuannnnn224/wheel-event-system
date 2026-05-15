@@ -25,11 +25,13 @@ async function main() {
 
     const health = await getJson(base, '/health');
     const apiHealth = await getJson(base, '/api/health');
+    const gameConfig = await getJson(base, '/api/webview/game-config');
     const adminHtml = await getText(base, '/');
     const webviewHtml = await getText(base, '/webview.html');
 
     assertContains(adminHtml, '<div id="root"></div>', 'admin page root');
     assertContains(webviewHtml, '100% Winning Bronze Spin', 'webview page marker');
+    assertGameConfig(gameConfig);
 
     console.log(JSON.stringify({
       ok: true,
@@ -37,6 +39,9 @@ async function main() {
       port: address.port,
       health: health,
       apiHealth: apiHealth,
+      gameConfig: {
+        stageCount: gameConfig.stages.length
+      },
       staticPages: {
         admin: true,
         webview: true
@@ -124,6 +129,16 @@ function getText(base, path) {
 function assertContains(body, expected, label) {
   if (body.indexOf(expected) === -1) {
     throw new Error('Missing ' + label + ' in HTTP smoke response.');
+  }
+}
+
+/**
+ * @param {Object} gameConfig
+ * @returns {void}
+ */
+function assertGameConfig(gameConfig) {
+  if (!gameConfig || !Array.isArray(gameConfig.stages) || gameConfig.stages.length !== 5) {
+    throw new Error('Invalid /api/webview/game-config response.');
   }
 }
 

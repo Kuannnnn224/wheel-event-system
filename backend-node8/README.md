@@ -47,11 +47,13 @@ Webview session endpoints:
 ```text
 POST /api/webview/sessions
 GET /api/webview/client-config
+GET /api/webview/game-config
 GET /api/webview/sessions/current?token=<token>
 POST /api/admin/webview-sessions
 ```
 
 `POST /api/webview/sessions` is the app-facing session creation endpoint and does not require an extra platform API key. `POST /api/admin/webview-sessions` is protected by admin JWT and is only enabled when `NODE_ENV=development`.
+`GET /api/webview/client-config` returns the API base URL used by the static webview. `GET /api/webview/game-config` returns wheel stages, thresholds, and prize display data. `GET /api/webview/sessions/current` returns only token-bound player/session state.
 
 GitHub Pages test webview:
 

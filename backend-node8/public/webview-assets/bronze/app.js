@@ -46,6 +46,7 @@ const WHEEL_LIGHT_ORDER = ['wlb-3', 'wlb-2', 'wlb-1', 'wlb-0', 'wlb-5', 'wlb-4']
 const EDGE_NEAR_MISS_RATE = 0.35;
 
 let sessionState = null;
+let gameConfig = { stages: [] };
 let currentSpinState = SPIN_STATES.NEED_WAGER;
 let currentStageNumber = 1;
 let totalRot = 0;
@@ -151,8 +152,12 @@ async function fetchSessionState() {
   return apiJson(`/webview/sessions/current?${query.toString()}`);
 }
 
+async function fetchGameConfig() {
+  return apiJson('/webview/game-config');
+}
+
 function sortedStages() {
-  return [...(sessionState?.stages || [])].sort((a, b) => a.stageNumber - b.stageNumber);
+  return [...(gameConfig.stages || [])].sort((a, b) => a.stageNumber - b.stageNumber);
 }
 
 function currentProgress() {
@@ -352,6 +357,12 @@ function applySessionState(nextState) {
   } else {
     stopPolling();
   }
+}
+
+function applyGameConfig(nextConfig) {
+  gameConfig = {
+    stages: Array.isArray(nextConfig?.stages) ? nextConfig.stages : [],
+  };
 }
 
 async function refreshSessionState() {
@@ -556,7 +567,9 @@ async function init() {
   setStatusMessage('載入玩家資料中...');
 
   try {
-    await refreshSessionState();
+    const [nextGameConfig, nextSessionState] = await Promise.all([fetchGameConfig(), fetchSessionState()]);
+    applyGameConfig(nextGameConfig);
+    applySessionState(nextSessionState);
   } catch (error) {
     console.warn('[webview] init failed:', error);
     showAuthError(error instanceof Error ? error.message : '初始化失敗');

@@ -50,7 +50,18 @@ class WebviewSessionController {
   }
 
   /**
-   * 依 token 查詢 webview session 狀態。
+   * 回傳 webview 轉盤渲染需要的階段與獎項設定。
+   *
+   * @param {Object} _req
+   * @param {{ json: Function }} res
+   * @returns {Promise<void>}
+   */
+  async getGameConfig(_req, res) {
+    res.json(await this.webviewSessionService.getGameConfig());
+  }
+
+  /**
+   * 依 token 查詢 webview session 與玩家狀態。
    *
    * @param {{ query: Object }} req
    * @param {{ json: Function }} res

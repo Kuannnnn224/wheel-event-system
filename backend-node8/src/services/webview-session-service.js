@@ -109,7 +109,19 @@ class WebviewSessionService {
   }
 
   /**
-   * 回傳 webview session token 對應的玩家與進度狀態。
+   * 回傳 webview 轉盤渲染需要的靜態遊戲設定。
+   *
+   * @returns {Promise<{ stages: Object[] }>}
+   */
+  async getGameConfig() {
+    const stages = await this.probabilityService.getStages();
+    return {
+      stages: this.toPublicStages(stages)
+    };
+  }
+
+  /**
+   * 回傳 webview session token 對應的玩家與進度狀態，不包含靜態遊戲設定。
    *
    * @param {string} token
    * @returns {Promise<Object>}
@@ -117,17 +129,13 @@ class WebviewSessionService {
   async getSessionState(token) {
     const session = await this.findValidSession(token);
     const businessDate = time.resolveCurrentBusinessDate(undefined, this.config.businessTimeZone);
-    const results = await Promise.all([
-      this.getDailyProgress(session.playerId, businessDate),
-      this.probabilityService.getStages()
-    ]);
+    const progress = await this.getDailyProgress(session.playerId, businessDate);
 
     return {
       player: session.player,
       expiresAt: session.expiresAt,
       businessDate: businessDate,
-      progress: this.toPublicProgress(results[0]),
-      stages: this.toPublicStages(results[1])
+      progress: this.toPublicProgress(progress)
     };
   }
 

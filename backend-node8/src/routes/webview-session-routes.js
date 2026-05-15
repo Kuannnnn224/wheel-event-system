@@ -26,6 +26,7 @@ class WebviewSessionRoutes {
     router.post('/webview/sessions', AsyncHandler.wrap((req, res, next) => this.webviewSessionController.createAppSession(req, res, next)));
     router.post('/admin/webview-sessions', this.requireAdmin, AsyncHandler.wrap((req, res, next) => this.webviewSessionController.createAdminSession(req, res, next)));
     router.get('/webview/client-config', AsyncHandler.wrap((req, res, next) => this.webviewSessionController.getClientConfig(req, res, next)));
+    router.get('/webview/game-config', AsyncHandler.wrap((req, res, next) => this.webviewSessionController.getGameConfig(req, res, next)));
     router.get('/webview/sessions/current', AsyncHandler.wrap((req, res, next) => this.webviewSessionController.getCurrentSession(req, res, next)));
   }
 }
