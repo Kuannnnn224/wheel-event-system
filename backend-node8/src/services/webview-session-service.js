@@ -220,9 +220,9 @@ class WebviewSessionService {
   async findDailyProgress(db, playerId, businessDate) {
     const row = await db.maybeOne(
       [
-        'SELECT turnover_points, unlocked_stage',
+        'SELECT turnoverPoints, unlockedStage',
         'FROM player_daily_progress',
-        'WHERE player_id = ? AND business_date = ?',
+        'WHERE playerId = ? AND businessDate = ?',
         'LIMIT 1'
       ].join(' '),
       [playerId, businessDate]
@@ -233,8 +233,8 @@ class WebviewSessionService {
     }
 
     return {
-      turnoverPoints: row.turnover_points,
-      unlockedStage: row.unlocked_stage
+      turnoverPoints: row.turnoverPoints,
+      unlockedStage: row.unlockedStage
     };
   }
 
@@ -252,11 +252,11 @@ class WebviewSessionService {
     await db.execute(
       [
         'INSERT INTO player_daily_progress',
-        '(id, player_id, business_date, turnover_points, unlocked_stage)',
+        '(id, playerId, businessDate, turnoverPoints, unlockedStage)',
         'VALUES (?, ?, ?, ?, ?)',
         'ON DUPLICATE KEY UPDATE',
-        'turnover_points = GREATEST(turnover_points, VALUES(turnover_points)),',
-        'unlocked_stage = GREATEST(unlocked_stage, VALUES(unlocked_stage))'
+        'turnoverPoints = GREATEST(turnoverPoints, VALUES(turnoverPoints)),',
+        'unlockedStage = GREATEST(unlockedStage, VALUES(unlockedStage))'
       ].join(' '),
       [ids.pseudoUuid(), playerId, businessDate, turnoverPoints, unlockedStage]
     );

@@ -23,10 +23,10 @@ class ReportsRepository {
   async findSpinsBetween(startDate, endDate) {
     const rows = await this.db.query(
       [
-        'SELECT id, player_id, business_date, stage_number, prize_config_id, prize_name, amount_points, created_at, probability_table',
+        'SELECT id, playerId, businessDate, stageNumber, prizeConfigId, prizeName, amountPoints, createdAt, probabilityTable',
         'FROM spin_records',
-        'WHERE business_date BETWEEN ? AND ?',
-        'ORDER BY business_date ASC, stage_number ASC'
+        'WHERE businessDate BETWEEN ? AND ?',
+        'ORDER BY businessDate ASC, stageNumber ASC'
       ].join(' '),
       [startDate, endDate]
     );
@@ -45,10 +45,10 @@ class ReportsRepository {
   async findSpinsByPlayerBetween(playerId, startDate, endDate) {
     const rows = await this.db.query(
       [
-        'SELECT id, player_id, business_date, stage_number, prize_config_id, prize_name, amount_points, created_at, probability_table',
+        'SELECT id, playerId, businessDate, stageNumber, prizeConfigId, prizeName, amountPoints, createdAt, probabilityTable',
         'FROM spin_records',
-        'WHERE player_id = ? AND business_date BETWEEN ? AND ?',
-        'ORDER BY business_date ASC, stage_number ASC'
+        'WHERE playerId = ? AND businessDate BETWEEN ? AND ?',
+        'ORDER BY businessDate ASC, stageNumber ASC'
       ].join(' '),
       [playerId, startDate, endDate]
     );
@@ -67,10 +67,10 @@ class ReportsRepository {
   async findProgressByPlayerBetween(playerId, startDate, endDate) {
     const rows = await this.db.query(
       [
-        'SELECT id, player_id, business_date, turnover_points, unlocked_stage',
+        'SELECT id, playerId, businessDate, turnoverPoints, unlockedStage',
         'FROM player_daily_progress',
-        'WHERE player_id = ? AND business_date BETWEEN ? AND ?',
-        'ORDER BY business_date ASC'
+        'WHERE playerId = ? AND businessDate BETWEEN ? AND ?',
+        'ORDER BY businessDate ASC'
       ].join(' '),
       [playerId, startDate, endDate]
     );
@@ -88,14 +88,14 @@ class ReportsRepository {
 function mapSpinRow(row) {
   return {
     id: row.id,
-    playerId: row.player_id,
-    businessDate: row.business_date,
-    stageNumber: row.stage_number,
-    prizeConfigId: row.prize_config_id,
-    prizeName: row.prize_name,
-    amountPoints: row.amount_points,
-    createdAt: row.created_at,
-    probabilityTable: row.probability_table
+    playerId: row.playerId,
+    businessDate: row.businessDate,
+    stageNumber: row.stageNumber,
+    prizeConfigId: row.prizeConfigId,
+    prizeName: row.prizeName,
+    amountPoints: row.amountPoints,
+    createdAt: row.createdAt,
+    probabilityTable: row.probabilityTable
   };
 }
 
@@ -108,10 +108,10 @@ function mapSpinRow(row) {
 function mapProgressRow(row) {
   return {
     id: row.id,
-    playerId: row.player_id,
-    businessDate: row.business_date,
-    turnoverPoints: row.turnover_points,
-    unlockedStage: row.unlocked_stage
+    playerId: row.playerId,
+    businessDate: row.businessDate,
+    turnoverPoints: row.turnoverPoints,
+    unlockedStage: row.unlockedStage
   };
 }
 

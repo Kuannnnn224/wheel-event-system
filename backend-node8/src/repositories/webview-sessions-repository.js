@@ -16,12 +16,12 @@ const time = require('../utils/time');
 /**
  * @typedef {Object} WebviewSessionRow
  * @property {string} id
- * @property {string} player_id
+ * @property {string} playerId
  * @property {string} token
- * @property {number} expires_at
- * @property {number} created_at
- * @property {number|null} player_created_at
- * @property {number|null} player_updated_at
+ * @property {number} expiresAt
+ * @property {number} createdAt
+ * @property {number|null} playerCreatedAt
+ * @property {number|null} playerUpdatedAt
  */
 
 /**
@@ -65,7 +65,7 @@ class WebviewSessionsRepository {
     await this.db.execute(
       [
         'INSERT INTO webview_sessions',
-        '(id, player_id, token, expires_at, created_at)',
+        '(id, playerId, token, expiresAt, createdAt)',
         'VALUES (?, ?, ?, ?, ?)'
       ].join(' '),
       [session.id, session.playerId, session.token, session.expiresAt, session.createdAt]
@@ -83,11 +83,11 @@ class WebviewSessionsRepository {
   async findByToken(token) {
     const row = await this.db.maybeOne(
       [
-        'SELECT ws.id, ws.player_id, ws.token, ws.expires_at, ws.created_at,',
-        'p.created_at AS player_created_at,',
-        'p.updated_at AS player_updated_at',
+        'SELECT ws.id, ws.playerId, ws.token, ws.expiresAt, ws.createdAt,',
+        'p.createdAt AS playerCreatedAt,',
+        'p.updatedAt AS playerUpdatedAt',
         'FROM webview_sessions ws',
-        'INNER JOIN players p ON p.id = ws.player_id',
+        'INNER JOIN players p ON p.id = ws.playerId',
         'WHERE ws.token = ?',
         'LIMIT 1'
       ].join(' '),
@@ -110,14 +110,14 @@ class WebviewSessionsRepository {
 
     return {
       id: row.id,
-      playerId: row.player_id,
+      playerId: row.playerId,
       token: row.token,
-      expiresAt: row.expires_at,
-      createdAt: row.created_at,
+      expiresAt: row.expiresAt,
+      createdAt: row.createdAt,
       player: {
-        id: row.player_id,
-        createdAt: row.player_created_at,
-        updatedAt: row.player_updated_at
+        id: row.playerId,
+        createdAt: row.playerCreatedAt,
+        updatedAt: row.playerUpdatedAt
       }
     };
   }

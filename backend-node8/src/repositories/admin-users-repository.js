@@ -14,10 +14,10 @@
  * @typedef {Object} AdminUserRow
  * @property {string} id
  * @property {string} username
- * @property {string} password_hash
- * @property {number} is_active
- * @property {number} created_at
- * @property {number} updated_at
+ * @property {string} passwordHash
+ * @property {number} isActive
+ * @property {number} createdAt
+ * @property {number} updatedAt
  */
 
 /**
@@ -42,7 +42,7 @@ class AdminUsersRepository {
   async findByUsername(username) {
     const row = await this.db.maybeOne(
       [
-        'SELECT id, username, password_hash, is_active, created_at, updated_at',
+        'SELECT id, username, passwordHash, isActive, createdAt, updatedAt',
         'FROM admin_users',
         'WHERE username = ?',
         'LIMIT 1'
@@ -62,9 +62,9 @@ class AdminUsersRepository {
   async findActiveByUsername(username) {
     const row = await this.db.maybeOne(
       [
-        'SELECT id, username, password_hash, is_active, created_at, updated_at',
+        'SELECT id, username, passwordHash, isActive, createdAt, updatedAt',
         'FROM admin_users',
-        'WHERE username = ? AND is_active = 1',
+        'WHERE username = ? AND isActive = 1',
         'LIMIT 1'
       ].join(' '),
       [username]
@@ -83,7 +83,7 @@ class AdminUsersRepository {
     await this.db.execute(
       [
         'INSERT INTO admin_users',
-        '(id, username, password_hash, is_active, created_at, updated_at)',
+        '(id, username, passwordHash, isActive, createdAt, updatedAt)',
         'VALUES (?, ?, ?, ?, ?, ?)'
       ].join(' '),
       [
@@ -113,10 +113,10 @@ class AdminUsersRepository {
     return {
       id: row.id,
       username: row.username,
-      passwordHash: row.password_hash,
-      isActive: !!row.is_active,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at
+      passwordHash: row.passwordHash,
+      isActive: !!row.isActive,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt
     };
   }
 }

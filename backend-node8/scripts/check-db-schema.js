@@ -7,76 +7,76 @@ const REQUIRED_COLUMNS = {
   admin_users: {
     id: { type: 'varchar(36)', nullable: false },
     username: { type: 'varchar(80)', nullable: false },
-    password_hash: { type: 'varchar(255)', nullable: false },
-    is_active: { type: /^tinyint/, nullable: false },
-    created_at: { type: 'int unsigned', nullable: false },
-    updated_at: { type: 'int unsigned', nullable: false }
+    passwordHash: { type: 'varchar(255)', nullable: false },
+    isActive: { type: /^tinyint/, nullable: false },
+    createdAt: { type: 'int unsigned', nullable: false },
+    updatedAt: { type: 'int unsigned', nullable: false }
   },
   players: {
     id: { type: 'varchar(120)', nullable: false },
-    created_at: { type: 'int unsigned', nullable: false },
-    updated_at: { type: 'int unsigned', nullable: false }
+    createdAt: { type: 'int unsigned', nullable: false },
+    updatedAt: { type: 'int unsigned', nullable: false }
   },
   player_daily_progress: {
     id: { type: 'varchar(36)', nullable: false },
-    player_id: { type: 'varchar(120)', nullable: false },
-    business_date: { type: 'varchar(10)', nullable: false },
-    turnover_points: { type: 'int unsigned', nullable: false },
-    unlocked_stage: { type: 'tinyint unsigned', nullable: false }
+    playerId: { type: 'varchar(120)', nullable: false },
+    businessDate: { type: 'varchar(10)', nullable: false },
+    turnoverPoints: { type: 'int unsigned', nullable: false },
+    unlockedStage: { type: 'tinyint unsigned', nullable: false }
   },
   spin_records: {
     id: { type: 'varchar(36)', nullable: false },
-    player_id: { type: 'varchar(120)', nullable: false },
-    business_date: { type: 'varchar(10)', nullable: false },
-    stage_number: { type: 'tinyint unsigned', nullable: false },
-    prize_config_id: { type: 'int', nullable: true },
-    prize_name: { type: 'varchar(120)', nullable: false },
-    amount_points: { type: 'int unsigned', nullable: false },
-    created_at: { type: 'int unsigned', nullable: false },
-    probability_table: { type: 'varchar(10)', nullable: false }
+    playerId: { type: 'varchar(120)', nullable: false },
+    businessDate: { type: 'varchar(10)', nullable: false },
+    stageNumber: { type: 'tinyint unsigned', nullable: false },
+    prizeConfigId: { type: 'int', nullable: true },
+    prizeName: { type: 'varchar(120)', nullable: false },
+    amountPoints: { type: 'int unsigned', nullable: false },
+    createdAt: { type: 'int unsigned', nullable: false },
+    probabilityTable: { type: 'varchar(10)', nullable: false }
   },
   award_override_rules: {
     id: { type: 'varchar(36)', nullable: false },
-    player_id: { type: 'varchar(120)', nullable: false },
-    business_date: { type: 'varchar(10)', nullable: false },
-    stage_number: { type: 'tinyint unsigned', nullable: false },
+    playerId: { type: 'varchar(120)', nullable: false },
+    businessDate: { type: 'varchar(10)', nullable: false },
+    stageNumber: { type: 'tinyint unsigned', nullable: false },
     status: { type: 'varchar(20)', nullable: false },
-    pending_key: { type: 'varchar(180)', nullable: true },
+    pendingKey: { type: 'varchar(180)', nullable: true },
     reason: { type: 'varchar(255)', nullable: true },
-    created_by_admin_id: { type: 'varchar(36)', nullable: true },
-    cancelled_by_admin_id: { type: 'varchar(36)', nullable: true },
-    consumed_spin_record_id: { type: 'varchar(36)', nullable: true },
-    created_at: { type: 'int unsigned', nullable: false },
-    updated_at: { type: 'int unsigned', nullable: false },
-    consumed_at: { type: 'int unsigned', nullable: true },
-    cancelled_at: { type: 'int unsigned', nullable: true }
+    createdByAdminId: { type: 'varchar(36)', nullable: true },
+    cancelledByAdminId: { type: 'varchar(36)', nullable: true },
+    consumedSpinRecordId: { type: 'varchar(36)', nullable: true },
+    createdAt: { type: 'int unsigned', nullable: false },
+    updatedAt: { type: 'int unsigned', nullable: false },
+    consumedAt: { type: 'int unsigned', nullable: true },
+    cancelledAt: { type: 'int unsigned', nullable: true }
   },
   webview_sessions: {
     id: { type: 'varchar(36)', nullable: false },
-    player_id: { type: 'varchar(120)', nullable: false },
+    playerId: { type: 'varchar(120)', nullable: false },
     token: { type: 'varchar(128)', nullable: false },
-    expires_at: { type: 'int unsigned', nullable: false },
-    created_at: { type: 'int unsigned', nullable: false }
+    expiresAt: { type: 'int unsigned', nullable: false },
+    createdAt: { type: 'int unsigned', nullable: false }
   }
 };
 
 const REQUIRED_UNIQUE_INDEXES = [
   { table: 'admin_users', columns: ['username'] },
-  { table: 'player_daily_progress', columns: ['player_id', 'business_date'] },
-  { table: 'spin_records', columns: ['player_id', 'business_date', 'stage_number'] },
-  { table: 'award_override_rules', columns: ['pending_key'] },
+  { table: 'player_daily_progress', columns: ['playerId', 'businessDate'] },
+  { table: 'spin_records', columns: ['playerId', 'businessDate', 'stageNumber'] },
+  { table: 'award_override_rules', columns: ['pendingKey'] },
   { table: 'webview_sessions', columns: ['token'] }
 ];
 
 const REQUIRED_INDEXES = [
-  { table: 'player_daily_progress', columns: ['business_date'] },
-  { table: 'spin_records', columns: ['business_date'] },
-  { table: 'award_override_rules', columns: ['business_date'] },
+  { table: 'player_daily_progress', columns: ['businessDate'] },
+  { table: 'spin_records', columns: ['businessDate'] },
+  { table: 'award_override_rules', columns: ['businessDate'] },
   { table: 'award_override_rules', columns: ['status'] }
 ];
 
 const OPTIONAL_INDEXES = [
-  { table: 'players', columns: ['created_at'] }
+  { table: 'players', columns: ['createdAt'] }
 ];
 
 const FORBIDDEN_COLUMNS = {

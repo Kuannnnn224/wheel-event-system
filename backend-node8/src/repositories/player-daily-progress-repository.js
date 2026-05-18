@@ -14,10 +14,10 @@ const ids = require('../utils/ids');
 /**
  * @typedef {Object} PlayerDailyProgressRow
  * @property {string} id
- * @property {string} player_id
- * @property {string} business_date
- * @property {number} turnover_points
- * @property {number} unlocked_stage
+ * @property {string} playerId
+ * @property {string} businessDate
+ * @property {number} turnoverPoints
+ * @property {number} unlockedStage
  */
 
 /**
@@ -43,9 +43,9 @@ class PlayerDailyProgressRepository {
   async findByPlayerAndDate(playerId, businessDate, tx) {
     const row = await this.getDb(tx).maybeOne(
       [
-        'SELECT id, player_id, business_date, turnover_points, unlocked_stage',
+        'SELECT id, playerId, businessDate, turnoverPoints, unlockedStage',
         'FROM player_daily_progress',
-        'WHERE player_id = ? AND business_date = ?',
+        'WHERE playerId = ? AND businessDate = ?',
         'LIMIT 1'
       ].join(' '),
       [playerId, businessDate]
@@ -68,11 +68,11 @@ class PlayerDailyProgressRepository {
     await this.getDb(tx).execute(
       [
         'INSERT INTO player_daily_progress',
-        '(id, player_id, business_date, turnover_points, unlocked_stage)',
+        '(id, playerId, businessDate, turnoverPoints, unlockedStage)',
         'VALUES (?, ?, ?, ?, ?)',
         'ON DUPLICATE KEY UPDATE',
-        'turnover_points = GREATEST(turnover_points, VALUES(turnover_points)),',
-        'unlocked_stage = GREATEST(unlocked_stage, VALUES(unlocked_stage))'
+        'turnoverPoints = GREATEST(turnoverPoints, VALUES(turnoverPoints)),',
+        'unlockedStage = GREATEST(unlockedStage, VALUES(unlockedStage))'
       ].join(' '),
       [ids.pseudoUuid(), playerId, businessDate, turnoverPoints, unlockedStage]
     );
@@ -93,10 +93,10 @@ class PlayerDailyProgressRepository {
 
     return {
       id: row.id,
-      playerId: row.player_id,
-      businessDate: row.business_date,
-      turnoverPoints: row.turnover_points,
-      unlockedStage: row.unlocked_stage
+      playerId: row.playerId,
+      businessDate: row.businessDate,
+      turnoverPoints: row.turnoverPoints,
+      unlockedStage: row.unlockedStage
     };
   }
 

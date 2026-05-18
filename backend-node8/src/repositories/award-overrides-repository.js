@@ -23,7 +23,7 @@ class AwardOverridesRepository {
    * @returns {Promise<Object[]>}
    */
   async list(filters) {
-    const where = ['r.business_date = ?'];
+    const where = ['r.businessDate = ?'];
     const params = [filters.businessDate];
 
     if (filters.status) {
@@ -32,11 +32,11 @@ class AwardOverridesRepository {
     }
 
     if (filters.playerId) {
-      where.push('r.player_id = ?');
+      where.push('r.playerId = ?');
       params.push(filters.playerId);
     }
 
-    const rows = await this.db.query(this.selectSql() + ' WHERE ' + where.join(' AND ') + ' ORDER BY r.created_at DESC, r.stage_number ASC', params);
+    const rows = await this.db.query(this.selectSql() + ' WHERE ' + where.join(' AND ') + ' ORDER BY r.createdAt DESC, r.stageNumber ASC', params);
     return rows.map(this.mapRow);
   }
 
@@ -56,7 +56,7 @@ class AwardOverridesRepository {
       return '?';
     }).join(', ');
     const rows = await this.getDb(tx).query(
-      this.selectSql() + ' WHERE r.pending_key IN (' + placeholders + ') ORDER BY r.stage_number ASC',
+      this.selectSql() + ' WHERE r.pendingKey IN (' + placeholders + ') ORDER BY r.stageNumber ASC',
       pendingKeys
     );
 
@@ -72,7 +72,7 @@ class AwardOverridesRepository {
    */
   async findPendingById(id, businessDate) {
     const row = await this.db.maybeOne(
-      this.selectSql() + ' WHERE r.id = ? AND r.business_date = ? AND r.status = ? LIMIT 1',
+      this.selectSql() + ' WHERE r.id = ? AND r.businessDate = ? AND r.status = ? LIMIT 1',
       [id, businessDate, 'pending']
     );
 
@@ -90,7 +90,7 @@ class AwardOverridesRepository {
    */
   async findPendingForSpin(playerId, businessDate, stageNumber, tx) {
     const row = await this.getDb(tx).maybeOne(
-      this.selectSql() + ' WHERE r.player_id = ? AND r.business_date = ? AND r.stage_number = ? AND r.status = ? LIMIT 1',
+      this.selectSql() + ' WHERE r.playerId = ? AND r.businessDate = ? AND r.stageNumber = ? AND r.status = ? LIMIT 1',
       [playerId, businessDate, stageNumber, 'pending']
     );
 
@@ -131,7 +131,7 @@ class AwardOverridesRepository {
       await this.getDb(tx).execute(
         [
           'INSERT INTO award_override_rules',
-          '(id, player_id, business_date, stage_number, status, pending_key, reason, created_by_admin_id, cancelled_by_admin_id, consumed_spin_record_id, created_at, updated_at, consumed_at, cancelled_at)',
+          '(id, playerId, businessDate, stageNumber, status, pendingKey, reason, createdByAdminId, cancelledByAdminId, consumedSpinRecordId, createdAt, updatedAt, consumedAt, cancelledAt)',
           'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         ].join(' '),
         [
@@ -168,7 +168,7 @@ class AwardOverridesRepository {
     await this.db.execute(
       [
         'UPDATE award_override_rules',
-        'SET status = ?, pending_key = NULL, cancelled_by_admin_id = ?, cancelled_at = ?, updated_at = ?',
+        'SET status = ?, pendingKey = NULL, cancelledByAdminId = ?, cancelledAt = ?, updatedAt = ?',
         'WHERE id = ?'
       ].join(' '),
       ['cancelled', adminId || null, now, now, rule.id]
@@ -195,7 +195,7 @@ class AwardOverridesRepository {
     await this.getDb(tx).execute(
       [
         'UPDATE award_override_rules',
-        'SET status = ?, pending_key = NULL, consumed_spin_record_id = ?, consumed_at = ?, updated_at = ?',
+        'SET status = ?, pendingKey = NULL, consumedSpinRecordId = ?, consumedAt = ?, updatedAt = ?',
         'WHERE id = ?'
       ].join(' '),
       ['consumed', spinRecordId, now, now, rule.id]
@@ -217,15 +217,15 @@ class AwardOverridesRepository {
   selectSql() {
     return [
       'SELECT',
-      'r.id, r.player_id, r.business_date, r.stage_number, r.status, r.pending_key, r.reason,',
-      'r.created_by_admin_id, r.cancelled_by_admin_id, r.consumed_spin_record_id,',
-      'r.created_at, r.updated_at, r.consumed_at, r.cancelled_at,',
-      'p.created_at AS player_created_at, p.updated_at AS player_updated_at,',
-      's.business_date AS spin_business_date, s.stage_number AS spin_stage_number,',
-      's.prize_name AS spin_prize_name, s.amount_points AS spin_amount_points, s.created_at AS spin_created_at',
+      'r.id, r.playerId, r.businessDate, r.stageNumber, r.status, r.pendingKey, r.reason,',
+      'r.createdByAdminId, r.cancelledByAdminId, r.consumedSpinRecordId,',
+      'r.createdAt, r.updatedAt, r.consumedAt, r.cancelledAt,',
+      'p.createdAt AS playerCreatedAt, p.updatedAt AS playerUpdatedAt,',
+      's.businessDate AS spinBusinessDate, s.stageNumber AS spinStageNumber,',
+      's.prizeName AS spinPrizeName, s.amountPoints AS spinAmountPoints, s.createdAt AS spinCreatedAt',
       'FROM award_override_rules r',
-      'INNER JOIN players p ON p.id = r.player_id',
-      'LEFT JOIN spin_records s ON s.id = r.consumed_spin_record_id'
+      'INNER JOIN players p ON p.id = r.playerId',
+      'LEFT JOIN spin_records s ON s.id = r.consumedSpinRecordId'
     ].join(' ');
   }
 
@@ -242,36 +242,36 @@ class AwardOverridesRepository {
 
     const rule = {
       id: row.id,
-      playerId: row.player_id,
-      businessDate: row.business_date,
-      stageNumber: row.stage_number,
+      playerId: row.playerId,
+      businessDate: row.businessDate,
+      stageNumber: row.stageNumber,
       status: row.status,
-      pendingKey: row.pending_key,
+      pendingKey: row.pendingKey,
       reason: row.reason,
-      createdByAdminId: row.created_by_admin_id,
-      cancelledByAdminId: row.cancelled_by_admin_id,
-      consumedSpinRecordId: row.consumed_spin_record_id,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-      consumedAt: row.consumed_at,
-      cancelledAt: row.cancelled_at,
+      createdByAdminId: row.createdByAdminId,
+      cancelledByAdminId: row.cancelledByAdminId,
+      consumedSpinRecordId: row.consumedSpinRecordId,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      consumedAt: row.consumedAt,
+      cancelledAt: row.cancelledAt,
       player: {
-        id: row.player_id,
-        createdAt: row.player_created_at,
-        updatedAt: row.player_updated_at
+        id: row.playerId,
+        createdAt: row.playerCreatedAt,
+        updatedAt: row.playerUpdatedAt
       },
       consumedSpinRecord: null
     };
 
-    if (row.consumed_spin_record_id) {
+    if (row.consumedSpinRecordId) {
       rule.consumedSpinRecord = {
-        id: row.consumed_spin_record_id,
-        playerId: row.player_id,
-        businessDate: row.spin_business_date,
-        stageNumber: row.spin_stage_number,
-        prizeName: row.spin_prize_name,
-        amountPoints: row.spin_amount_points,
-        createdAt: row.spin_created_at
+        id: row.consumedSpinRecordId,
+        playerId: row.playerId,
+        businessDate: row.spinBusinessDate,
+        stageNumber: row.spinStageNumber,
+        prizeName: row.spinPrizeName,
+        amountPoints: row.spinAmountPoints,
+        createdAt: row.spinCreatedAt
       };
     }
 

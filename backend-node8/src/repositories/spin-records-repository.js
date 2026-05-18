@@ -19,14 +19,14 @@ const time = require('../utils/time');
 /**
  * @typedef {Object} SpinRecordRow
  * @property {string} id
- * @property {string} player_id
- * @property {string} business_date
- * @property {number} stage_number
- * @property {number|null} prize_config_id
- * @property {string} prize_name
- * @property {number} amount_points
- * @property {number} created_at
- * @property {string} probability_table
+ * @property {string} playerId
+ * @property {string} businessDate
+ * @property {number} stageNumber
+ * @property {number|null} prizeConfigId
+ * @property {string} prizeName
+ * @property {number} amountPoints
+ * @property {number} createdAt
+ * @property {string} probabilityTable
  */
 
 /**
@@ -52,11 +52,11 @@ class SpinRecordsRepository {
   async findByPlayerAndDate(playerId, businessDate, tx) {
     const rows = await this.getDb(tx).query(
       [
-        'SELECT id, player_id, business_date, stage_number, prize_config_id,',
-        'prize_name, amount_points, created_at, probability_table',
+        'SELECT id, playerId, businessDate, stageNumber, prizeConfigId,',
+        'prizeName, amountPoints, createdAt, probabilityTable',
         'FROM spin_records',
-        'WHERE player_id = ? AND business_date = ?',
-        'ORDER BY stage_number ASC'
+        'WHERE playerId = ? AND businessDate = ?',
+        'ORDER BY stageNumber ASC'
       ].join(' '),
       [playerId, businessDate]
     );
@@ -83,11 +83,11 @@ class SpinRecordsRepository {
     }).join(', ');
     const rows = await this.getDb(tx).query(
       [
-        'SELECT id, player_id, business_date, stage_number, prize_config_id,',
-        'prize_name, amount_points, created_at, probability_table',
+        'SELECT id, playerId, businessDate, stageNumber, prizeConfigId,',
+        'prizeName, amountPoints, createdAt, probabilityTable',
         'FROM spin_records',
-        'WHERE player_id = ? AND business_date = ? AND stage_number IN (' + placeholders + ')',
-        'ORDER BY stage_number ASC'
+        'WHERE playerId = ? AND businessDate = ? AND stageNumber IN (' + placeholders + ')',
+        'ORDER BY stageNumber ASC'
       ].join(' '),
       [playerId, businessDate].concat(stageNumbers)
     );
@@ -105,14 +105,14 @@ class SpinRecordsRepository {
   async sumAmountPointsByDate(businessDate, tx) {
     const row = await this.getDb(tx).maybeOne(
       [
-        'SELECT COALESCE(SUM(amount_points), 0) AS total_amount_points',
+        'SELECT COALESCE(SUM(amountPoints), 0) AS totalAmountPoints',
         'FROM spin_records',
-        'WHERE business_date = ?'
+        'WHERE businessDate = ?'
       ].join(' '),
       [businessDate]
     );
 
-    return row ? Number(row.total_amount_points) : 0;
+    return row ? Number(row.totalAmountPoints) : 0;
   }
 
   /**
@@ -145,7 +145,7 @@ class SpinRecordsRepository {
     await this.getDb(tx).execute(
       [
         'INSERT INTO spin_records',
-        '(id, player_id, business_date, stage_number, prize_config_id, prize_name, amount_points, created_at, probability_table)',
+        '(id, playerId, businessDate, stageNumber, prizeConfigId, prizeName, amountPoints, createdAt, probabilityTable)',
         'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
       ].join(' '),
       [
@@ -173,14 +173,14 @@ class SpinRecordsRepository {
   mapRow(row) {
     return {
       id: row.id,
-      playerId: row.player_id,
-      businessDate: row.business_date,
-      stageNumber: row.stage_number,
-      prizeConfigId: row.prize_config_id,
-      prizeName: row.prize_name,
-      amountPoints: row.amount_points,
-      createdAt: row.created_at,
-      probabilityTable: row.probability_table
+      playerId: row.playerId,
+      businessDate: row.businessDate,
+      stageNumber: row.stageNumber,
+      prizeConfigId: row.prizeConfigId,
+      prizeName: row.prizeName,
+      amountPoints: row.amountPoints,
+      createdAt: row.createdAt,
+      probabilityTable: row.probabilityTable
     };
   }
 

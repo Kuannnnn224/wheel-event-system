@@ -12,8 +12,8 @@ const time = require('../utils/time');
 /**
  * @typedef {Object} PlayerRow
  * @property {string} id
- * @property {number} created_at
- * @property {number} updated_at
+ * @property {number} createdAt
+ * @property {number} updatedAt
  */
 
 /**
@@ -38,9 +38,9 @@ class PlayersRepository {
   async listPlayers(limit, tx) {
     const rows = await this.getDb(tx).query(
       [
-        'SELECT id, created_at, updated_at',
+        'SELECT id, createdAt, updatedAt',
         'FROM players',
-        'ORDER BY created_at DESC',
+        'ORDER BY createdAt DESC',
         'LIMIT ?'
       ].join(' '),
       [limit]
@@ -58,7 +58,7 @@ class PlayersRepository {
   async findById(id, tx) {
     const row = await this.getDb(tx).maybeOne(
       [
-        'SELECT id, created_at, updated_at',
+        'SELECT id, createdAt, updatedAt',
         'FROM players',
         'WHERE id = ?',
         'LIMIT 1'
@@ -87,7 +87,7 @@ class PlayersRepository {
     await this.getDb(tx).execute(
       [
         'INSERT INTO players',
-        '(id, created_at, updated_at)',
+        '(id, createdAt, updatedAt)',
         'VALUES (?, ?, ?)'
       ].join(' '),
       [player.id, player.createdAt, player.updatedAt]
@@ -133,8 +133,8 @@ class PlayersRepository {
 
     return {
       id: row.id,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt
     };
   }
 

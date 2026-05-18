@@ -123,10 +123,12 @@ Node 8 backend does not use TypeORM `synchronize`, so the database schema must a
 - `webview_sessions`
 
 Legacy `turnover_adjustments` is no longer part of the Node 8 runtime baseline. If an existing test database still has it, drop it only after confirming historical data retention is not needed.
-The runtime no longer keeps a separate `players.external_id`; `players.id` is the platform-provided player ID, and related `player_id` columns store that same value.
+The runtime no longer keeps a separate `players.external_id`; `players.id` is the platform-provided player ID, and related `playerId` columns store that same value.
+Table names remain snake_case, while database column names use camelCase such as `playerId`, `businessDate`, and `createdAt`.
 
 For an existing database, run `npm run check:db` before switching traffic. The check is intentionally non-destructive.
 
+If an older local or staging database still uses snake_case columns, run [src/db/migrate-columns-to-camel-case.sql](src/db/migrate-columns-to-camel-case.sql) or rebuild from [src/db/schema.sql](src/db/schema.sql).
 If an older local or staging database still has `demo_sessions`, rename it to `webview_sessions` or rebuild from [src/db/schema.sql](src/db/schema.sql) before testing the webview session endpoints.
 
 If the existing `webview_sessions` table comment still contains demo wording, update only the metadata:
