@@ -54,6 +54,7 @@ POST /api/admin/webview-sessions
 
 `POST /api/webview/sessions` is the app-facing session creation endpoint and does not require an extra platform API key. `POST /api/admin/webview-sessions` is protected by admin JWT and is only enabled when `NODE_ENV=development`.
 `GET /api/webview/client-config` returns the API base URL used by the static webview. `GET /api/webview/game-config` returns wheel stages, thresholds, and prize display data. `GET /api/webview/sessions/current` returns only token-bound player/session state.
+App 對接需要的 real spin、game config、current session 格式整理在 [docs/WEBVIEW_APP_API.md](docs/WEBVIEW_APP_API.md)。
 
 GitHub Pages test webview:
 
