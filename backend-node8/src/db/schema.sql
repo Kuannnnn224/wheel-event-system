@@ -1,6 +1,5 @@
--- Node 8 Express backend reference schema.
--- This is a non-destructive schema baseline for new environments.
--- Existing production databases should be compared before applying migrations.
+-- Node 8 Express backend latest schema baseline.
+-- Use this file to initialize or rebuild the current expected database shape.
 
 CREATE TABLE IF NOT EXISTS adminUsers (
   id varchar(36) NOT NULL COMMENT '管理員 ID',

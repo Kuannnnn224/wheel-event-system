@@ -126,10 +126,7 @@ Legacy `turnover_adjustments` is no longer part of the Node 8 runtime baseline. 
 The runtime no longer keeps a separate `players.external_id`; `players.id` is the platform-provided player ID, and related `playerId` columns store that same value.
 Runtime table and column names use camelCase, such as `webviewSessions`, `spinRecords`, `playerId`, `businessDate`, and `createdAt`. The `players` table keeps its simple lowercase name because it has no word boundary.
 
-For an existing database, run `npm run check:db` before switching traffic. The check is intentionally non-destructive.
-
-If an older local or staging database still uses snake_case columns or table names, run [src/db/migrate-columns-to-camel-case.sql](src/db/migrate-columns-to-camel-case.sql) first, then [src/db/migrate-tables-to-camel-case.sql](src/db/migrate-tables-to-camel-case.sql), or rebuild from [src/db/schema.sql](src/db/schema.sql).
-If an older local or staging database still has `demo_sessions`, rename it to `webviewSessions` or rebuild from [src/db/schema.sql](src/db/schema.sql) before testing the webview session endpoints.
+For an existing database, rebuild it from [src/db/schema.sql](src/db/schema.sql), then run `npm run check:db` before switching traffic. The check is intentionally non-destructive.
 
 If the existing `webviewSessions` table comment still contains demo wording, update only the metadata:
 
