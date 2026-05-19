@@ -2,109 +2,59 @@
 
 const Url = require('url').URL;
 const HttpError = require('../utils/http-error');
-const ids = require('../utils/ids');
 const time = require('../utils/time');
 
 /**
- * @typedef {Object} WebviewSessionServiceOptions
- * @property {Object} config
- * @property {import('../db').Database} db
- * @property {import('../repositories/webview-sessions-repository')} webviewSessionsRepository
- * @property {import('../repositories/players-repository')} [playersRepository]
- * @property {import('./players-service')} [playersService]
- * @property {import('./probability-service')} probabilityService
- */
-
-/**
- * @typedef {Object} CreateWebviewSessionInput
- * @property {string} playerId
- * @property {number} turnoverPoints
- */
-
-/**
- * @typedef {Object} WebviewUrlContext
- * @property {string|undefined} [origin]
- * @property {string|undefined} [referer]
- */
-
-/**
- * 處理正式 webview session 生命週期與公開 webview 狀態。
+ * 處理正式 Webview 開頁 URL 與公開玩家狀態。
  */
 class WebviewSessionService {
   /**
-   * 初始化 webview session service，保存設定、DB 與 session/player 相依。
+   * 初始化 webview service。
    *
-   * @param {WebviewSessionServiceOptions} options
+   * @param {{ config: Object, webviewTokenService: Object, spinRecordsRepository: Object, probabilityService: Object }} options
    */
   constructor(options) {
     this.config = options.config;
-    this.db = options.db || options.webviewSessionsRepository.db;
-    this.webviewSessionsRepository = options.webviewSessionsRepository;
-    this.playersRepository = options.playersRepository;
-    this.playersService = options.playersService;
+    this.webviewTokenService = options.webviewTokenService;
+    this.spinRecordsRepository = options.spinRecordsRepository;
     this.probabilityService = options.probabilityService;
   }
 
   /**
-   * 建立正式 webview session、更新玩家進度並回傳 webview URL。
+   * 建立正式 Webview URL，App client 呼叫此 API 後把 URL 回給前端開頁。
    *
-   * @param {CreateWebviewSessionInput|Object|null|undefined} input
-   * @param {WebviewUrlContext} [context]
-   * @returns {Promise<{ player: Object, token: string, expiresAt: number, webviewUrl: string }>}
+   * @param {Object|null|undefined} input
+   * @param {{ origin?: string, referer?: string }} [context]
+   * @returns {Promise<{ player: Object, token: string, issuedAt: number, expiresAt: number, webviewUrl: string }>}
    */
   async createSession(input, context) {
     const dto = this.parseCreateSessionInput(input);
-    const player = await this.getOrCreatePlayer(dto.playerId);
-    const businessDate = time.resolveCurrentBusinessDate(undefined, this.config.businessTimeZone);
-    const stageThresholds = await this.getStageThresholds();
-    const token = ids.randomToken();
-    const ttlMinutes = Number(this.config.webviewSessionTtlMinutes || 30);
-    const expiresAt = time.unixTimestampSeconds() + ttlMinutes * 60;
-
-    const session = await this.db.withTransaction(async (tx) => {
-      const progress = await this.findDailyProgress(tx, player.id, businessDate);
-      const turnoverPoints = Math.max(progress ? progress.turnoverPoints : 0, dto.turnoverPoints);
-      const unlockedStage = Math.max(
-        progress ? progress.unlockedStage : 0,
-        calculateUnlockedStage(turnoverPoints, stageThresholds)
-      );
-
-      await this.saveDailyProgressSnapshot(tx, player.id, businessDate, turnoverPoints, unlockedStage);
-
-      return this.webviewSessionsRepository.withConnection(tx).create({
-        playerId: player.id,
-        token: token,
-        expiresAt: expiresAt
-      });
-    });
+    const signed = this.webviewTokenService.sign(dto);
 
     return {
-      player: player,
-      token: session.token,
-      expiresAt: session.expiresAt,
-      webviewUrl: this.buildWebviewUrl(this.resolveWebviewBaseUrl(context || {}), token)
+      player: this.toPublicPlayer(dto.playerId),
+      token: signed.token,
+      issuedAt: signed.issuedAt,
+      expiresAt: signed.expiresAt,
+      webviewUrl: this.buildWebviewUrl(this.resolveWebviewBaseUrl(context || {}), signed.token)
     };
   }
 
   /**
-   * 驗證 webview session token 是否存在且未過期。
+   * 驗證 token 並回傳玩家上下文。
    *
    * @param {string} token
    * @returns {Promise<Object>}
    */
   async validateToken(token) {
-    const session = await this.findValidSession(token);
-    return session.player;
-  }
+    const payload = this.webviewTokenService.verify(token);
 
-  /**
-   * 回傳 webview 前端可公開讀取的 API 設定。
-   *
-   * @returns {{ apiBaseUrl: string }}
-   */
-  getClientConfig() {
     return {
-      apiBaseUrl: this.resolveWebviewApiBaseUrl()
+      id: payload.playerId,
+      turnoverPoints: payload.turnoverPoints,
+      unlockedStage: payload.unlockedStage,
+      tokenIssuedAt: payload.issuedAt,
+      tokenExpiresAt: payload.expiresAt
     };
   }
 
@@ -121,34 +71,43 @@ class WebviewSessionService {
   }
 
   /**
-   * 回傳 webview session token 對應的玩家與進度狀態，不包含靜態遊戲設定。
+   * 回傳 token 對應玩家今日狀態。
    *
    * @param {string} token
    * @returns {Promise<Object>}
    */
   async getSessionState(token) {
-    const session = await this.findValidSession(token);
+    const player = await this.validateToken(token);
     const businessDate = time.resolveCurrentBusinessDate(undefined, this.config.businessTimeZone);
-    const progress = await this.getDailyProgress(session.playerId, businessDate);
+    const spins = await this.spinRecordsRepository.findByPlayerAndDate(player.id, businessDate);
 
     return {
-      player: session.player,
-      expiresAt: session.expiresAt,
+      player: this.toPublicPlayer(player.id),
+      issuedAt: player.tokenIssuedAt,
+      expiresAt: player.tokenExpiresAt,
       businessDate: businessDate,
-      progress: this.toPublicProgress(progress)
+      progress: this.toPublicProgress({
+        playerId: player.id,
+        businessDate: businessDate,
+        turnoverPoints: player.turnoverPoints,
+        unlockedStage: player.unlockedStage,
+        spins: spins
+      })
     };
   }
 
   /**
-   * 解析 app 建立 webview session 的輸入資料。
+   * 解析 App client 建立 Webview URL 的輸入。
    *
-   * @param {CreateWebviewSessionInput|Object|null|undefined} input
-   * @returns {CreateWebviewSessionInput}
+   * @param {Object|null|undefined} input
+   * @returns {{ playerId: string, turnoverPoints: number, unlockedStage: number }}
    */
   parseCreateSessionInput(input) {
     const errors = [];
     const source = input || {};
     const playerId = typeof source.playerId === 'string' ? source.playerId.trim() : '';
+    const turnoverPoints = Number(source.turnoverPoints);
+    const unlockedStage = Number(source.unlockedStage);
 
     if (typeof source.playerId !== 'string') {
       errors.push('playerId must be a string');
@@ -156,10 +115,14 @@ class WebviewSessionService {
       errors.push('playerId must be between 1 and 120 characters');
     }
 
-    if (!Number.isInteger(source.turnoverPoints)) {
+    if (!Number.isInteger(turnoverPoints)) {
       errors.push('turnoverPoints must be an integer number');
-    } else if (source.turnoverPoints < 0) {
+    } else if (turnoverPoints < 0) {
       errors.push('turnoverPoints must not be less than 0');
+    }
+
+    if (!Number.isInteger(unlockedStage) || unlockedStage < 0 || unlockedStage > 5) {
+      errors.push('unlockedStage must be an integer between 0 and 5');
     }
 
     if (errors.length) {
@@ -168,130 +131,44 @@ class WebviewSessionService {
 
     return {
       playerId: playerId,
-      turnoverPoints: source.turnoverPoints
+      turnoverPoints: turnoverPoints,
+      unlockedStage: unlockedStage
     };
   }
 
   /**
-   * 依平台玩家 ID 查詢玩家，沒有時建立新玩家。
+   * 把玩家 ID 包成公開回傳格式。
    *
    * @param {string} playerId
-   * @returns {Promise<Object>}
+   * @returns {{ id: string }}
    */
-  async getOrCreatePlayer(playerId) {
-    if (this.playersService && typeof this.playersService.getOrCreateByPlayerId === 'function') {
-      return this.playersService.getOrCreateByPlayerId(playerId);
-    }
-
-    if (this.playersRepository && typeof this.playersRepository.getOrCreateByPlayerId === 'function') {
-      return this.playersRepository.getOrCreateByPlayerId(playerId);
-    }
-
-    throw new Error('WebviewSessionService requires player get-or-create support.');
-  }
-
-  /**
-   * 取得各階段流水門檻，供 webview 顯示進度。
-   *
-   * @returns {Promise<Array<{ stageNumber: number, turnoverThresholdPoints: number }>>}
-   */
-  async getStageThresholds() {
-    if (typeof this.probabilityService.getStageThresholds === 'function') {
-      return this.probabilityService.getStageThresholds();
-    }
-
-    const stages = await this.probabilityService.getStages();
-    return stages.map(function (stage) {
-      return {
-        stageNumber: stage.stageNumber,
-        turnoverThresholdPoints: stage.turnoverThresholdPoints
-      };
-    });
-  }
-
-  /**
-   * 查詢玩家指定業務日期的進度快照。
-   *
-   * @param {import('../db').DatabaseConnection} db
-   * @param {string} playerId
-   * @param {string} businessDate
-   * @returns {Promise<{ turnoverPoints: number, unlockedStage: number }|null>}
-   */
-  async findDailyProgress(db, playerId, businessDate) {
-    const row = await db.maybeOne(
-      [
-        'SELECT turnoverPoints, unlockedStage',
-        'FROM playerDailyProgress',
-        'WHERE playerId = ? AND businessDate = ?',
-        'LIMIT 1'
-      ].join(' '),
-      [playerId, businessDate]
-    );
-
-    if (!row) {
-      return null;
-    }
-
+  toPublicPlayer(playerId) {
     return {
-      turnoverPoints: row.turnoverPoints,
-      unlockedStage: row.unlockedStage
+      id: playerId
     };
-  }
-
-  /**
-   * 寫入或提高玩家當日流水與解鎖階段。
-   *
-   * @param {import('../db').DatabaseConnection} db
-   * @param {string} playerId
-   * @param {string} businessDate
-   * @param {number} turnoverPoints
-   * @param {number} unlockedStage
-   * @returns {Promise<void>}
-   */
-  async saveDailyProgressSnapshot(db, playerId, businessDate, turnoverPoints, unlockedStage) {
-    await db.execute(
-      [
-        'INSERT INTO playerDailyProgress',
-        '(id, playerId, businessDate, turnoverPoints, unlockedStage)',
-        'VALUES (?, ?, ?, ?, ?)',
-        'ON DUPLICATE KEY UPDATE',
-        'turnoverPoints = GREATEST(turnoverPoints, VALUES(turnoverPoints)),',
-        'unlockedStage = GREATEST(unlockedStage, VALUES(unlockedStage))'
-      ].join(' '),
-      [ids.pseudoUuid(), playerId, businessDate, turnoverPoints, unlockedStage]
-    );
-  }
-
-  /**
-   * 取得玩家當日公開進度資料。
-   *
-   * @param {string} playerId
-   * @param {string} businessDate
-   * @returns {Promise<Object>}
-   */
-  async getDailyProgress(playerId, businessDate) {
-    if (!this.playersService || typeof this.playersService.getDailyProgress !== 'function') {
-      throw new Error('WebviewSessionService requires PlayersService.getDailyProgress.');
-    }
-
-    return this.playersService.getDailyProgress(playerId, businessDate);
   }
 
   /**
    * 把內部進度資料轉成前端可用格式。
    *
-   * @param {Object} progress
+   * @param {{ playerId: string, businessDate: string, turnoverPoints: number, unlockedStage: number, spins: Object[] }} progress
    * @returns {Object}
    */
   toPublicProgress(progress) {
+    const spins = progress.spins || [];
+
     return {
-      player: progress.player,
+      player: this.toPublicPlayer(progress.playerId),
       businessDate: progress.businessDate,
       turnoverPoints: progress.turnoverPoints,
       unlockedStage: progress.unlockedStage,
-      playedStages: progress.playedStages,
-      totalWinPoints: progress.totalWinPoints,
-      spins: progress.spins.map(function (spin) {
+      playedStages: spins.map(function (spin) {
+        return spin.stageNumber;
+      }),
+      totalWinPoints: spins.reduce(function (sum, spin) {
+        return sum + spin.amountPoints;
+      }, 0),
+      spins: spins.map(function (spin) {
         return {
           id: spin.id,
           businessDate: spin.businessDate,
@@ -330,7 +207,7 @@ class WebviewSessionService {
   /**
    * 決定產生 webview URL 時使用的 base URL。
    *
-   * @param {WebviewUrlContext} context
+   * @param {{ origin?: string, referer?: string }} context
    * @returns {string}
    */
   resolveWebviewBaseUrl(context) {
@@ -359,7 +236,7 @@ class WebviewSessionService {
   /**
    * 從 request context 推出目前請求來源。
    *
-   * @param {WebviewUrlContext} context
+   * @param {{ origin?: string, referer?: string }} context
    * @returns {string|undefined}
    */
   resolveRequestOrigin(context) {
@@ -397,58 +274,12 @@ class WebviewSessionService {
     url.searchParams.set('token', token);
     return url.toString();
   }
-
-  /**
-   * 查詢 token session 並確認尚未過期。
-   *
-   * @param {string} token
-   * @returns {Promise<Object>}
-   */
-  async findValidSession(token) {
-    const session = await this.webviewSessionsRepository.findByToken(token);
-    if (!session) {
-      throw HttpError.notFound('Webview session not found.');
-    }
-
-    if (session.expiresAt <= time.unixTimestampSeconds()) {
-      throw HttpError.unauthorized('Webview session expired.');
-    }
-
-    return session;
-  }
 }
 
-/**
- * 依流水點數計算玩家目前解鎖到哪個階段。
- *
- * @param {number} turnoverPoints
- * @param {Array<{ stageNumber: number, turnoverThresholdPoints: number }>} stages
- * @returns {number}
- */
-function calculateUnlockedStage(turnoverPoints, stages) {
-  return stages.filter(function (stage) {
-    return turnoverPoints >= stage.turnoverThresholdPoints;
-  }).reduce(function (highest, stage) {
-    return Math.max(highest, stage.stageNumber);
-  }, 0);
-}
-
-/**
- * 整理設定字串，將 undefined 或空白值轉成空字串。
- *
- * @param {string|undefined} value
- * @returns {string}
- */
 function normalizeConfigString(value) {
   return value ? String(value).trim() : '';
 }
 
-/**
- * 解析並正規化 origin，只保留協定、網域與 port。
- *
- * @param {string|undefined} origin
- * @returns {string|undefined}
- */
 function normalizeOrigin(origin) {
   if (!origin) {
     return undefined;
@@ -461,12 +292,6 @@ function normalizeOrigin(origin) {
   }
 }
 
-/**
- * 判斷設定值是否為可公開給 webview 使用的 HTTP(S) URL。
- *
- * @param {string} value
- * @returns {boolean}
- */
 function isHttpUrl(value) {
   if (!value) {
     return false;

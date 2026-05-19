@@ -3,11 +3,11 @@
 const HttpError = require('../utils/http-error');
 
 /**
- * webview session API 的 Express controller。
+ * Webview 開頁與狀態 API 的 Express controller。
  */
 class WebviewSessionController {
   /**
-   * 初始化 webview session controller，保存 service。
+   * 初始化 webview controller，保存 service。
    *
    * @param {import('../services/webview-session-service')} webviewSessionService
    */
@@ -16,7 +16,7 @@ class WebviewSessionController {
   }
 
   /**
-   * 由 app 建立正式 webview session。
+   * 由 App client 建立正式 webview URL。
    *
    * @param {{ body: Object, headers: Object }} req
    * @param {{ json: Function }} res
@@ -24,29 +24,6 @@ class WebviewSessionController {
    */
   async createAppSession(req, res) {
     res.json(await this.webviewSessionService.createSession(req.body, this.getRequestContext(req)));
-  }
-
-  /**
-   * 由開發環境後控工具建立 webview session。
-   *
-   * @param {{ body: Object, headers: Object }} req
-   * @param {{ json: Function }} res
-   * @returns {Promise<void>}
-   */
-  async createAdminSession(req, res) {
-    this.assertAdminSessionCreationAllowed();
-    res.json(await this.webviewSessionService.createSession(req.body, this.getRequestContext(req)));
-  }
-
-  /**
-   * 回傳 webview 前端啟動時需要的公開設定。
-   *
-   * @param {Object} _req
-   * @param {{ json: Function }} res
-   * @returns {Promise<void>}
-   */
-  async getClientConfig(_req, res) {
-    res.json(this.webviewSessionService.getClientConfig());
   }
 
   /**
@@ -61,7 +38,7 @@ class WebviewSessionController {
   }
 
   /**
-   * 依 token 查詢 webview session 與玩家狀態。
+   * 依 token 查詢 webview 玩家狀態。
    *
    * @param {{ query: Object }} req
    * @param {{ json: Function }} res
@@ -87,18 +64,6 @@ class WebviewSessionController {
       origin: req.headers.origin,
       referer: req.headers.referer
     };
-  }
-
-  /**
-   * 後控工具建立 webview 連結只允許開發環境，避免正式環境污染真實玩家資料。
-   *
-   * @returns {void}
-   */
-  assertAdminSessionCreationAllowed() {
-    const nodeEnv = this.webviewSessionService.config.nodeEnv;
-    if (nodeEnv !== 'development') {
-      throw HttpError.forbidden('Admin webview sessions are only available in development.');
-    }
   }
 }
 

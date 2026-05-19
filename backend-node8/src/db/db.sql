@@ -1,6 +1,6 @@
 -- App integration database baseline.
 -- This file only creates the two activity tables required by the App-facing flow.
--- The backend stores platform player IDs directly in playerId and does not maintain a players table.
+-- The backend stores platform player IDs directly in playerId and does not maintain player/session tables.
 
 SET NAMES utf8mb4;
 

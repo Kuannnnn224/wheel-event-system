@@ -5,12 +5,7 @@ const HttpError = require('../utils/http-error');
 const time = require('../utils/time');
 
 /**
- * @typedef {Object} SimulateSpinInput
- * @property {number|string} stageNumber
- */
-
-/**
- * 處理抽獎模擬與真實抽獎的主要流程編排。
+ * 處理真實抽獎的主要流程編排。
  */
 class SpinsService {
   /**
@@ -21,7 +16,6 @@ class SpinsService {
  * @param {import('../db').Database} options.db
  * @param {import('./probability-service')} options.probabilityService
  * @param {import('./webview-session-service')} options.webviewSessionService
-   * @param {import('../repositories/player-daily-progress-repository')} options.playerDailyProgressRepository
    * @param {import('../repositories/spin-records-repository')} options.spinRecordsRepository
    * @param {import('./award-overrides-service')} options.awardOverridesService
    */
@@ -30,30 +24,8 @@ class SpinsService {
     this.db = options.db;
     this.probabilityService = options.probabilityService;
     this.webviewSessionService = options.webviewSessionService;
-    this.playerDailyProgressRepository = options.playerDailyProgressRepository;
     this.spinRecordsRepository = options.spinRecordsRepository;
     this.awardOverridesService = options.awardOverridesService;
-  }
-
-  /**
-   * 執行不寫 DB 的抽獎模擬流程。
-   *
-   * @param {SimulateSpinInput} input
-   * @returns {Promise<Object>}
-   */
-  async simulate(input) {
-    const stageNumber = this.parseStageNumber(input);
-    const draw = await this.probabilityService.drawPrize(stageNumber);
-
-    return {
-      stageNumber: stageNumber,
-      probabilityTable: draw.table,
-      prize: {
-        rewardCode: draw.prize.rewardCode,
-        name: draw.prize.name,
-        amountPoints: draw.prize.amountPoints
-      }
-    };
   }
 
   /**
@@ -68,11 +40,10 @@ class SpinsService {
     const businessDate = time.resolveCurrentBusinessDate(undefined, this.config.businessTimeZone);
 
     return this.db.withTransaction(async (tx) => {
-      const progress = await this.playerDailyProgressRepository.findByPlayerAndDate(player.id, businessDate, tx);
       const existingSpins = await this.spinRecordsRepository.findByPlayerAndDate(player.id, businessDate, tx);
       const rule = spinRules.validateRealSpinRule({
         requestedStage: dto.stageNumber,
-        unlockedStage: progress ? progress.unlockedStage : 0,
+        unlockedStage: player.unlockedStage,
         playedStages: existingSpins.map((spin) => spin.stageNumber)
       });
 
@@ -89,7 +60,11 @@ class SpinsService {
       }
 
       return {
-        player: player,
+        player: {
+          id: player.id,
+          turnoverPoints: player.turnoverPoints,
+          unlockedStage: player.unlockedStage
+        },
         businessDate: businessDate,
         spin: {
           id: spin.id,
@@ -179,7 +154,7 @@ class SpinsService {
   /**
    * 解析 API 傳入的 stageNumber，限制只能是 LV1 到 LV5。
    *
-   * @param {SimulateSpinInput|Object|null|undefined} input
+   * @param {Object|null|undefined} input
    * @returns {number}
    */
   parseStageNumber(input) {

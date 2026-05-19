@@ -38,8 +38,8 @@
 - 活動是每日制，日期欄位統一使用 `businessDate`，格式 `YYYY-MM-DD`。
 - `BUSINESS_TIME_ZONE` 可設定部署地區時區；未設定時使用執行環境本地時區。
 - 目前沒有每日 12:00 清除資料排程；每日重置靠 `businessDate` 隔離資料。
-- 玩家流水不跨日，`player_daily_progress` 每位玩家每天一筆；正式流程由 app 建立 webview session 時帶入當日累積流水快照。
-- `players.id` 直接使用平台帶入的玩家 ID；不要再新增內部 ID / external ID 雙欄位或 `external_id` 查詢流程。
+- 玩家流水與解鎖階段由 App 既有流程提供；正式流程由 App client 呼叫 `POST /api/webview/sessions` 帶入平台玩家 ID、當日流水與已解鎖階段，本服務只把這些資料簽進 webview token。
+- Node 8 runtime 不維護 `players` 玩家主檔；`spinRecords.playerId` 與 `awardOverrideRules.playerId` 直接保存平台帶入的玩家 ID。
 - 玩家每日最多可抽 LV1 到 LV5 各一次。
 - 即使玩家一次補滿最高流水，也必須照 LV1、LV2、LV3、LV4、LV5 順序抽。
 - 抽獎金額與流水都用整數點數，不使用浮點數。
@@ -49,7 +49,7 @@
 - 指定派獎只對當日 `businessDate` 生效，真實抽獎時才會消耗 pending 規則。
 - 過去日期的 pending 指定派獎不會影響今日抽獎。
 - 多次模擬是本機記憶體 job，不寫入真實玩家 DB。
-- 後控 Webview 工具只能在 `NODE_ENV=development` 建立 webview session；production/staging 不可從後控建立，避免污染正式玩家資料。
+- 此正式 API 分支不掛後控 Webview 工具；開頁連結由 App client 呼叫正式 API 產生。
 
 ## Backend 邊界
 
@@ -64,7 +64,7 @@ Express runtime 依照這些層次切分：
 - `src/domain/`：純 business rule，不依賴 Express、DB、controller 或 repository。
 - `src/utils/`：通用小工具；不要把遊戲規則藏在 util。
 
-不要為了方便讓 `spins` 直接改機率 parser，也不要讓 `probability-imports` 決定真實抽獎流程。跨 module 需要用 service dependency 表達。
+不要為了方便讓 `spins` 直接改機率設定檔。跨 module 需要用 service dependency 表達。
 
 ## 機率模型邊界
 
@@ -72,28 +72,19 @@ Express runtime 依照這些層次切分：
 - `backend-node8/src/services/probability-service.js` 只負責讀寫 `probability.json`，並把 domain validation error 轉成 API error。
 - `backend-node8/src/utils/probability-picker.js` 是權重抽選工具；如果要調整抽選行為，先確認既有 roll-down 行為是否需要相容。
 - `spins-service` 是真實抽獎 orchestration：token、玩家進度、依序抽、交易寫入、指定派獎與每日上限。
-- `simulations-service` 應只拿 draw config 在記憶體跑，不碰真實玩家 DB。
+- 此正式 API 分支不掛模擬 API；若日後要恢復模擬，應只拿 draw config 在記憶體跑，不碰真實玩家 DB。
 - 機率核心要能被 server 拆出來測；新增或修改模型時，至少跑 `npm run test:probability-model`。
 
 ## 機率設定規則
 
-機率 JSON 位於 `backend-node8/config/probability.json`，由 parser 或 PM 上傳 ZIP 產生。
+機率 JSON 位於 `backend-node8/config/probability.json`。此正式 API 分支不掛 PM ZIP 匯入 API；若機率來源格式或產檔流程改變，應在外部產生新的 JSON 後再替換此檔。
 
-目前 ZIP 必須包含：
-
-- `config.xlsx`：LV 門檻、A-E 獎項名稱與點數；`門檻設置` 可包含 `每日送出上限`。
-- `weight.xlsx`：low/high 分流權重。
-- `low.xlsx`：low 表 A-E 權重。
-- `high.xlsx`：high 表 A-E 權重。
-- `prize.xlsx`：指定派獎 prize 表 A-E 權重。
-- `daily-limit.xlsx`：每日送出達上限後使用的 dailyLimit 表 A-E 權重。
-
-Parser、runtime model、報表與前端顯示要保持概念分離。不要手改 generated JSON 來當作機率來源；若格式或來源規則變了，應更新 parser 與測試。
+Runtime model 與前端顯示要保持概念分離。不要讓真實抽獎流程直接解析 XLSX 或 ZIP。
 
 ## DB 與時間
 
-- DB 時間欄位使用 Unix timestamp 秒數，例如 `created_at`、`updated_at`、`consumed_at`。
-- `business_date` 是每日活動分界，不是 timestamp。
+- DB 時間欄位使用 Unix timestamp 秒數，例如 `createdAt`、`updatedAt`、`consumedAt`。
+- `businessDate` 是每日活動分界，不是 timestamp。
 - Node 8 runtime 使用 raw SQL，不使用 TypeORM。
 - schema 相容性以 `backend-node8/src/db/schema.sql` 與 `npm run check-db` 為準。
 - DB 檢查應是非破壞性；不要在 check script 中自動 drop、truncate 或 migrate 真實資料。

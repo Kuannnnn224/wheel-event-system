@@ -10,20 +10,18 @@ const AWARD_OVERRIDE_STATUSES = ['pending', 'consumed', 'cancelled'];
  */
 class AwardOverridesService {
   /**
-   * 初始化指定派獎 service，保存玩家、抽獎紀錄與指定派獎 repository。
+   * 初始化指定派獎 service，保存抽獎紀錄與指定派獎 repository。
    *
    * @param {Object} options
    * @param {Object} options.config
    * @param {import('../db').Database} options.db
    * @param {import('../repositories/award-overrides-repository')} options.awardOverridesRepository
-   * @param {import('./players-service')} options.playersService
    * @param {import('../repositories/spin-records-repository')} options.spinRecordsRepository
    */
   constructor(options) {
     this.config = options.config;
     this.db = options.db;
     this.awardOverridesRepository = options.awardOverridesRepository;
-    this.playersService = options.playersService;
     this.spinRecordsRepository = options.spinRecordsRepository;
   }
 
@@ -54,36 +52,29 @@ class AwardOverridesService {
    */
   async create(input, adminId) {
     const dto = this.parseCreateInput(input);
-    const player = await this.playersService.findByPlayerId(dto.playerId);
-
-    if (!player) {
-      throw HttpError.notFound('找不到玩家，請先建立玩家後再新增指定派獎。');
-    }
-
     const businessDate = time.resolveCurrentBusinessDate(undefined, this.config.businessTimeZone);
 
     return this.db.withTransaction(async (tx) => {
-      const existingSpins = await this.spinRecordsRepository.findByPlayerDateAndStages(player.id, businessDate, dto.stageNumbers, tx);
+      const existingSpins = await this.spinRecordsRepository.findByPlayerDateAndStages(dto.playerId, businessDate, dto.stageNumbers, tx);
 
       if (existingSpins.length > 0) {
         const playedStages = existingSpins.map((spin) => spin.stageNumber).sort(sortNumbers);
-        throw HttpError.badRequest('玩家 ' + player.id + ' 今天 ' + this.formatStages(playedStages) + ' 已經抽過，該階段轉盤次數已用盡，不能新增指定派獎。');
+        throw HttpError.badRequest('玩家 ' + dto.playerId + ' 今天 ' + this.formatStages(playedStages) + ' 已經抽過，該階段轉盤次數已用盡，不能新增指定派獎。');
       }
 
-      const pendingKeys = dto.stageNumbers.map((stageNumber) => this.buildPendingKey(player.id, businessDate, stageNumber));
+      const pendingKeys = dto.stageNumbers.map((stageNumber) => this.buildPendingKey(dto.playerId, businessDate, stageNumber));
       const existingRules = await this.awardOverridesRepository.findByPendingKeys(pendingKeys, tx);
 
       if (existingRules.length > 0) {
         const duplicatedStages = existingRules.map((rule) => rule.stageNumber).sort(sortNumbers);
-        throw HttpError.badRequest('玩家 ' + player.id + ' 今天 ' + this.formatStages(duplicatedStages) + ' 已有等待中的指定派獎，請先取消原規則。');
+        throw HttpError.badRequest('玩家 ' + dto.playerId + ' 今天 ' + this.formatStages(duplicatedStages) + ' 已有等待中的指定派獎，請先取消原規則。');
       }
 
       const rules = dto.stageNumbers.map((stageNumber) => ({
-        playerId: player.id,
-        player: player,
+        playerId: dto.playerId,
         businessDate: businessDate,
         stageNumber: stageNumber,
-        pendingKey: this.buildPendingKey(player.id, businessDate, stageNumber),
+        pendingKey: this.buildPendingKey(dto.playerId, businessDate, stageNumber),
         reason: dto.reason,
         createdByAdminId: adminId
       }));

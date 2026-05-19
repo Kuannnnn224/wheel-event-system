@@ -10,8 +10,6 @@ async function main() {
   let server = null;
 
   try {
-    await container.authService.ensureInitialAdmin();
-
     server = await listen(createApp({
       config: config,
       container: container
@@ -26,12 +24,17 @@ async function main() {
     const health = await getJson(base, '/health');
     const apiHealth = await getJson(base, '/api/health');
     const gameConfig = await getJson(base, '/api/webview/game-config');
-    const adminHtml = await getText(base, '/');
+    const webviewSession = await postJson(base, '/api/webview/sessions', {
+      playerId: 'smoke-player',
+      turnoverPoints: 999999,
+      unlockedStage: 5
+    });
+    const currentSession = await getJson(base, '/api/webview/sessions/current?token=' + encodeURIComponent(webviewSession.token));
     const webviewHtml = await getText(base, '/webview.html');
 
-    assertContains(adminHtml, '<div id="root"></div>', 'admin page root');
     assertContains(webviewHtml, '100% Winning Bronze Spin', 'webview page marker');
     assertGameConfig(gameConfig);
+    assertCurrentSession(currentSession);
 
     console.log(JSON.stringify({
       ok: true,
@@ -42,8 +45,11 @@ async function main() {
       gameConfig: {
         stageCount: gameConfig.stages.length
       },
+      webviewSession: {
+        playerId: currentSession.player.id,
+        unlockedStage: currentSession.progress.unlockedStage
+      },
       staticPages: {
-        admin: true,
         webview: true
       }
     }, null, 2));
@@ -71,6 +77,25 @@ function listen(app) {
 /**
  * @param {{ host: string, port: number }} base
  * @param {string} path
+ * @param {Object} body
+ * @returns {Promise<Object>}
+ */
+function postJson(base, path, body) {
+  return requestText(base, path, 'POST', JSON.stringify(body), {
+    'Content-Type': 'application/json',
+    Accept: 'application/json'
+  }).then(function (responseBody) {
+    try {
+      return JSON.parse(responseBody);
+    } catch (err) {
+      throw new Error(path + ' returned invalid JSON: ' + err.message);
+    }
+  });
+}
+
+/**
+ * @param {{ host: string, port: number }} base
+ * @param {string} path
  * @returns {Promise<Object>}
  */
 function getJson(base, path) {
@@ -89,11 +114,25 @@ function getJson(base, path) {
  * @returns {Promise<string>}
  */
 function getText(base, path) {
+  return requestText(base, path, 'GET');
+}
+
+/**
+ * @param {{ host: string, port: number }} base
+ * @param {string} path
+ * @param {string} method
+ * @param {string|undefined} [body]
+ * @param {Object|undefined} [headers]
+ * @returns {Promise<string>}
+ */
+function requestText(base, path, method, body, headers) {
   return new Promise(function (resolve, reject) {
-    const req = http.get({
+    const req = http.request({
+      method: method,
       hostname: base.host,
       port: base.port,
       path: path,
+      headers: headers || {},
       timeout: 5000
     }, function (res) {
       let body = '';
@@ -117,6 +156,12 @@ function getText(base, path) {
       req.abort();
       reject(new Error(path + ' timed out.'));
     });
+
+    if (body) {
+      req.write(body);
+    }
+
+    req.end();
   });
 }
 
@@ -139,6 +184,20 @@ function assertContains(body, expected, label) {
 function assertGameConfig(gameConfig) {
   if (!gameConfig || !Array.isArray(gameConfig.stages) || gameConfig.stages.length !== 5) {
     throw new Error('Invalid /api/webview/game-config response.');
+  }
+}
+
+/**
+ * @param {Object} currentSession
+ * @returns {void}
+ */
+function assertCurrentSession(currentSession) {
+  if (!currentSession || !currentSession.player || currentSession.player.id !== 'smoke-player') {
+    throw new Error('Invalid /api/webview/sessions/current player response.');
+  }
+
+  if (!currentSession.progress || currentSession.progress.unlockedStage < 1) {
+    throw new Error('Invalid /api/webview/sessions/current progress response.');
   }
 }
 

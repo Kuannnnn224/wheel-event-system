@@ -13,7 +13,6 @@ class SpinsRoutes {
    */
   constructor(context) {
     this.spinsController = context.container.spinsController;
-    this.requireAdmin = context.requireAdmin;
   }
 
   /**
@@ -23,7 +22,6 @@ class SpinsRoutes {
    * @returns {void}
    */
   register(router) {
-    router.post('/spins/simulate', this.requireAdmin, AsyncHandler.wrap((req, res, next) => this.spinsController.simulate(req, res, next)));
     router.post('/spins/real', AsyncHandler.wrap((req, res, next) => this.spinsController.realSpin(req, res, next)));
   }
 }

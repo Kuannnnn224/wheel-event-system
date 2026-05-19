@@ -15,7 +15,6 @@ let shuttingDown = false;
  */
 async function main() {
   container = new Container(config);
-  await container.authService.ensureInitialAdmin();
 
   const app = createApp({
     config: config,

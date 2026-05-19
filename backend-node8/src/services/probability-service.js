@@ -110,21 +110,6 @@ class ProbabilityService {
   }
 
   /**
-   * 取得各階段流水門檻，供 webview 顯示進度。
-   *
-   * @returns {Promise<Array<{ stageNumber: number, turnoverThresholdPoints: number }>>}
-   */
-  async getStageThresholds() {
-    const stages = await this.getStages();
-    return stages.map(function (stage) {
-      return {
-        stageNumber: stage.stageNumber,
-        turnoverThresholdPoints: stage.turnoverThresholdPoints
-      };
-    });
-  }
-
-  /**
    * 取得指定階段可抽獎用的機率設定。
    *
    * @param {number} stageNumber

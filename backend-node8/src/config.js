@@ -92,15 +92,13 @@ const config = {
 
   businessTimeZone: readString('BUSINESS_TIME_ZONE', ''),
   jwtSecret: readString('JWT_SECRET', 'change-this-secret'),
-  jwtExpiresIn: readString('JWT_EXPIRES_IN', '8h'),
-  adminUsername: readString('ADMIN_USERNAME', 'admin'),
-  adminPassword: readString('ADMIN_PASSWORD', 'admin123'),
 
   webviewBaseUrl: readString('WEBVIEW_BASE_URL', ''),
   webviewApiBaseUrl: readString('WEBVIEW_API_BASE_URL', '/api'),
   webviewSessionTtlMinutes: readNumber('WEBVIEW_SESSION_TTL_MINUTES', 30),
+  webviewTokenSecret: readString('WEBVIEW_TOKEN_SECRET', readString('JWT_SECRET', 'change-this-secret')),
+  webviewTokenClockSkewSeconds: readNumber('WEBVIEW_TOKEN_CLOCK_SKEW_SECONDS', 300),
   probabilityConfigPath: resolvePath(readString('PROBABILITY_CONFIG_PATH', 'config/probability.json')),
-  probabilityImportStoragePath: resolvePath(readString('PROBABILITY_IMPORT_STORAGE_PATH', 'storage/probability-imports')),
   publicPath: resolvePath(readString('PUBLIC_PATH', 'public'))
 };
 

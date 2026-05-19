@@ -122,7 +122,9 @@ class AwardOverridesRepository {
         updatedAt: now,
         consumedAt: null,
         cancelledAt: null,
-        player: rule.player
+        player: {
+          id: rule.playerId
+        }
       };
     });
 
@@ -220,11 +222,9 @@ class AwardOverridesRepository {
       'r.id, r.playerId, r.businessDate, r.stageNumber, r.status, r.pendingKey, r.reason,',
       'r.createdByAdminId, r.cancelledByAdminId, r.consumedSpinRecordId,',
       'r.createdAt, r.updatedAt, r.consumedAt, r.cancelledAt,',
-      'p.createdAt AS playerCreatedAt, p.updatedAt AS playerUpdatedAt,',
       's.businessDate AS spinBusinessDate, s.stageNumber AS spinStageNumber,',
       's.prizeName AS spinPrizeName, s.amountPoints AS spinAmountPoints, s.createdAt AS spinCreatedAt',
       'FROM awardOverrideRules r',
-      'INNER JOIN players p ON p.id = r.playerId',
       'LEFT JOIN spinRecords s ON s.id = r.consumedSpinRecordId'
     ].join(' ');
   }
@@ -256,9 +256,7 @@ class AwardOverridesRepository {
       consumedAt: row.consumedAt,
       cancelledAt: row.cancelledAt,
       player: {
-        id: row.playerId,
-        createdAt: row.playerCreatedAt,
-        updatedAt: row.playerUpdatedAt
+        id: row.playerId
       },
       consumedSpinRecord: null
     };

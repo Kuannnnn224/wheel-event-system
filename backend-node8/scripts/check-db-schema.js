@@ -4,32 +4,11 @@ const config = require('../src/config');
 const db = require('../src/db');
 
 const REQUIRED_COLUMNS = {
-  adminUsers: {
-    id: { type: 'varchar(36)', nullable: false },
-    username: { type: 'varchar(80)', nullable: false },
-    passwordHash: { type: 'varchar(255)', nullable: false },
-    isActive: { type: /^tinyint/, nullable: false },
-    createdAt: { type: 'int unsigned', nullable: false },
-    updatedAt: { type: 'int unsigned', nullable: false }
-  },
-  players: {
-    id: { type: 'varchar(120)', nullable: false },
-    createdAt: { type: 'int unsigned', nullable: false },
-    updatedAt: { type: 'int unsigned', nullable: false }
-  },
-  playerDailyProgress: {
-    id: { type: 'varchar(36)', nullable: false },
-    playerId: { type: 'varchar(120)', nullable: false },
-    businessDate: { type: 'varchar(10)', nullable: false },
-    turnoverPoints: { type: 'int unsigned', nullable: false },
-    unlockedStage: { type: 'tinyint unsigned', nullable: false }
-  },
   spinRecords: {
     id: { type: 'varchar(36)', nullable: false },
     playerId: { type: 'varchar(120)', nullable: false },
     businessDate: { type: 'varchar(10)', nullable: false },
     stageNumber: { type: 'tinyint unsigned', nullable: false },
-    prizeConfigId: { type: 'int', nullable: true },
     prizeName: { type: 'varchar(120)', nullable: false },
     amountPoints: { type: 'int unsigned', nullable: false },
     createdAt: { type: 'int unsigned', nullable: false },
@@ -50,38 +29,22 @@ const REQUIRED_COLUMNS = {
     updatedAt: { type: 'int unsigned', nullable: false },
     consumedAt: { type: 'int unsigned', nullable: true },
     cancelledAt: { type: 'int unsigned', nullable: true }
-  },
-  webviewSessions: {
-    id: { type: 'varchar(36)', nullable: false },
-    playerId: { type: 'varchar(120)', nullable: false },
-    token: { type: 'varchar(128)', nullable: false },
-    expiresAt: { type: 'int unsigned', nullable: false },
-    createdAt: { type: 'int unsigned', nullable: false }
   }
 };
 
 const REQUIRED_UNIQUE_INDEXES = [
-  { table: 'adminUsers', columns: ['username'] },
-  { table: 'playerDailyProgress', columns: ['playerId', 'businessDate'] },
   { table: 'spinRecords', columns: ['playerId', 'businessDate', 'stageNumber'] },
-  { table: 'awardOverrideRules', columns: ['pendingKey'] },
-  { table: 'webviewSessions', columns: ['token'] }
+  { table: 'awardOverrideRules', columns: ['pendingKey'] }
 ];
 
 const REQUIRED_INDEXES = [
-  { table: 'playerDailyProgress', columns: ['businessDate'] },
+  { table: 'spinRecords', columns: ['playerId'] },
   { table: 'spinRecords', columns: ['businessDate'] },
   { table: 'awardOverrideRules', columns: ['businessDate'] },
-  { table: 'awardOverrideRules', columns: ['status'] }
+  { table: 'awardOverrideRules', columns: ['playerId', 'businessDate'] },
+  { table: 'awardOverrideRules', columns: ['status'] },
+  { table: 'awardOverrideRules', columns: ['consumedSpinRecordId'] }
 ];
-
-const OPTIONAL_INDEXES = [
-  { table: 'players', columns: ['createdAt'] }
-];
-
-const FORBIDDEN_COLUMNS = {
-  players: ['external_id']
-};
 
 async function main() {
   const columnsByTable = await loadColumnsByTable();
@@ -89,7 +52,6 @@ async function main() {
   const allIndexesByTable = indexInfo.allIndexesByTable;
   const uniqueIndexesByTable = indexInfo.uniqueIndexesByTable;
   const errors = [];
-  const warnings = [];
 
   Object.keys(REQUIRED_COLUMNS).forEach(function (tableName) {
     if (!columnsByTable[tableName]) {
@@ -122,25 +84,6 @@ async function main() {
     }
   });
 
-  OPTIONAL_INDEXES.forEach(function (index) {
-    if (!hasIndexPrefix(allIndexesByTable[index.table], index.columns)) {
-      warnings.push('Optional performance index is missing: ' + index.table + '(' + index.columns.join(', ') + ')');
-    }
-  });
-
-  Object.keys(FORBIDDEN_COLUMNS).forEach(function (tableName) {
-    const tableColumns = columnsByTable[tableName];
-    if (!tableColumns) {
-      return;
-    }
-
-    FORBIDDEN_COLUMNS[tableName].forEach(function (columnName) {
-      if (tableColumns[columnName]) {
-        errors.push('Forbidden legacy column exists: ' + tableName + '.' + columnName);
-      }
-    });
-  });
-
   if (errors.length) {
     console.error('DB schema check failed for database `' + config.db.database + '`');
     errors.forEach(function (error) {
@@ -151,14 +94,8 @@ async function main() {
   }
 
   console.log('DB schema check passed for database `' + config.db.database + '`');
-  warnings.forEach(function (warning) {
-    console.warn('warning: ' + warning);
-  });
 }
 
-/**
- * @returns {Promise<Object<string, Object<string, { columnType: string, isNullable: boolean }>>>}
- */
 async function loadColumnsByTable() {
   const rows = await db.query(
     [
@@ -184,9 +121,6 @@ async function loadColumnsByTable() {
   return tables;
 }
 
-/**
- * @returns {Promise<{ allIndexesByTable: Object<string, Array<string[]>>, uniqueIndexesByTable: Object<string, Array<string[]>> }>}
- */
 async function loadIndexesByTable() {
   const rows = await db.query(
     [
@@ -224,15 +158,13 @@ async function loadIndexesByTable() {
 
     allIndexesByTable[index.tableName].push(index.columns);
 
-    if (!index.isUnique) {
-      return;
-    }
+    if (index.isUnique) {
+      if (!uniqueIndexesByTable[index.tableName]) {
+        uniqueIndexesByTable[index.tableName] = [];
+      }
 
-    if (!uniqueIndexesByTable[index.tableName]) {
-      uniqueIndexesByTable[index.tableName] = [];
+      uniqueIndexesByTable[index.tableName].push(index.columns);
     }
-
-    uniqueIndexesByTable[index.tableName].push(index.columns);
   });
 
   return {
@@ -241,14 +173,6 @@ async function loadIndexesByTable() {
   };
 }
 
-/**
- * @param {string[]} messages
- * @param {string} tableName
- * @param {string} columnName
- * @param {{ columnType: string, isNullable: boolean }} column
- * @param {{ type: string|RegExp, nullable: boolean }} expected
- * @returns {void}
- */
 function validateColumn(messages, tableName, columnName, column, expected) {
   if (!matchesType(column.columnType, expected.type)) {
     messages.push(
@@ -263,11 +187,6 @@ function validateColumn(messages, tableName, columnName, column, expected) {
   }
 }
 
-/**
- * @param {string} actual
- * @param {string|RegExp} expected
- * @returns {boolean}
- */
 function matchesType(actual, expected) {
   if (expected instanceof RegExp) {
     return expected.test(actual);
@@ -276,30 +195,14 @@ function matchesType(actual, expected) {
   return actual === expected;
 }
 
-/**
- * @param {Array<string[]>|undefined} existingIndexes
- * @param {string[]} requiredColumns
- * @returns {boolean}
- */
 function hasUniqueIndex(existingIndexes, requiredColumns) {
   return hasIndex(existingIndexes, requiredColumns, true);
 }
 
-/**
- * @param {Array<string[]>|undefined} existingIndexes
- * @param {string[]} requiredColumns
- * @returns {boolean}
- */
 function hasIndexPrefix(existingIndexes, requiredColumns) {
   return hasIndex(existingIndexes, requiredColumns, false);
 }
 
-/**
- * @param {Array<string[]>|undefined} existingIndexes
- * @param {string[]} requiredColumns
- * @param {boolean} exact
- * @returns {boolean}
- */
 function hasIndex(existingIndexes, requiredColumns, exact) {
   if (!existingIndexes) {
     return false;
@@ -314,12 +217,6 @@ function hasIndex(existingIndexes, requiredColumns, exact) {
   return false;
 }
 
-/**
- * @param {string[]} left
- * @param {string[]} right
- * @param {boolean} exact
- * @returns {boolean}
- */
 function sameColumns(left, right, exact) {
   if (exact && left.length !== right.length) {
     return false;
