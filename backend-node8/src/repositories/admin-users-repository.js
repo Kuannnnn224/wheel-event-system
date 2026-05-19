@@ -21,7 +21,7 @@
  */
 
 /**
- * `admin_users` 的 raw SQL repository。
+ * `adminUsers` 的 raw SQL repository。
  */
 class AdminUsersRepository {
   /**
@@ -43,7 +43,7 @@ class AdminUsersRepository {
     const row = await this.db.maybeOne(
       [
         'SELECT id, username, passwordHash, isActive, createdAt, updatedAt',
-        'FROM admin_users',
+        'FROM adminUsers',
         'WHERE username = ?',
         'LIMIT 1'
       ].join(' '),
@@ -63,7 +63,7 @@ class AdminUsersRepository {
     const row = await this.db.maybeOne(
       [
         'SELECT id, username, passwordHash, isActive, createdAt, updatedAt',
-        'FROM admin_users',
+        'FROM adminUsers',
         'WHERE username = ? AND isActive = 1',
         'LIMIT 1'
       ].join(' '),
@@ -82,7 +82,7 @@ class AdminUsersRepository {
   async create(admin) {
     await this.db.execute(
       [
-        'INSERT INTO admin_users',
+        'INSERT INTO adminUsers',
         '(id, username, passwordHash, isActive, createdAt, updatedAt)',
         'VALUES (?, ?, ?, ?, ?, ?)'
       ].join(' '),

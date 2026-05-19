@@ -21,7 +21,7 @@ const ids = require('../utils/ids');
  */
 
 /**
- * `player_daily_progress` 的 raw SQL repository。
+ * `playerDailyProgress` 的 raw SQL repository。
  */
 class PlayerDailyProgressRepository {
   /**
@@ -44,7 +44,7 @@ class PlayerDailyProgressRepository {
     const row = await this.getDb(tx).maybeOne(
       [
         'SELECT id, playerId, businessDate, turnoverPoints, unlockedStage',
-        'FROM player_daily_progress',
+        'FROM playerDailyProgress',
         'WHERE playerId = ? AND businessDate = ?',
         'LIMIT 1'
       ].join(' '),
@@ -67,7 +67,7 @@ class PlayerDailyProgressRepository {
   async upsertMaxProgress(playerId, businessDate, turnoverPoints, unlockedStage, tx) {
     await this.getDb(tx).execute(
       [
-        'INSERT INTO player_daily_progress',
+        'INSERT INTO playerDailyProgress',
         '(id, playerId, businessDate, turnoverPoints, unlockedStage)',
         'VALUES (?, ?, ?, ?, ?)',
         'ON DUPLICATE KEY UPDATE',

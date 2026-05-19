@@ -30,7 +30,7 @@ const time = require('../utils/time');
  */
 
 /**
- * `spin_records` 的 raw SQL repository。
+ * `spinRecords` 的 raw SQL repository。
  */
 class SpinRecordsRepository {
   /**
@@ -54,7 +54,7 @@ class SpinRecordsRepository {
       [
         'SELECT id, playerId, businessDate, stageNumber, prizeConfigId,',
         'prizeName, amountPoints, createdAt, probabilityTable',
-        'FROM spin_records',
+        'FROM spinRecords',
         'WHERE playerId = ? AND businessDate = ?',
         'ORDER BY stageNumber ASC'
       ].join(' '),
@@ -85,7 +85,7 @@ class SpinRecordsRepository {
       [
         'SELECT id, playerId, businessDate, stageNumber, prizeConfigId,',
         'prizeName, amountPoints, createdAt, probabilityTable',
-        'FROM spin_records',
+        'FROM spinRecords',
         'WHERE playerId = ? AND businessDate = ? AND stageNumber IN (' + placeholders + ')',
         'ORDER BY stageNumber ASC'
       ].join(' '),
@@ -106,7 +106,7 @@ class SpinRecordsRepository {
     const row = await this.getDb(tx).maybeOne(
       [
         'SELECT COALESCE(SUM(amountPoints), 0) AS totalAmountPoints',
-        'FROM spin_records',
+        'FROM spinRecords',
         'WHERE businessDate = ?'
       ].join(' '),
       [businessDate]
@@ -144,7 +144,7 @@ class SpinRecordsRepository {
 
     await this.getDb(tx).execute(
       [
-        'INSERT INTO spin_records',
+        'INSERT INTO spinRecords',
         '(id, playerId, businessDate, stageNumber, prizeConfigId, prizeName, amountPoints, createdAt, probabilityTable)',
         'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
       ].join(' '),

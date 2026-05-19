@@ -115,26 +115,26 @@ npm run test:probability-model
 
 Node 8 backend does not use TypeORM `synchronize`, so the database schema must already exist. The reference baseline is [src/db/schema.sql](src/db/schema.sql), and it mirrors the current TypeORM entities for:
 
-- `admin_users`
+- `adminUsers`
 - `players` (`id` is the platform player ID)
-- `player_daily_progress`
-- `spin_records`
-- `award_override_rules`
-- `webview_sessions`
+- `playerDailyProgress`
+- `spinRecords`
+- `awardOverrideRules`
+- `webviewSessions`
 
 Legacy `turnover_adjustments` is no longer part of the Node 8 runtime baseline. If an existing test database still has it, drop it only after confirming historical data retention is not needed.
 The runtime no longer keeps a separate `players.external_id`; `players.id` is the platform-provided player ID, and related `playerId` columns store that same value.
-Table names remain snake_case, while database column names use camelCase such as `playerId`, `businessDate`, and `createdAt`.
+Runtime table and column names use camelCase, such as `webviewSessions`, `spinRecords`, `playerId`, `businessDate`, and `createdAt`. The `players` table keeps its simple lowercase name because it has no word boundary.
 
 For an existing database, run `npm run check:db` before switching traffic. The check is intentionally non-destructive.
 
-If an older local or staging database still uses snake_case columns, run [src/db/migrate-columns-to-camel-case.sql](src/db/migrate-columns-to-camel-case.sql) or rebuild from [src/db/schema.sql](src/db/schema.sql).
-If an older local or staging database still has `demo_sessions`, rename it to `webview_sessions` or rebuild from [src/db/schema.sql](src/db/schema.sql) before testing the webview session endpoints.
+If an older local or staging database still uses snake_case columns or table names, run [src/db/migrate-columns-to-camel-case.sql](src/db/migrate-columns-to-camel-case.sql) first, then [src/db/migrate-tables-to-camel-case.sql](src/db/migrate-tables-to-camel-case.sql), or rebuild from [src/db/schema.sql](src/db/schema.sql).
+If an older local or staging database still has `demo_sessions`, rename it to `webviewSessions` or rebuild from [src/db/schema.sql](src/db/schema.sql) before testing the webview session endpoints.
 
-If the existing `webview_sessions` table comment still contains demo wording, update only the metadata:
+If the existing `webviewSessions` table comment still contains demo wording, update only the metadata:
 
 ```sql
-ALTER TABLE webview_sessions COMMENT = 'App webview access sessions';
+ALTER TABLE webviewSessions COMMENT = 'App webview access sessions';
 ```
 
 If the admin frontend needs to change later, rebuild it outside this runtime package and replace the static files in `backend-node8/public`. The Node 8 server should only run the built assets.

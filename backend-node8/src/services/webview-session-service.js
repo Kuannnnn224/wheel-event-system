@@ -221,7 +221,7 @@ class WebviewSessionService {
     const row = await db.maybeOne(
       [
         'SELECT turnoverPoints, unlockedStage',
-        'FROM player_daily_progress',
+        'FROM playerDailyProgress',
         'WHERE playerId = ? AND businessDate = ?',
         'LIMIT 1'
       ].join(' '),
@@ -251,7 +251,7 @@ class WebviewSessionService {
   async saveDailyProgressSnapshot(db, playerId, businessDate, turnoverPoints, unlockedStage) {
     await db.execute(
       [
-        'INSERT INTO player_daily_progress',
+        'INSERT INTO playerDailyProgress',
         '(id, playerId, businessDate, turnoverPoints, unlockedStage)',
         'VALUES (?, ?, ?, ?, ?)',
         'ON DUPLICATE KEY UPDATE',

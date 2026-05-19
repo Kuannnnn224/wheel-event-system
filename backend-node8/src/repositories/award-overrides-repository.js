@@ -4,7 +4,7 @@ const ids = require('../utils/ids');
 const time = require('../utils/time');
 
 /**
- * `award_override_rules` 的 raw SQL repository。
+ * `awardOverrideRules` 的 raw SQL repository。
  */
 class AwardOverridesRepository {
   /**
@@ -130,7 +130,7 @@ class AwardOverridesRepository {
       const rule = created[index];
       await this.getDb(tx).execute(
         [
-          'INSERT INTO award_override_rules',
+          'INSERT INTO awardOverrideRules',
           '(id, playerId, businessDate, stageNumber, status, pendingKey, reason, createdByAdminId, cancelledByAdminId, consumedSpinRecordId, createdAt, updatedAt, consumedAt, cancelledAt)',
           'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         ].join(' '),
@@ -167,7 +167,7 @@ class AwardOverridesRepository {
     const now = time.unixTimestampSeconds();
     await this.db.execute(
       [
-        'UPDATE award_override_rules',
+        'UPDATE awardOverrideRules',
         'SET status = ?, pendingKey = NULL, cancelledByAdminId = ?, cancelledAt = ?, updatedAt = ?',
         'WHERE id = ?'
       ].join(' '),
@@ -194,7 +194,7 @@ class AwardOverridesRepository {
     const now = time.unixTimestampSeconds();
     await this.getDb(tx).execute(
       [
-        'UPDATE award_override_rules',
+        'UPDATE awardOverrideRules',
         'SET status = ?, pendingKey = NULL, consumedSpinRecordId = ?, consumedAt = ?, updatedAt = ?',
         'WHERE id = ?'
       ].join(' '),
@@ -223,9 +223,9 @@ class AwardOverridesRepository {
       'p.createdAt AS playerCreatedAt, p.updatedAt AS playerUpdatedAt,',
       's.businessDate AS spinBusinessDate, s.stageNumber AS spinStageNumber,',
       's.prizeName AS spinPrizeName, s.amountPoints AS spinAmountPoints, s.createdAt AS spinCreatedAt',
-      'FROM award_override_rules r',
+      'FROM awardOverrideRules r',
       'INNER JOIN players p ON p.id = r.playerId',
-      'LEFT JOIN spin_records s ON s.id = r.consumedSpinRecordId'
+      'LEFT JOIN spinRecords s ON s.id = r.consumedSpinRecordId'
     ].join(' ');
   }
 

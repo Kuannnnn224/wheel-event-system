@@ -4,7 +4,7 @@ const config = require('../src/config');
 const db = require('../src/db');
 
 const REQUIRED_COLUMNS = {
-  admin_users: {
+  adminUsers: {
     id: { type: 'varchar(36)', nullable: false },
     username: { type: 'varchar(80)', nullable: false },
     passwordHash: { type: 'varchar(255)', nullable: false },
@@ -17,14 +17,14 @@ const REQUIRED_COLUMNS = {
     createdAt: { type: 'int unsigned', nullable: false },
     updatedAt: { type: 'int unsigned', nullable: false }
   },
-  player_daily_progress: {
+  playerDailyProgress: {
     id: { type: 'varchar(36)', nullable: false },
     playerId: { type: 'varchar(120)', nullable: false },
     businessDate: { type: 'varchar(10)', nullable: false },
     turnoverPoints: { type: 'int unsigned', nullable: false },
     unlockedStage: { type: 'tinyint unsigned', nullable: false }
   },
-  spin_records: {
+  spinRecords: {
     id: { type: 'varchar(36)', nullable: false },
     playerId: { type: 'varchar(120)', nullable: false },
     businessDate: { type: 'varchar(10)', nullable: false },
@@ -35,7 +35,7 @@ const REQUIRED_COLUMNS = {
     createdAt: { type: 'int unsigned', nullable: false },
     probabilityTable: { type: 'varchar(10)', nullable: false }
   },
-  award_override_rules: {
+  awardOverrideRules: {
     id: { type: 'varchar(36)', nullable: false },
     playerId: { type: 'varchar(120)', nullable: false },
     businessDate: { type: 'varchar(10)', nullable: false },
@@ -51,7 +51,7 @@ const REQUIRED_COLUMNS = {
     consumedAt: { type: 'int unsigned', nullable: true },
     cancelledAt: { type: 'int unsigned', nullable: true }
   },
-  webview_sessions: {
+  webviewSessions: {
     id: { type: 'varchar(36)', nullable: false },
     playerId: { type: 'varchar(120)', nullable: false },
     token: { type: 'varchar(128)', nullable: false },
@@ -61,18 +61,18 @@ const REQUIRED_COLUMNS = {
 };
 
 const REQUIRED_UNIQUE_INDEXES = [
-  { table: 'admin_users', columns: ['username'] },
-  { table: 'player_daily_progress', columns: ['playerId', 'businessDate'] },
-  { table: 'spin_records', columns: ['playerId', 'businessDate', 'stageNumber'] },
-  { table: 'award_override_rules', columns: ['pendingKey'] },
-  { table: 'webview_sessions', columns: ['token'] }
+  { table: 'adminUsers', columns: ['username'] },
+  { table: 'playerDailyProgress', columns: ['playerId', 'businessDate'] },
+  { table: 'spinRecords', columns: ['playerId', 'businessDate', 'stageNumber'] },
+  { table: 'awardOverrideRules', columns: ['pendingKey'] },
+  { table: 'webviewSessions', columns: ['token'] }
 ];
 
 const REQUIRED_INDEXES = [
-  { table: 'player_daily_progress', columns: ['businessDate'] },
-  { table: 'spin_records', columns: ['businessDate'] },
-  { table: 'award_override_rules', columns: ['businessDate'] },
-  { table: 'award_override_rules', columns: ['status'] }
+  { table: 'playerDailyProgress', columns: ['businessDate'] },
+  { table: 'spinRecords', columns: ['businessDate'] },
+  { table: 'awardOverrideRules', columns: ['businessDate'] },
+  { table: 'awardOverrideRules', columns: ['status'] }
 ];
 
 const OPTIONAL_INDEXES = [

@@ -24,7 +24,7 @@ class ReportsRepository {
     const rows = await this.db.query(
       [
         'SELECT id, playerId, businessDate, stageNumber, prizeConfigId, prizeName, amountPoints, createdAt, probabilityTable',
-        'FROM spin_records',
+        'FROM spinRecords',
         'WHERE businessDate BETWEEN ? AND ?',
         'ORDER BY businessDate ASC, stageNumber ASC'
       ].join(' '),
@@ -46,7 +46,7 @@ class ReportsRepository {
     const rows = await this.db.query(
       [
         'SELECT id, playerId, businessDate, stageNumber, prizeConfigId, prizeName, amountPoints, createdAt, probabilityTable',
-        'FROM spin_records',
+        'FROM spinRecords',
         'WHERE playerId = ? AND businessDate BETWEEN ? AND ?',
         'ORDER BY businessDate ASC, stageNumber ASC'
       ].join(' '),
@@ -68,7 +68,7 @@ class ReportsRepository {
     const rows = await this.db.query(
       [
         'SELECT id, playerId, businessDate, turnoverPoints, unlockedStage',
-        'FROM player_daily_progress',
+        'FROM playerDailyProgress',
         'WHERE playerId = ? AND businessDate BETWEEN ? AND ?',
         'ORDER BY businessDate ASC'
       ].join(' '),
@@ -80,7 +80,7 @@ class ReportsRepository {
 }
 
 /**
- * 將 spin_records row 轉成報表 service 使用的物件。
+ * 將 spinRecords row 轉成報表 service 使用的物件。
  *
  * @param {Object} row
  * @returns {Object}
@@ -100,7 +100,7 @@ function mapSpinRow(row) {
 }
 
 /**
- * 將 player_daily_progress row 轉成報表 service 使用的物件。
+ * 將 playerDailyProgress row 轉成報表 service 使用的物件。
  *
  * @param {Object} row
  * @returns {Object}

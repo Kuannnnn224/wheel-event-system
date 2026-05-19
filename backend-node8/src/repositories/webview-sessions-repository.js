@@ -64,7 +64,7 @@ class WebviewSessionsRepository {
 
     await this.db.execute(
       [
-        'INSERT INTO webview_sessions',
+        'INSERT INTO webviewSessions',
         '(id, playerId, token, expiresAt, createdAt)',
         'VALUES (?, ?, ?, ?, ?)'
       ].join(' '),
@@ -86,7 +86,7 @@ class WebviewSessionsRepository {
         'SELECT ws.id, ws.playerId, ws.token, ws.expiresAt, ws.createdAt,',
         'p.createdAt AS playerCreatedAt,',
         'p.updatedAt AS playerUpdatedAt',
-        'FROM webview_sessions ws',
+        'FROM webviewSessions ws',
         'INNER JOIN players p ON p.id = ws.playerId',
         'WHERE ws.token = ?',
         'LIMIT 1'
