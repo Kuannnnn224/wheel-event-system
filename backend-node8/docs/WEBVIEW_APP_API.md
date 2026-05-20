@@ -14,7 +14,6 @@
 ## 保留 API
 
 ```text
-GET  /api/health
 POST /api/webview/sessions
 GET  /api/webview/game-config
 GET  /api/webview/sessions/current?token=<token>

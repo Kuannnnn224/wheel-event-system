@@ -8,7 +8,7 @@ body {
 }
 
 body {
-  background: #030010;
+  background: transparent;
   min-height: 100vh;
   display: flex; align-items: center; justify-content: center;
   font-family: 'Arial Black', Arial, sans-serif;
@@ -22,8 +22,7 @@ body {
   overflow: hidden;
   transform: scale(var(--frame-scale, 1));
   transform-origin: center center;
-  /* 底層漸層，圖片蓋上後作為補底 */
-  background: linear-gradient(180deg, #1a0645 0%, #08021a 50%, #0f0330 100%);
+  background: transparent;
 }
 
 /* 共用 absolute 元素 */
@@ -132,18 +131,22 @@ body {
 }
 .deposit-overlay.show { display: flex; }
 .deposit-box {
-  background: url('assets/window.png') no-repeat center center;
-  background-size: 100% 100%;
-  border: none; border-radius: 0;
-  /* padding-top: 0 讓標題從頂端開始，對齊藍色標題框 */
-  padding: 0 46px 32px;
+  background: none;
+  border-style: solid;
+  border-color: transparent;
+  border-width: 64px 30px 26px 30px;
+  border-image-source: url('assets/window.png');
+  border-image-slice: 64 30 26 30 fill;
+  border-image-repeat: stretch stretch;
+  border-radius: 0;
+  padding: 0 16px 16px;
   text-align: center; min-width: 280px;
   box-shadow: none;
   animation: popIn .35s cubic-bezier(.34,1.56,.64,1);
 }
 .deposit-title {
-  /* height 撐開藍色區高度，flex 垂直置中文字 */
-  height: 56px;
+  margin: -64px -30px 16px;
+  height: 64px;
   display: flex; align-items: center; justify-content: center;
   font-size: 18px; font-weight: 900; letter-spacing: 2px;
   text-transform: uppercase;
@@ -152,7 +155,6 @@ body {
                -2px  2px 0 #000, 2px  2px 0 #000,
                 0px -2px 0 #000, 0px  2px 0 #000,
                -2px  0px 0 #000, 2px  0px 0 #000;
-  margin-bottom: 12px;
 }
 .deposit-msg {
   font-size: 13px; color: #9080b8; line-height: 1.6; margin-bottom: 20px;
@@ -214,6 +216,27 @@ body {
   z-index: 6;
   align-items: center;
   justify-content: center;
+  pointer-events: none;
+  overflow: hidden;
+}
+.progress-bar.show { display: flex; }
+
+.progress-bar-fill {
+  position: absolute;
+  left: 0;
+  top: 2px;
+  height: 100%;
+  width: 0%;
+  background: url('assets/progress_bar2.png') no-repeat left center;
+  background-size: 307px 100%;
+  z-index: 1;
+  transition: width 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  pointer-events: none;
+}
+
+.progress-bar-text {
+  position: relative;
+  z-index: 2;
   font-family: 'Arial Black', Arial, sans-serif;
   font-weight: 900;
   font-size: 16px;
@@ -223,10 +246,9 @@ body {
                -2px  2px 0 #d36a05, 2px  2px 0 #d36a05,
                 0px -2px 0 #d36a05, 0px  2px 0 #d36a05,
                -2px  0px 0 #d36a05, 2px  0px 0 #d36a05;
-  pointer-events: none;
   white-space: nowrap;
+  pointer-events: none;
 }
-.progress-bar.show { display: flex; }
 
 /* Deposit Now 按鈕（NEED_DEPOSIT 狀態才顯示，金色按鈕，可點觸發儲值彈窗）
    元素 61×322 直立 box，CSS rotate(-90deg) → 視覺 322×61 水平膠囊
@@ -420,10 +442,15 @@ img.go-bet-btn:active { transform: scale(0.96); }
 }
 .result-overlay.show { display: flex; }
 .result-box {
-  background: url('assets/window.png') no-repeat center center;
-  background-size: 100% 100%;
-  border: none; border-radius: 0;
-  padding: 25px 30px; text-align: center;
+  background: none;
+  border-style: solid;
+  border-color: transparent;
+  border-width: 64px 30px 26px 30px;
+  border-image-source: url('assets/window.png');
+  border-image-slice: 64 30 26 30 fill;
+  border-image-repeat: stretch stretch;
+  border-radius: 0;
+  padding: 0 16px 16px; text-align: center;
   box-shadow: none;
   animation: popIn .4s cubic-bezier(.34,1.56,.64,1);
   min-width: 260px;
@@ -433,13 +460,16 @@ img.go-bet-btn:active { transform: scale(0.96); }
   to   { transform: scale(1)  rotate(0);     opacity:1; }
 }
 .result-congrats {
-  font-size: 30px; font-weight: 900;
+  margin: -64px -30px 12px;
+  height: 64px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 900;
   color: #ffffff;
   text-shadow: -2px -2px 0 #000, 2px -2px 0 #000,
                -2px  2px 0 #000, 2px  2px 0 #000,
                 0px -2px 0 #000, 0px  2px 0 #000,
                -2px  0px 0 #000, 2px  0px 0 #000;
-  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px;
+  letter-spacing: 2px; text-transform: uppercase;
 }
 .result-prize {
   font-size:60px; font-weight:900;

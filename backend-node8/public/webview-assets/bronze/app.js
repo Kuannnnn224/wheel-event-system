@@ -55,6 +55,57 @@ let pollTimer = null;
 
 const rotator = document.getElementById('wheelRotator');
 const spinBtn = document.getElementById('spinBtn');
+const wheelFxModeC = createAudio('assets/wheel_fx1.mp3', true, 0.6);
+const wheelFxModeA = createAudio('assets/wheel_fx2.mp3', true, 0.6);
+const wheelFxWin = createAudio('assets/wheel_fx_win.mp3', false, 0.7);
+
+function createAudio(src, loop, volume) {
+  if (typeof Audio === 'undefined') return null;
+  const audio = new Audio(src);
+  audio.loop = loop;
+  audio.volume = volume;
+  audio.preload = 'auto';
+  return audio;
+}
+
+function resolveAudioVolume(defaultVolume) {
+  if (typeof window.wheelFxVolume === 'number') {
+    return Math.max(0, Math.min(1, window.wheelFxVolume));
+  }
+  return defaultVolume;
+}
+
+function safePlayAudio(audio, label, volume) {
+  if (!audio) return;
+  try {
+    audio.volume = resolveAudioVolume(volume);
+    audio.currentTime = 0;
+    const result = audio.play();
+    if (result && typeof result.catch === 'function') {
+      result.catch((error) => console.log(`[Audio:${label}] autoplay blocked:`, error.message));
+    }
+  } catch (error) {
+    console.log(`[Audio:${label}] play error:`, error);
+  }
+}
+
+function playSpinSound(useModeA) {
+  safePlayAudio(useModeA ? wheelFxModeA : wheelFxModeC, useModeA ? 'ModeA' : 'ModeC', 0.6);
+}
+
+function stopSpinSound() {
+  [wheelFxModeC, wheelFxModeA].forEach((audio) => {
+    if (!audio) return;
+    try {
+      audio.pause();
+      audio.currentTime = 0;
+    } catch (_error) {}
+  });
+}
+
+function playWinSound() {
+  safePlayAudio(wheelFxWin, 'Win', 0.7);
+}
 
 function fitFrame() {
   const scale = Math.min(window.innerWidth / FRAME_WIDTH, window.innerHeight / FRAME_HEIGHT);
@@ -249,8 +300,15 @@ function setStatusMessage(message) {
 function setSpinProgress(current, target) {
   const currentEl = document.getElementById('progressCurrent');
   const targetEl = document.getElementById('progressTarget');
+  const fillEl = document.getElementById('progressBarFill');
+  const currentValue = Number(current) || 0;
+  const targetValue = Number(target) || 0;
   if (currentEl) currentEl.textContent = formatPoints(current);
   if (targetEl) targetEl.textContent = formatPoints(target);
+  if (fillEl) {
+    const ratio = targetValue > 0 ? Math.max(0, Math.min(1, currentValue / targetValue)) : 0;
+    fillEl.style.width = `${ratio * 100}%`;
+  }
 }
 
 function updateProgressPanel() {
@@ -412,6 +470,7 @@ function spinToPrize(prize, onComplete) {
   } else {
     finalJitter = -16 + Math.random() * 32;
   }
+  playSpinSound(useEdgeNearMiss);
 
   const finalPos = startRot + fullRevs + delta + finalJitter;
   const totalSweep = finalPos - startRot;
@@ -430,6 +489,8 @@ function spinToPrize(prize, onComplete) {
       spinning = false;
       spinBtn.classList.remove('spinning');
       spinBtn.style.cursor = 'pointer';
+      stopSpinSound();
+      playWinSound();
       flashWheelLights(() => {
         showResult(prize);
         onComplete?.();
@@ -556,4 +617,4 @@ window.setSpinProgress = setSpinProgress;
 window.doSpin = doSpin;
 window.SPIN_STATES = SPIN_STATES;
 
-init();
+// init();
