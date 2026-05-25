@@ -72,6 +72,20 @@ npm run test
 npm run build
 ```
 
+PM 離線機率工具：
+
+```bash
+cd frontend
+npm run build:pm-tool
+```
+
+產物在 `frontend/dist-pm-tool/`：
+
+- `pm-tool.html`：可直接開啟的本地工具。
+- `probability-files/`：PM 可在工具內選擇這個本機資料夾，用來保存上傳 ZIP 與解析後的 JSON。
+
+此工具不呼叫後端 API，支援檢視與調整機率表、匯入/匯出 JSON、上傳整包 ZIP、單次抽獎與批次模擬統計。ZIP 格式沿用後端匯入格式：`config.xlsx`、`weight.xlsx`、`low.xlsx`、`high.xlsx`、`prize.xlsx`、`daily-limit.xlsx`。
+
 匯入 XLSX 機率來源：
 
 ```bash

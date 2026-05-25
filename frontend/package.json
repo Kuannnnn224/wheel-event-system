@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:pm-tool": "vite --config vite.pm-tool.config.ts --host 0.0.0.0",
     "build": "tsc && vite build",
+    "build:pm-tool": "tsc && vite build --config vite.pm-tool.config.ts",
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "tsc --noEmit"
@@ -16,9 +18,11 @@
     "antd": "^5.22.5",
     "axios": "^1.7.9",
     "dayjs": "^1.11.13",
+    "jszip": "^3.10.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^7.1.1"
+    "react-router-dom": "^7.1.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",
