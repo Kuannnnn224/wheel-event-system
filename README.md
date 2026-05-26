@@ -86,6 +86,17 @@ npm run build:pm-tool
 
 此工具不呼叫後端 API，支援檢視與調整機率表、匯入/匯出 JSON、上傳整包 ZIP、單次抽獎與批次模擬統計。ZIP 格式沿用後端匯入格式：`config.xlsx`、`weight.xlsx`、`low.xlsx`、`high.xlsx`、`prize.xlsx`、`daily-limit.xlsx`。
 
+PM 機率工具桌面版：
+
+```bash
+npm run pm-tool:desktop
+npm run pm-tool:exe
+```
+
+`npm run pm-tool:desktop` 會先建立 `frontend/dist-pm-tool/` 再用 Electron 開啟工具。`npm run pm-tool:exe` 會輸出 Windows x64 portable exe 到 `release/`。
+
+桌面版預設資料夾在 Windows 文件資料夾底下：`Wheel Event PM Tool/probability-files/`。上傳 ZIP 後，工具會把原始 ZIP 與解析後的 probability JSON 保存到這裡；也可以在工具上方按「本機資料夾」改成其他保存位置。
+
 匯入 XLSX 機率來源：
 
 ```bash

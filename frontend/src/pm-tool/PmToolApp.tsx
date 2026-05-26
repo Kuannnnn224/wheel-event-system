@@ -21,7 +21,7 @@ import {
   message,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { defaultProbabilityConfig } from './defaultProbabilityConfig';
 import {
   addDrawToSimulation,
@@ -138,6 +138,34 @@ async function saveBlobToDirectory(directory: LocalDirectoryHandle, filename: st
   await writable.close();
 }
 
+function getDesktopBridge() {
+  return window.pmToolDesktop;
+}
+
+async function saveBlobToDesktop(filename: string, blob: Blob) {
+  const desktop = getDesktopBridge();
+  if (!desktop) {
+    throw new Error('桌面版保存功能尚未啟用。');
+  }
+
+  return desktop.saveFile({
+    filename: safeFilename(filename),
+    contents: await blob.arrayBuffer(),
+  });
+}
+
+async function saveTextToDesktop(filename: string, text: string) {
+  const desktop = getDesktopBridge();
+  if (!desktop) {
+    throw new Error('桌面版保存功能尚未啟用。');
+  }
+
+  return desktop.saveFile({
+    filename: safeFilename(filename),
+    contents: text,
+  });
+}
+
 function tableTag(table: ProbabilityTable) {
   const colorMap: Record<ProbabilityTable, string> = {
     low: 'blue',
@@ -179,6 +207,7 @@ export default function PmToolApp() {
   const [simulating, setSimulating] = useState(false);
   const [error, setError] = useState<string>();
   const [localDirectory, setLocalDirectory] = useState<LocalDirectoryHandle>();
+  const [desktopDirectory, setDesktopDirectory] = useState<PmToolDesktopDirectory>();
   const [importPreview, setImportPreview] = useState<ZipImportPreview>();
   const [importing, setImporting] = useState(false);
   const [savingFiles, setSavingFiles] = useState(false);
@@ -193,6 +222,33 @@ export default function PmToolApp() {
   const prizePrizeTotal = getPrizeWeightTotal(selectedStage, 'prize');
   const dailyLimitPrizeTotal = getPrizeWeightTotal(selectedStage, 'dailyLimit');
   const theoreticalAverage = getExpectedAmountPoints(selectedStage, drawMode);
+  const desktopBridge = getDesktopBridge();
+  const activeDirectoryName = desktopDirectory?.name ?? localDirectory?.name;
+  const canSaveToDirectory = Boolean(desktopBridge || localDirectory);
+
+  useEffect(() => {
+    const desktop = getDesktopBridge();
+    if (!desktop) {
+      return;
+    }
+
+    let active = true;
+    void desktop
+      .getDataDirectory()
+      .then((directory) => {
+        if (active) {
+          setDesktopDirectory(directory);
+        }
+      })
+      .catch((directoryError: unknown) => {
+        const directoryMessage = directoryError instanceof Error ? directoryError.message : '讀取桌面版資料夾失敗。';
+        setError(directoryMessage);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   function replaceConfig(nextConfig: ProbabilityConfig) {
     setConfig(nextConfig);
@@ -266,7 +322,7 @@ export default function PmToolApp() {
         setSimulation(undefined);
         setSimulationProgress(0);
 
-        if (localDirectory) {
+        if (desktopBridge || localDirectory) {
           await saveImportPreviewFiles(preview, localDirectory);
         }
 
@@ -287,6 +343,30 @@ export default function PmToolApp() {
   }
 
   async function chooseLocalDirectory() {
+    const desktop = getDesktopBridge();
+
+    if (desktop) {
+      try {
+        const directory = await desktop.chooseDataDirectory();
+        if (!directory) {
+          return;
+        }
+
+        setDesktopDirectory(directory);
+        messageApi.success(`已選擇資料夾：${directory.path}`);
+
+        if (importPreview) {
+          await saveImportPreviewFiles(importPreview);
+        }
+      } catch (directoryError) {
+        const directoryMessage = directoryError instanceof Error ? directoryError.message : '選擇本機資料夾失敗。';
+        setError(directoryMessage);
+        messageApi.error(directoryMessage);
+      }
+
+      return;
+    }
+
     const picker = (window as Window & {
       showDirectoryPicker?: (options?: { mode?: 'read' | 'readwrite' }) => Promise<LocalDirectoryHandle>;
     }).showDirectoryPicker;
@@ -318,7 +398,9 @@ export default function PmToolApp() {
   }
 
   async function saveImportPreviewFiles(preview = importPreview, directory = localDirectory) {
-    if (!preview || !directory) {
+    const desktop = getDesktopBridge();
+
+    if (!preview || (!desktop && !directory)) {
       return;
     }
 
@@ -328,10 +410,26 @@ export default function PmToolApp() {
       const zipFilename = `${basename}-${new Date(preview.uploadedAt).toISOString().replace(/[-:.TZ]/g, '').slice(0, 14)}.zip`;
       const jsonFilename = `${basename}-probability.json`;
 
-      await saveBlobToDirectory(directory, zipFilename, preview.zipFile);
-      await saveBlobToDirectory(directory, jsonFilename, createConfigBlob(preview.proposedConfig));
+      let savedFiles: string[];
+      let savedDirectoryName: string;
 
-      const savedFiles = [zipFilename, jsonFilename];
+      if (desktop) {
+        const [savedZip, savedJson] = await Promise.all([
+          saveBlobToDesktop(zipFilename, preview.zipFile),
+          saveTextToDesktop(jsonFilename, createConfigJson(preview.proposedConfig)),
+        ]);
+        setDesktopDirectory(savedZip.directory);
+        savedFiles = [savedZip.filename, savedJson.filename];
+        savedDirectoryName = savedZip.directory.path;
+      } else if (directory) {
+        await saveBlobToDirectory(directory, zipFilename, preview.zipFile);
+        await saveBlobToDirectory(directory, jsonFilename, createConfigBlob(preview.proposedConfig));
+        savedFiles = [zipFilename, jsonFilename];
+        savedDirectoryName = directory.name;
+      } else {
+        return;
+      }
+
       setImportPreview((current) => {
         if (!current || current.uploadedAt === preview.uploadedAt) {
           return { ...preview, savedFiles };
@@ -339,7 +437,7 @@ export default function PmToolApp() {
 
         return current;
       });
-      messageApi.success(`已保存到 ${directory.name}`);
+      messageApi.success(`已保存到 ${savedDirectoryName}`);
     } catch (saveError) {
       const saveMessage = saveError instanceof Error ? saveError.message : '保存檔案到本機資料夾失敗。';
       setError(saveMessage);
@@ -359,8 +457,23 @@ export default function PmToolApp() {
     messageApi.success(`已套用 ${importPreview.filename}`);
   }
 
-  function downloadImportZip() {
+  async function downloadImportZip() {
     if (!importPreview) {
+      return;
+    }
+
+    const desktop = getDesktopBridge();
+    if (desktop) {
+      try {
+        const savedZip = await saveBlobToDesktop(importPreview.filename, importPreview.zipFile);
+        setDesktopDirectory(savedZip.directory);
+        messageApi.success(`已保存 ZIP：${savedZip.filename}`);
+      } catch (downloadError) {
+        const downloadMessage = downloadError instanceof Error ? downloadError.message : '保存 ZIP 失敗。';
+        setError(downloadMessage);
+        messageApi.error(downloadMessage);
+      }
+
       return;
     }
 
@@ -374,6 +487,15 @@ export default function PmToolApp() {
     try {
       const normalizedConfig = normalizeProbabilityConfig(config);
       const filename = `probability-${new Date().toISOString().slice(0, 10)}.json`;
+      const desktop = getDesktopBridge();
+
+      if (desktop) {
+        const savedJson = await saveTextToDesktop(filename, createConfigJson(normalizedConfig));
+        setDesktopDirectory(savedJson.directory);
+        messageApi.success(`已保存 ${savedJson.filename}`);
+        return;
+      }
+
       if (localDirectory) {
         await saveBlobToDirectory(localDirectory, filename, createConfigBlob(normalizedConfig));
         messageApi.success(`已保存 ${filename}`);
@@ -603,10 +725,10 @@ export default function PmToolApp() {
             <Button icon={<UploadOutlined />} loading={importing}>匯入 ZIP / JSON</Button>
           </Upload>
           <Button icon={<FolderOpenOutlined />} onClick={() => void chooseLocalDirectory()}>
-            {localDirectory ? localDirectory.name : '本機資料夾'}
+            {activeDirectoryName ?? '本機資料夾'}
           </Button>
           <Button icon={<DownloadOutlined />} onClick={exportConfig}>
-            {localDirectory ? '保存 JSON' : '下載 JSON'}
+            {canSaveToDirectory ? '保存 JSON' : '下載 JSON'}
           </Button>
           <Button icon={<SaveOutlined />} onClick={saveDraft}>
             保存草稿
@@ -634,14 +756,14 @@ export default function PmToolApp() {
                 <Tag color={importPreview.diff.length ? 'orange' : 'green'}>
                   {importPreview.diff.length ? `${importPreview.diff.length} 筆差異` : '無差異'}
                 </Tag>
-                {localDirectory ? <Tag color="blue">保存資料夾 {localDirectory.name}</Tag> : null}
-                <Button icon={<DownloadOutlined />} onClick={downloadImportZip}>
-                  下載原始 ZIP
+                {activeDirectoryName ? <Tag color="blue">保存資料夾 {activeDirectoryName}</Tag> : null}
+                <Button icon={<DownloadOutlined />} onClick={() => void downloadImportZip()}>
+                  {desktopBridge ? '保存原始 ZIP' : '下載原始 ZIP'}
                 </Button>
                 <Button
                   icon={<SaveOutlined />}
                   loading={savingFiles}
-                  disabled={!localDirectory}
+                  disabled={!canSaveToDirectory}
                   onClick={() => void saveImportPreviewFiles()}
                 >
                   保存 ZIP / JSON
